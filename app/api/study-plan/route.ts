@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         creationDate: 'desc'
       }
     });
-
+    
     return NextResponse.json({ studyPlan });
   } catch (error) {
     console.error('Error fetching study plan:', error);

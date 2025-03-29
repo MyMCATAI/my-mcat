@@ -11,529 +11,235 @@ macbookair@M2-MacbookAir my-mcat % npm run dev
 
  ✓ Starting...
    automatically enabled Fast Refresh for 1 custom loader
- ✓ Ready in 1845ms
- ○ Compiling /_not-found ...
+ ✓ Ready in 1426ms
+ ✓ Compiled /middleware in 137ms (182 modules)
+ ○ Compiling /home ...
 Browserslist: caniuse-lite is outdated. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
- ✓ Compiled /_not-found in 6.2s (976 modules)
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /home
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /home
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params { pathname: '/home', searchParams: 'debug=true' }
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /home?debug=true 404 in 6413ms
- ○ Compiling /favicon.ico ...
- ✓ Compiled /favicon.ico in 643ms (772 modules)
- GET /favicon.ico 200 in 907ms
+ ✓ Compiled /api/notifications in 8.6s (6267 modules)
+[Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: false
+[HomePage] Rendering content, hasSeenIntroVideo: false
+ GET /api/notifications 200 in 9674ms
+ GET /home 200 in 10407ms
+ ✓ Compiled in 2.1s (3008 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1372ms (6256 modules)
+ GET /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map 404 in 1667ms
+ GET /api/notifications 200 in 142ms
  ○ Compiling /api/user-info ...
- ✓ Compiled /api/user-info in 595ms (698 modules)
- ✓ Compiled (702 modules)
- GET /api/user-info/profile 200 in 1883ms
- GET /api/user-info/profile 200 in 229ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 2502ms
- ✓ Compiled /api/study-plan in 135ms (704 modules)
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 373ms
- GET /api/study-plan 200 in 373ms
- GET /api/study-plan 200 in 106ms
- ○ Compiling /home ...
- ✓ Compiled /home in 5.9s (6349 modules)
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /home
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /home
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params { pathname: '/home', searchParams: 'debug=true' }
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /home?debug=true 200 in 8279ms
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params {
-  pathname: '/_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map',
-  searchParams: ''
-}
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map 404 in 371ms
- ○ Compiling /api/notifications ...
- ✓ Compiled /api/notifications in 1699ms (3365 modules)
- GET /api/notifications 200 in 3169ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 3347ms
- GET /api/notifications 200 in 200ms
- GET /api/notifications 200 in 99ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
- GET /api/notifications 200 in 97ms
- GET /api/user-info/profile 200 in 3646ms
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 370ms
- GET /api/user-info/profile 200 in 217ms
- GET /api/study-plan 200 in 226ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
- GET /api/user-info/profile 200 in 199ms
- GET /api/study-plan 200 in 100ms
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 398ms
- GET /api/user-info/profile 200 in 223ms
- GET /api/study-plan 200 in 107ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
- GET /api/user-info/profile 200 in 191ms
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 381ms
- GET /api/user-info/profile 200 in 191ms
- GET /api/study-plan 200 in 220ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 436ms
- ○ Compiling /api/user-activity ...
- ✓ Compiled /api/user-activity in 798ms (3367 modules)
- ✓ Compiled (3374 modules)
- GET /api/calendar-activity 200 in 2195ms
- GET /api/calendar/exam-activities 200 in 2381ms
- GET /api/subscription 200 in 2358ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
- GET /api/study-plan 200 in 143ms
-objc[10892]: Class GNotificationCenterDelegate is implemented in both /opt/homebrew/Cellar/glib/2.82.4/lib/libgio-2.0.0.dylib (0x140300648) and /Users/macbookair/Desktop/my-mcat/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.42.dylib (0xd17c09a28). One of the two will be used. Which one is undefined.
- ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 542ms
- GET /api/user-info/profile 200 in 2414ms
-cleaning up last activity
-cleaning up last activity
-cleaning up last activity
- GET /api/calendar-activity 200 in 257ms
- GET /api/calendar/exam-activities 200 in 470ms
- GET /api/study-plan 200 in 209ms
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 625ms
- GET /api/user-info/profile 200 in 223ms
-cleaning up last activity
- GET /api/calendar-activity 200 in 275ms
- POST /api/user-activity 200 in 3490ms
-cleaning up last activity
-[DEBUG][API] User info from database, keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord'
-]
- GET /api/study-plan 200 in 200ms
-[DEBUG][API] Response object keys: [
-  'id',               'userId',
-  'devUserId',        'bio',
-  'updatedAt',        'apiCount',
-  'createdAt',        'score',
-  'clinicRooms',      'hasPaid',
-  'subscriptionType', 'diagnosticScores',
-  'firstName',        'profilePhoto',
-  'streak',           'notificationPreference',
-  'unlocks',          'onboardingInfo',
-  'patientRecord',    'email'
-]
- GET /api/user-info 200 in 391ms
-cleaning up last activity
- POST /api/user-activity 200 in 2157ms
- ○ Compiling /api/user-activity/[activityId] ...
- POST /api/user-activity 200 in 1332ms
- ✓ Compiled /api/user-activity/[activityId] in 762ms (3376 modules)
- POST /api/user-activity 200 in 4857ms
- POST /api/user-activity 200 in 1634ms
- POST /api/user-activity 200 in 2539ms
- GET /api/study-plan 200 in 1328ms
- PATCH /api/user-activity/cm8nwawcy0000dgek748d0iyh 200 in 3100ms
- GET /api/notifications 200 in 326ms
- GET /api/notifications 200 in 111ms
- GET /api/notifications 200 in 206ms
- GET /api/notifications 200 in 103ms
- GET /api/notifications 200 in 218ms
- GET /api/notifications 200 in 103ms
- GET /api/notifications 200 in 202ms
- GET /api/notifications 200 in 103ms
- GET /api/notifications 200 in 211ms
- GET /api/notifications 200 in 105ms
- GET /api/notifications 200 in 216ms
- GET /api/notifications 200 in 103ms
- ✓ Compiled in 3.5s (6247 modules)
- GET /home?debug=true&_rsc=1yv1g 200 in 272ms
- ○ Compiling /api/user-activity/[activityId] ...
- ✓ Compiled /api/user-activity/[activityId] in 1085ms (6238 modules)
- ✓ Compiled in 0ms (3252 modules)
- ✓ Compiled in 2s (6238 modules)
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params {
-  pathname: '/_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map',
-  searchParams: ''
-}
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map 404 in 4075ms
- PATCH /api/user-activity/cm8nwaxuv0005dgek9e79nnew 200 in 5244ms
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /home
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /home
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params { pathname: '/home', searchParams: 'debug=true' }
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /home?debug=true 200 in 4114ms
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params {
-  pathname: '/_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map',
-  searchParams: ''
-}
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map 404 in 143ms
- ○ Compiling /favicon.ico ...
- ✓ Compiled /api/user-info/profile in 1372ms (3280 modules)
- ✓ Compiled (3365 modules)
- GET /favicon.ico 200 in 3322ms
- GET /home?debug=true&_rsc=1yv1g 200 in 70ms
- GET /api/notifications 200 in 2833ms
- GET /api/user-info/profile 200 in 2857ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
-[RouteTracker DEBUG] === STATE DUMP ===
-[RouteTracker DEBUG] Path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] isSignedIn: undefined
-[RouteTracker DEBUG] isLoaded: true
-[RouteTracker DEBUG] profileLoading: true
-[RouteTracker DEBUG] Zustand onboardingComplete: false
-[RouteTracker DEBUG] userInfo exists: false
-[RouteTracker DEBUG] ====================
-[RouteTracker DEBUG] Checking exemption for path: /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map
-[RouteTracker DEBUG] User is signed in: undefined
-[RouteTracker DEBUG] Path exempt (standard): false
-[RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
-👋 DebugPanel: Component initialized
-👋 DebugPanel: Current path and search params {
-  pathname: '/_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map',
-  searchParams: ''
-}
-👋 DebugPanel: Not rendering panel (isDebug is false)
- GET /_next/static/css/app/(dashboard)/(routes)/home/react-big-calendar.css.map 404 in 313ms
- GET /api/notifications 200 in 174ms
- GET /api/user-info/profile 200 in 212ms
- GET /api/user-info 200 in 3452ms
- GET /api/notifications 200 in 104ms
- GET /api/notifications 200 in 159ms
- GET /api/user-info/profile 200 in 262ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- ✓ Compiled /api/study-plan in 480ms (3367 modules)
- GET /api/user-info 200 in 690ms
- GET /api/study-plan 200 in 1096ms
- GET /api/user-info/profile 200 in 1014ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- GET /api/user-info 200 in 512ms
- GET /api/study-plan 200 in 228ms
- GET /api/user-info/profile 200 in 229ms
- GET /api/study-plan 200 in 123ms
+ ✓ Compiled /api/user-info in 723ms (3341 modules)
+ ✓ Compiled (3345 modules)
+ GET /api/user-info/profile 200 in 1825ms
+ GET /api/user-info/profile 200 in 202ms
+ GET /api/notifications 200 in 1747ms
+ GET /api/notifications 200 in 101ms
  GET /api/user-info/profile 200 in 201ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- GET /api/user-info 200 in 591ms
- GET /api/study-plan 200 in 246ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- GET /api/user-info 200 in 491ms
- ○ Compiling /api/calendar-activity ...
- ✓ Compiled /api/user-activity in 798ms (3369 modules)
- ✓ Compiled (3376 modules)
- GET /api/calendar-activity 200 in 1356ms
+ GET /api/notifications 200 in 101ms
+ GET /api/user-info/profile 200 in 200ms
+ GET /api/user-info 200 in 2511ms
+ GET /api/user-info/profile 200 in 389ms
+ GET /api/user-info 200 in 539ms
+ GET /api/user-info/profile 200 in 196ms
+ GET /api/user-info 200 in 556ms
+ GET /api/user-info 200 in 339ms
+ GET /api/user-info 200 in 338ms
+ ✓ Compiled /api/global-leaderboard in 322ms (3347 modules)
+ ✓ Compiled /api/user-activity in 0ms (3478 modules)
+ ✓ Compiled in 0ms (3480 modules)
+ ✓ Compiled in 1ms (3480 modules)
+ GET /api/user-info/profile 200 in 2530ms
+ GET /api/calendar/exam-activities 200 in 2774ms
+ ✓ Compiled in 2ms (3480 modules)
+[KALYPSO_WELCOME] API call started at 2025-03-27T19:38:31.420Z
+[KALYPSO_WELCOME] Request from IP: ::1
+[KALYPSO_WELCOME] Auth check completed in 1ms
+[KALYPSO_WELCOME] Skipping rate limiting in development mode
+[KALYPSO_WELCOME] Rate limit check passed in 0ms
+[KALYPSO_WELCOME] Cache miss for user user_2rFXhmeHNzY3irm9HShrGMGMY3M, generating new message (0ms)
+ GET /api/calendar-activity 200 in 3122ms
+[KALYPSO_WELCOME] User first name: Dennis Cao
+ ✓ Compiled in 0ms (3480 modules)
+ GET /api/global-leaderboard 200 in 3306ms
+[KALYPSO_WELCOME] Last activity query completed in 416ms
+[KALYPSO_WELCOME] Last activity: {
+  id: 'cm8rra0ik0006dgt5fg4fwsd7',
+  type: 'studying',
+  startTime: 2025-03-27T19:37:52.412Z,
+  location: 'KalypsoAI'
+}
+[KALYPSO_WELCOME] Days since last activity: 1
 cleaning up last activity
- GET /api/user-info/profile 200 in 1625ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- GET /api/calendar/exam-activities 200 in 1643ms
+[KALYPSO_WELCOME] Latest exam query completed in 317ms
+[KALYPSO_WELCOME] Latest full length exam: No full length exam found
+ ✓ Compiled in 0ms (3480 modules)
+ ✓ Compiled in 0ms (3480 modules)
+[KALYPSO_WELCOME] Latest user test: {
+  id: 'cm8holmmm000tdgyuio5nmqxd',
+  score: 40,
+  testTitle: 'Sporus - Part 1',
+  finishedAt: 2025-03-20T18:26:10.703Z
+}
+[KALYPSO_WELCOME] Latest user test score: 40 on "Sporus - Part 1"
+[KALYPSO_WELCOME] Next exam: {
+  id: 'cm8qdwdp4000zdg6kbioalg0y',
+  title: 'Unscored Sample',
+  scheduledDate: 2025-03-29T07:00:00.000Z
+}
+[KALYPSO_WELCOME] Days until next test: 2
+[KALYPSO_WELCOME] Prompt preparation completed in 0ms
+[KALYPSO_WELCOME] Prompt for GPT-4o: 
+      Create a personalized welcome message for the user named Dennis Cao with the following context:
+      
+      - Last active: 1 day ago
+      - Latest test score: 40 on "Sporus - Part 1"
+      - Next scheduled test: "Unscored Sample" in 2 days
+      
+      The message should start with "Hey Dennis Cao!" and feel personal and contextual to their activity. If this is their first login or they have no activity yet, welcome them as a new user and encourage them to start their MCAT journey.
+    
+[KALYPSO_WELCOME] Calling GPT-4o-mini for welcome message generation
+[AI-COMPLETION] Attempt 1/3 to generate completion
+ ✓ Compiled in 1ms (3480 modules)
 cleaning up last activity
- GET /api/subscription 200 in 1666ms
- GET /api/user-info 200 in 385ms
- GET /api/study-plan 200 in 152ms
- GET /api/calendar-activity 200 in 157ms
+ POST /api/user-activity 200 in 4175ms
+ GET /api/user-info 200 in 1728ms
 cleaning up last activity
- GET /api/user-info/profile 200 in 218ms
- POST /api/user-activity 200 in 1622ms
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
-cleaning up last activity
- GET /api/calendar/exam-activities 200 in 415ms
- GET /api/study-plan 200 in 127ms
- GET /api/user-info 200 in 436ms
- GET /api/calendar-activity 200 in 227ms
-cleaning up last activity
-[DEBUG][API] RAW DATABASE RESPONSE: ["id","userId","devUserId","bio","updatedAt","apiCount","createdAt","score","clinicRooms","hasPaid","subscriptionType","diagnosticScores","firstName","profilePhoto","streak","notificationPreference","unlocks","onboardingInfo","patientRecord"]
- POST /api/user-activity 200 in 2169ms
- GET /api/user-info 200 in 362ms
- POST /api/user-activity 200 in 789ms
- GET /api/study-plan 200 in 106ms
- GET /api/study-plan 200 in 109ms
- POST /api/user-activity 200 in 1423ms
- POST /api/user-activity 200 in 890ms
- PATCH /api/user-activity/cm8nwf4t80006dgek2qc3i3nw 200 in 863ms
- GET /api/notifications 200 in 217ms
- GET /api/notifications 200 in 112ms
- GET /api/notifications 200 in 206ms
- GET /api/notifications 200 in 100ms
+ GET /api/user-info/profile 200 in 1425ms
+ GET /api/global-leaderboard 200 in 193ms
+ GET /api/calendar/exam-activities 200 in 410ms
+ POST /api/user-activity 200 in 2721ms
+ GET /api/calendar-activity 200 in 716ms
+ ✓ Compiled /api/user-activity/[activityId] in 338ms (3482 modules)
+ GET /api/user-info 200 in 592ms
+ POST /api/user-activity 200 in 2561ms
+ GET /api/user-info 200 in 573ms
+ PATCH /api/user-activity/cm8rravn60000dg6wy4qiviyd 200 in 1459ms
+ GET /api/kalypso/welcome 200 in 7975ms
+[KALYPSO_WELCOME] API call started at 2025-03-27T19:38:36.628Z
+[KALYPSO_WELCOME] Request from IP: ::1
+[KALYPSO_WELCOME] Auth check completed in 1ms
+[KALYPSO_WELCOME] Skipping rate limiting in development mode
+[KALYPSO_WELCOME] Rate limit check passed in 0ms
+[KALYPSO_WELCOME] Cache miss for user user_2rFXhmeHNzY3irm9HShrGMGMY3M, generating new message (0ms)
+[KALYPSO_WELCOME] User first name: Dennis Cao
+ GET /api/kalypso/welcome 200 in 251ms
+[KALYPSO_WELCOME] API call started at 2025-03-27T19:38:36.864Z
+[KALYPSO_WELCOME] Request from IP: ::1
+[KALYPSO_WELCOME] Auth check completed in 0ms
+[KALYPSO_WELCOME] Skipping rate limiting in development mode
+[KALYPSO_WELCOME] Rate limit check passed in 0ms
+[KALYPSO_WELCOME] Cache miss for user user_2rFXhmeHNzY3irm9HShrGMGMY3M, generating new message (0ms)
+[KALYPSO_WELCOME] Last activity query completed in 400ms
+[KALYPSO_WELCOME] Last activity: {
+  id: 'cm8rrawkk0002dg6w5n5uthu1',
+  type: 'studying',
+  startTime: 2025-03-27T19:38:33.957Z,
+  location: 'KalypsoAI'
+}
+[KALYPSO_WELCOME] Days since last activity: 1
+[KALYPSO_WELCOME] User first name: Dennis Cao
+[KALYPSO_WELCOME] Latest exam query completed in 191ms
+[KALYPSO_WELCOME] Latest full length exam: No full length exam found
+[KALYPSO_WELCOME] Last activity query completed in 389ms
+[KALYPSO_WELCOME] Last activity: {
+  id: 'cm8rrawkk0002dg6w5n5uthu1',
+  type: 'studying',
+  startTime: 2025-03-27T19:38:33.957Z,
+  location: 'KalypsoAI'
+}
+[KALYPSO_WELCOME] Days since last activity: 1
+[KALYPSO_WELCOME] GPT-4o-mini generation completed in 4653ms
+[KALYPSO_WELCOME] Generated welcome message: Hey Dennis Cao! 😸
+
+Wow, just a day since you last logged in—you're on a roll! 🎉 Congrats on scoring a fantastic 40 on "Sporus - Part 1"! That's some serious brainpower! 
+
+I see you have an "Unscored Sample" test coming up in 2 days. Remember, it’s a great opportunity to practice and refine your test-taking strategies. You’ve got this! Just approach it with confidence and curiosity. Keep up the great work, and let’s keep those paws moving toward your MCAT success! 🐾
+
+Let me know if you need any help with your prep. Happy studying! 📚✨
+[KALYPSO_WELCOME] Cached message for user user_2rFXhmeHNzY3irm9HShrGMGMY3M in 0ms
+[KALYPSO_WELCOME] Total API execution time: 5987ms
+[KALYPSO_WELCOME] Latest exam query completed in 198ms
+[KALYPSO_WELCOME] Latest full length exam: No full length exam found
+[KALYPSO_WELCOME] Latest user test: {
+  id: 'cm8holmmm000tdgyuio5nmqxd',
+  score: 40,
+  testTitle: 'Sporus - Part 1',
+  finishedAt: 2025-03-20T18:26:10.703Z
+}
+[KALYPSO_WELCOME] Latest user test score: 40 on "Sporus - Part 1"
+[KALYPSO_WELCOME] Next exam: {
+  id: 'cm8qdwdp4000zdg6kbioalg0y',
+  title: 'Unscored Sample',
+  scheduledDate: 2025-03-29T07:00:00.000Z
+}
+[KALYPSO_WELCOME] Days until next test: 2
+[KALYPSO_WELCOME] Prompt preparation completed in 0ms
+[KALYPSO_WELCOME] Prompt for GPT-4o: 
+      Create a personalized welcome message for the user named Dennis Cao with the following context:
+      
+      - Last active: 1 day ago
+      - Latest test score: 40 on "Sporus - Part 1"
+      - Next scheduled test: "Unscored Sample" in 2 days
+      
+      The message should start with "Hey Dennis Cao!" and feel personal and contextual to their activity. If this is their first login or they have no activity yet, welcome them as a new user and encourage them to start their MCAT journey.
+    
+[KALYPSO_WELCOME] Calling GPT-4o-mini for welcome message generation
+[AI-COMPLETION] Attempt 1/3 to generate completion
+[KALYPSO_WELCOME] Latest user test: {
+  id: 'cm8holmmm000tdgyuio5nmqxd',
+  score: 40,
+  testTitle: 'Sporus - Part 1',
+  finishedAt: 2025-03-20T18:26:10.703Z
+}
+[KALYPSO_WELCOME] Latest user test score: 40 on "Sporus - Part 1"
+[KALYPSO_WELCOME] Next exam: {
+  id: 'cm8qdwdp4000zdg6kbioalg0y',
+  title: 'Unscored Sample',
+  scheduledDate: 2025-03-29T07:00:00.000Z
+}
+[KALYPSO_WELCOME] Days until next test: 2
+[KALYPSO_WELCOME] Prompt preparation completed in 0ms
+[KALYPSO_WELCOME] Prompt for GPT-4o: 
+      Create a personalized welcome message for the user named Dennis Cao with the following context:
+      
+      - Last active: 1 day ago
+      - Latest test score: 40 on "Sporus - Part 1"
+      - Next scheduled test: "Unscored Sample" in 2 days
+      
+      The message should start with "Hey Dennis Cao!" and feel personal and contextual to their activity. If this is their first login or they have no activity yet, welcome them as a new user and encourage them to start their MCAT journey.
+    
+[KALYPSO_WELCOME] Calling GPT-4o-mini for welcome message generation
+[AI-COMPLETION] Attempt 1/3 to generate completion
+[KALYPSO_WELCOME] GPT-4o-mini generation completed in 2155ms
+[KALYPSO_WELCOME] Generated welcome message: Hey Dennis Cao! 🐾 It's great to see you back after just a day! Congrats on scoring a fantastic 40 on "Sporus - Part 1" – that's an awesome achievement! 🎉 
+
+You've got the "Unscored Sample" test coming up in just 2 days. Use it as a chance to practice and fine-tune your skills; every bit counts! Remember, every step you take gets you closer to your goals. Keep up the great work, and I'm here to help you shine! 🌟 
+
+Let’s keep the momentum going!
+[KALYPSO_WELCOME] Cached message for user user_2rFXhmeHNzY3irm9HShrGMGMY3M in 0ms
+[KALYPSO_WELCOME] Total API execution time: 3329ms
+[KALYPSO_WELCOME] GPT-4o-mini generation completed in 1907ms
+[KALYPSO_WELCOME] Generated welcome message: Hey Dennis Cao! 🐾 
+
+Wow, you were just here yesterday! I see you scored an impressive 40 on "Sporus - Part 1"! 🎉 That's fantastic—keep that momentum going! 
+
+You've got an "Unscored Sample" test coming up in just 2 days. Use this time to review and fine-tune your strategies. Remember, every practice test is a step closer to your goals! 
+
+Stay curious, keep pushing, and don’t hesitate to reach out if you need help. You've got this! 💪✨
+[KALYPSO_WELCOME] Cached message for user user_2rFXhmeHNzY3irm9HShrGMGMY3M in 0ms
+[KALYPSO_WELCOME] Total API execution time: 3095ms
+ GET /api/kalypso/welcome 200 in 3109ms
+[KALYPSO_WELCOME] API call started at 2025-03-27T19:38:39.997Z
+[KALYPSO_WELCOME] Request from IP: ::1
+[KALYPSO_WELCOME] Auth check completed in 1ms
+[KALYPSO_WELCOME] Skipping rate limiting in development mode
+[KALYPSO_WELCOME] Rate limit check passed in 0ms
+[KALYPSO_WELCOME] Cache hit for user user_2rFXhmeHNzY3irm9HShrGMGMY3M (0ms)
+ GET /api/kalypso/welcome 200 in 10ms
+[KALYPSO_WELCOME] API call started at 2025-03-27T19:38:40.039Z
+[KALYPSO_WELCOME] Request from IP: ::1
+[KALYPSO_WELCOME] Auth check completed in 0ms
+[KALYPSO_WELCOME] Skipping rate limiting in development mode
+[KALYPSO_WELCOME] Rate limit check passed in 0ms
+[KALYPSO_WELCOME] Cache hit for user user_2rFXhmeHNzY3irm9HShrGMGMY3M (0ms)
+ GET /api/kalypso/welcome 200 in 33ms

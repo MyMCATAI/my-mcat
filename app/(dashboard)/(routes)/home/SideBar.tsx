@@ -80,7 +80,7 @@ const SideBar: React.FC<SideBarProps> = ({
   
   const getInitialActiveTab = () => {
     if (!isSubscribed) {
-      return "tab5"; // Leaderboard tab
+      return "tab2"; // Default to Tasks tab even for non-subscribers
     }
 
     switch (currentPage) {
@@ -88,13 +88,13 @@ const SideBar: React.FC<SideBarProps> = ({
         return "tab2"; // Tasks tab
       case "CARS":
       case "AdaptiveTutoringSuite":
-        return "tab1"; // Insights tab
+        return "tab2"; // Default to Tasks tab
       case "Tests":
-        return "tab5"; // Update from tab4 (Help) to tab5 (Leaderboard) since we removed Help
+        return "tab2"; // Default to Tasks tab
       case "KalypsoAI":
         return "tab2"; // Tasks tab for KalypsoAI
       default:
-        return "tab1"; // Default to Insights tab
+        return "tab2"; // Default to Tasks tab
     }
   };
 
@@ -540,8 +540,8 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
-    { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
     { id: "tab5", label: "Friends", content: { type: 'leaderboard' } },
+    { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
   ];
 
   const displayTabs = useMemo(() => {
