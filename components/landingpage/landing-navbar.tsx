@@ -55,21 +55,15 @@ const LandingNavbar = () => {
             </svg>
           </button>
         </div>
-
         <div className="hidden lg:flex items-center space-x-4">
           <Link href={"/blog"}>
-            <button className="border border-blue-500 text-blue-500 py-2 text-[16px] px-6 rounded-lg hover:bg-blue-500/10 transition-colors duration-300">
+            <button className="border py-2 text-[16px] px-6 rounded-lg hover:bg-blue-500/10 hover:scale-105 hover:shadow-lg transition-all duration-300">
               Blog
-            </button>
-          </Link>
-          <Link href={"/sign-up"}>
-            <button className="border border-white text-white py-2 text-[16px] px-6 rounded-lg hover:bg-white/10 transition-colors duration-300">
-              Sign Up
             </button>
           </Link>
           <Link href={"/sign-in"}>
             <button 
-              className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 transition-colors duration-300"
+              className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 hover:scale-105 hover:shadow-lg transition-all duration-300"
               onClick={() => {
                 console.log('[LOGIN BUTTON] Login button clicked explicitly by user');
                 localStorage.setItem('explicit_login_click', 'true');

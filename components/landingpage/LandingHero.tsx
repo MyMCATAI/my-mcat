@@ -194,7 +194,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
            Meow there, <span className="text-[#f2f64f]">I'm Kalypso!</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-        MCAT prep from the year 3005 that feels like a video game — with a tutor by your side!
+        MyMCAT.ai is a high-tech tutoring platform that transformed MCAT courses into video games.
         </p>
         <div className="flex justify-center gap-4">
           <motion.button
@@ -221,7 +221,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
               className="bg-black text-white py-4 text-xl border-white border md:text-2xl px-10 rounded-[20px]"
               whileHover={{ scale: 1.05 }}
             >
-              Start for Free
+              Play for Free
             </motion.button>
           </Link>
         </div>
