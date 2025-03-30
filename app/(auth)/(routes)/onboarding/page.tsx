@@ -1,44 +1,24 @@
 "use client";
-
-import { useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { useUserInfo } from "@/hooks/useUserInfo";
-import { useOnboardingInfo } from "@/hooks/useOnboardingInfo";
-import { useRouter } from "next/navigation";
-import { UnlockOptions } from "./components/UnlockOptions";
-import { FriendReferral } from "./components/FriendReferral";
+import { ONBOARDING_STEPS, useOnboardingInfo } from "@/hooks/useOnboardingInfo";
 import { NameStep } from "./components/steps/NameStep";
 import { CollegeStep } from "./components/steps/CollegeStep";
 import { AcademicsStep } from "./components/steps/AcademicsStep";
 import { GoalsStep } from "./components/steps/GoalsStep";
 import { KalypsoDialogueStep } from "./components/steps/KalypsoDialogueStep";
 
-const ONBOARDING_STEPS = {
-  NAME: 1,
-  COLLEGE: 2,
-  ACADEMICS: 3,
-  GOALS: 4,
-  KALYPSO_DIALOGUE: 5,
-  REFERRAL: 6,
-  UNLOCK: 7,
-} as const;
 
 export default function OnboardingPage() {
-  const { createReferral } = useUserInfo();
   const { 
     onboardingInfo, 
     handleNameSubmit,
     handleCollegeSubmit,
     handleAcademicsSubmit,
     handleGoalsSubmit,
-    handleReferralComplete,
     handleKalypsoComplete,
     currentStep 
   } = useOnboardingInfo();
-  const router = useRouter();
 
-  // Render the appropriate step based on currentStep
   const renderStep = () => {
     switch (currentStep) {
       case ONBOARDING_STEPS.NAME:
@@ -53,22 +33,22 @@ export default function OnboardingPage() {
       case ONBOARDING_STEPS.GOALS:
         return <GoalsStep onSubmit={handleGoalsSubmit} />;
       case ONBOARDING_STEPS.KALYPSO_DIALOGUE:
-        return <KalypsoDialogueStep onComplete={handleKalypsoComplete} />;
-      case ONBOARDING_STEPS.REFERRAL:
-        return <FriendReferral onComplete={handleReferralComplete} createReferral={createReferral} />;
-      case ONBOARDING_STEPS.UNLOCK:
-        return <UnlockOptions />;
+        return <KalypsoDialogueStep onComplete={handleKalypsoComplete} 
+        firstName={onboardingInfo?.firstName || "Future Doctor"}
+        targetScore={onboardingInfo?.targetScore}
+        targetMedSchool={onboardingInfo?.targetMedSchool}
+        />;
       default:
         return <NameStep onSubmit={handleNameSubmit} />;
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226] px-4 sm:px-6 md:px-8">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md p-6"
+        className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl p-4 sm:p-6 md:p-8 rounded-lg"
       >
         {renderStep()}
       </motion.div>

@@ -20,11 +20,11 @@ const ChatBotWidgetDoctorsOffice: React.FC<ChatBotWidgetDoctorsOfficeProps> = ({
   const getKalypsoGif = () => {
     switch (clickCount) {
       case 1:
-        return '/kalypsodistressed.gif';
+        return '/kalypso/kalypsodistressed.gif';
       case 2:
-        return '/kalypsoapproval.gif';
+        return '/kalypso/kalypsoapproval.gif';
       default:
-        return '/kalypsoend.gif';
+        return '/kalypso/kalypsoend.gif';
     }
   };
 

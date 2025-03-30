@@ -263,7 +263,7 @@ export function GameStats({ name }: GameStatsProps) {
                 <div className="flex items-center">
                   <div className="relative">
                     <Image
-                      src="/kalypsotalk.gif"
+                      src="/kalypso/kalypsotalk.gif"
                       alt="Kalypso"
                       width={200}
                       height={200}

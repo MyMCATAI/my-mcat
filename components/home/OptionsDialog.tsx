@@ -100,7 +100,7 @@ export const OptionsDialog = ({
   const options = [
     {
       title: "ADAPTIVE TUTORING",
-      image: "/kalypsocalendar.png",
+      image: "/kalypso/kalypsocalendar.png",
       alt: "Calendar",
       cost: "5 coins",
       tab: "Schedule",
@@ -108,7 +108,7 @@ export const OptionsDialog = ({
     },
     {
       title: "ANKI GAME",
-      image: "/kalypsodiagnostic.png",
+      image: "/kalypso/kalypsodiagnostic.png",
       alt: "Flashcards",
       cost: "5 coins",
       tab: "flashcards",
@@ -116,7 +116,7 @@ export const OptionsDialog = ({
     },
     {
       title: "TEST REVIEW",
-      image: "/kalypotesting.png",
+      image: "/kalypso/kalypotesting.png",
       alt: "Testing",
       cost: "25 coins",
       tab: "KnowledgeProfile",
