@@ -199,7 +199,7 @@ const Product = () => {
             className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl"
           >
             <h1 className="text-2xl md:text-2xl font-bold mb-10 text-center text-white font-krungthep">
-              You&apos;re not alone.
+              We&apos;re here to help.
             </h1>
             <div
               ref={video}
