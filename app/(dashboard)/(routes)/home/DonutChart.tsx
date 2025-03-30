@@ -326,7 +326,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
           ) : (
             <div className="flex flex-col items-center justify-center w-full">
               <Image 
-                src="/kalypsotyping.gif" 
+                src="/kalypso/kalypsotyping.gif" 
                 alt="Kalypso Working" 
                 width={200} 
                 height={200} 

@@ -119,13 +119,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   }, []);
   
   useEffect(() => {
-    // Update global navigation state when currentPage prop changes (for initial sync)
-    if (currentPage && currentPage !== activePage) {
-      navigateHomeTab(currentPage);
-    }
-  }, [currentPage, activePage, navigateHomeTab]);
-  
-  useEffect(() => {
     // Handle hover detection on the edge of the screen
     const handleMouseMove = (e: MouseEvent) => {
       const triggerThreshold = 20; // pixels from edge
