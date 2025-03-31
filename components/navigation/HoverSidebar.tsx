@@ -238,7 +238,10 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       {!isVisible && (
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 p-2 rounded-full bg-[--theme-emphasis-color] text-[--theme-hover-text] shadow-lg"
+          className={cn(
+            "fixed left-4 z-[40] p-2 rounded-full bg-[--theme-emphasis-color] text-[--theme-hover-text] shadow-lg",
+            isMobile ? "top-[6px]" : "top-[10px]"
+          )}
           aria-label="Open navigation"
         >
           <Menu className="w-5 h-5" />
@@ -248,7 +251,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       <div 
         ref={sidebarRef}
         className={cn(
-          "fixed top-0 left-0 h-full z-50 transition-all duration-300 shadow-xl",
+          "fixed top-0 left-0 h-full z-[51] transition-all duration-300 shadow-xl",
           isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0",
           "bg-gradient-to-b from-[--theme-gradient-start] to-[--theme-gradient-end]",
           "border-r border-[--theme-border-color]",

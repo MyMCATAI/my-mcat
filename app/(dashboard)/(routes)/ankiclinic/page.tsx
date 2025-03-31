@@ -853,8 +853,15 @@ const DoctorsOfficePage = () => {
                   boxShadow: '0 -4px 20px rgba(0,0,0,0.25)',
                 }}
                 >
-                  {/* Pill handle for UI feedback */}
-                  <div className="w-12 h-1.5 bg-gray-300/30 rounded-full mx-auto mb-6"></div>
+                  {/* Pill handle for UI feedback - now clickable */}
+                  <div 
+                    className="w-full h-8 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                    role="button"
+                    aria-label="Close sidebar"
+                  >
+                    <div className="w-12 h-1.5 bg-gray-300/30 rounded-full" />
+                  </div>
                   
                   <button 
                     onClick={() => setIsSidebarOpen(false)}
