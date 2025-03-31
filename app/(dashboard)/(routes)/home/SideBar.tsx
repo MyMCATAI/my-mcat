@@ -550,266 +550,39 @@ const SideBar: React.FC<SideBarProps> = ({
   }, [tabs]);
 
   const TutorBookingDialog = () => {
-    const { user } = useUser();
-    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({
-      name: '',
-      currentScore: '',
-      targetScore: '',
-      tutoringNeeds: '',
-      bestTimeToContact: '',
-      selectedPackage: ''
-    });
-
-    const handleBooking = async (sessionType: string) => {
-      setFormData(prev => ({ ...prev, selectedPackage: sessionType }));
-      setShowForm(true);
-    };
-
-    const handleSubmitForm = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        setLoadingStates(prev => ({ ...prev, [formData.selectedPackage]: true }));
-        const messageBody = `
-Name: ${formData.name}
-Current MCAT Score: ${formData.currentScore}
-Target MCAT Score: ${formData.targetScore}
-Tutoring Needs: ${formData.tutoringNeeds}
-Best Time to Contact: ${formData.bestTimeToContact}
-Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.selectedPackage + ' Session Package'}
-`;
-
-        const response = await fetch('/api/send-message', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: messageBody,
-            recipient: 'kalypso@mymcat.ai'
-          }),
-        });
-
-        if (response.ok) {
-          toast.success('Booking request sent successfully!');
-          setIsModalOpen(false);
-          setShowForm(false);
-          setFormData({
-            name: '',
-            currentScore: '',
-            targetScore: '',
-            tutoringNeeds: '',
-            bestTimeToContact: '',
-            selectedPackage: ''
-          });
-        } else {
-          throw new Error('Failed to send booking request');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        toast.error('Failed to send booking request. Please try again.');
-      } finally {
-        setLoadingStates(prev => ({ ...prev, [formData.selectedPackage]: false }));
-      }
-    };
-
-    const bookingOptions = [
-      {
-        title: "One Session",
-        price: "$150",
-        description: "Single tutoring session. Perfect for addressing specific topics or questions.",
-        image: "/kalypso/kalypsoteaching.png",
-        type: "single"
-      },
-      {
-        title: "Five Sessions",
-        price: "$700",
-        description: "Five tutoring sessions package. Great for ongoing support and comprehensive topic coverage.",
-        image: "/kalypso/kalypsocalendar.png",
-        type: "five"
-      },
-      {
-        title: "Ten Sessions",
-        price: "$1250",
-        description: "Ten tutoring sessions package. Best value for long-term preparation and complete MCAT coverage.",
-        image: "/kalypso/kalypsodiagnostic.png",
-        type: "ten"
-      }
-    ];
-
+    const router = useRouter();
+    
     return (
-      <Dialog open={isModalOpen} onOpenChange={(open) => {
-        if (!open) {
-          setShowForm(false);
-          setFormData({
-            name: '',
-            currentScore: '',
-            targetScore: '',
-            tutoringNeeds: '',
-            bestTimeToContact: '',
-            selectedPackage: ''
-          });
-        }
-        setIsModalOpen(open);
-      }}>
-        <DialogTrigger asChild>
-          <button 
-            className="group relative flex items-center gap-3 px-6 py-3 rounded-lg 
-              bg-[--theme-button-color] hover:bg-[--theme-hover-color] 
-              transition-all duration-300 ease-in-out
-              shadow-[var(--theme-button-boxShadow)]
-              hover:shadow-[var(--theme-button-boxShadow-hover)]
-              transform hover:scale-[1.02]"
+      <button 
+        onClick={() => router.push('/pricing')}
+        className="group relative flex items-center gap-3 px-6 py-3 rounded-lg 
+          bg-[--theme-button-color] hover:bg-[--theme-hover-color] 
+          transition-all duration-300 ease-in-out
+          shadow-[var(--theme-button-boxShadow)]
+          hover:shadow-[var(--theme-button-boxShadow-hover)]
+          transform hover:scale-[1.02]"
+      >
+        <div className="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-transform duration-300 group-hover:rotate-90"
           >
-            <div className="relative">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="transition-transform duration-300 group-hover:rotate-90"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              <div className="absolute inset-0 animate-ping opacity-75 rounded-full bg-[--theme-hover-color] group-hover:opacity-0"></div>
-            </div>
-            <span className="text-base font-semibold text-[--theme-text-color] group-hover:text-[--theme-hover-text]">
-              Schedule meeting with a tutor
-            </span>
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center mb-4 text-[--theme-text-color]">
-              {showForm ? 'Complete Your Booking Request' : 'Book Tutoring Sessions'}
-            </DialogTitle>
-          </DialogHeader>
-          {showForm ? (
-            <form onSubmit={handleSubmitForm} className="space-y-4 p-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full p-2 rounded-md bg-[--theme-leaguecard-color] border border-[--theme-border-color]"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current MCAT Score</label>
-                  <input
-                    type="text"
-                    value={formData.currentScore}
-                    onChange={(e) => setFormData(prev => ({ ...prev, currentScore: e.target.value }))}
-                    className="w-full p-2 rounded-md bg-[--theme-leaguecard-color] border border-[--theme-border-color]"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Target MCAT Score</label>
-                  <input
-                    type="text"
-                    value={formData.targetScore}
-                    onChange={(e) => setFormData(prev => ({ ...prev, targetScore: e.target.value }))}
-                    className="w-full p-2 rounded-md bg-[--theme-leaguecard-color] border border-[--theme-border-color]"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">What tutoring is needed for</label>
-                <textarea
-                  value={formData.tutoringNeeds}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tutoringNeeds: e.target.value }))}
-                  className="w-full p-2 rounded-md bg-[--theme-leaguecard-color] border border-[--theme-border-color]"
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Best time to contact</label>
-                <input
-                  type="text"
-                  value={formData.bestTimeToContact}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bestTimeToContact: e.target.value }))}
-                  className="w-full p-2 rounded-md bg-[--theme-leaguecard-color] border border-[--theme-border-color]"
-                  placeholder="e.g., Weekdays after 5pm EST"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-4 mt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 rounded-md bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loadingStates[formData.selectedPackage]}
-                  className="px-4 py-2 rounded-md bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                >
-                  {loadingStates[formData.selectedPackage] ? "Sending..." : "Submit Request"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-                {bookingOptions.map((option, index) => (
-                  <button 
-                    key={index}
-                    onClick={() => handleBooking(option.type)}
-                    className="rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full text-left
-                      bg-[--theme-leaguecard-color] cursor-pointer"
-                    style={{ 
-                      boxShadow: 'var(--theme-button-boxShadow)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
-                    }}
-                  >
-                    <Image
-                      src={option.image}
-                      alt={option.title}
-                      width={120}
-                      height={120}
-                      className="mb-4 rounded-lg object-contain h-[120px] w-[120px] pointer-events-none"
-                    />
-                    <h3 className="text-l font-bold text-[--theme-text-color] pointer-events-none">{option.title}</h3>
-                    <p className="text-2xl font-bold text-[--theme-text-color] pointer-events-none">{option.price}</p>
-                    <p className="text-sm text-[--theme-text-color] text-center flex-grow pointer-events-none">{option.description}</p>
-                    <div 
-                      className="w-full mt-auto px-4 py-2 rounded-md text-center font-medium text-[--theme-text-color] bg-[--theme-doctorsoffice-accent]"
-                    >
-                      Book Now
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="text-center">
-                <button
-                  onClick={() => handleBooking('free')}
-                  className="text-[--theme-hover-color] hover:underline font-medium"
-                >
-                  Not sure? Schedule a free consultation
-                </button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <div className="absolute inset-0 animate-ping opacity-75 rounded-full bg-[--theme-hover-color] group-hover:opacity-0"></div>
+        </div>
+        <span className="text-base font-semibold text-[--theme-text-color] group-hover:text-[--theme-hover-text]">
+          Schedule a free consult
+        </span>
+      </button>
     );
   };
 
