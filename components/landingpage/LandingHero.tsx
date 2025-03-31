@@ -190,13 +190,13 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
     <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
       {/* Left side - Text content */}
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
-           Score your <span className="text-[#f2f64f]">best.</span>
+        <h1 className="text-4xl md:text-4xl font-bold text-white font-krungthep mb-4">
+           Meow there, <span className="text-[#f2f64f]">I'm Kalypso!</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-          High-tech MCAT software dedicated to creating the future doctors our patients deserve.
+        MyMCAT.ai is a high-tech tutoring platform that transformed MCAT courses into video games.
         </p>
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
           <motion.button
             onClick={handleDemoClick}
             className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]"
@@ -216,6 +216,14 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
           >
             Watch Demo
           </motion.button>
+          <Link href="/sign-up">
+            <motion.button
+              className="bg-black text-white py-4 text-xl border-white border md:text-2xl px-10 rounded-[20px]"
+              whileHover={{ scale: 1.05 }}
+            >
+              Play for Free
+            </motion.button>
+          </Link>
         </div>
       </div>
       {/* Right side - Laptop and Cat */}
