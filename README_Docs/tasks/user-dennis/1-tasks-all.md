@@ -8,28 +8,7 @@
     subSection: // object that encapsulates all subsections - each page could have different looking 
 }```
  
- 2) **Prynce priority: in Home - we need to fetch the user's information**
- [ ] First time user signs in track ChatContainer is replaced by a new <Component> that holds space for a  3 minute video afterwards there a checkbox dialog you've watched it, (2nd time they login they dont see the video if the check was true)
-->
-ChatContainer (similar te refactor-final -branch) has transparent background -   interactive kalypso, waves and always talks right when u login -use elevenlabs
-Kalypso has context and summarizes your week.
 
-- last time you were here its been this many day (date of latest user activity)
-- greet them happily -
-- notify them of next test date with motivational message! 
-
-- api call with incoming user activity, day of next time, pass it into 4o mini
-
-- Example: 
-FIRST MESSAGE IS HARDCODED AFTER THEY ENTER! 
-
-   "Hey, welcome back! It's been three days. You scored a 492 on your last test, which isn't the best, but you have another one in SEVEN days. Keep on rocking, kiddo!" 
-
-
-2.5. **Navigate to different parts of program implementations**
-A. unique links for every route / document
-B. Global Navigator component that plays back and navigates
-C. Homework component (Esther's idea)
 
 
  3. **In ATS - Kalypso knows the content you are looking at and will quiz you (depends on 2).**
