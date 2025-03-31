@@ -40,43 +40,42 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
   }
 
   return (
-    <nav className="flex items-center justify-between bg-transparent h-16 relative z-[40]">
+    <nav className="flex items-center justify-between bg-transparent h-fit relative z-[40]">
       {isDesktop ? (
         // Desktop layout - matching main branch styling
-        <div className="flex items-center justify-between w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
+        <div className="flex items-center justify-between w-full pl-16">
           {/* Left section with logo and music player - aligned with hamburger */}
           <div className="flex items-center space-x-4">
-            <Link href="/home" className="flex items-center ml-8">
+            <Link href="/home" className="flex items-center">
               <div className="flex flex-col justify-center h-16">
                 <span className="text-xl text-white font-krungthep">mymcat.ai</span>
               </div>
             </Link>
-            <div className="w-48 ml-2">
+            <div className="w-48">
               <MusicPlayer theme={theme} />
             </div>
           </div>
           
           {/* Right section with buttons and baller text - aligned with the section below */}
-          <div className="flex items-center h-full">
-            <div className="flex flex-row items-center gap-6 mr-6">
+          <div className="flex items-center">
+            <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-6 mr-2 sm:mr-4 md:mr-6">
               <MailButton />
-              <div className="flex items-center h-full relative z-[10]">
+              <div className="flex items-center relative z-[10] pr-4">
                 <ProfileButton />
               </div> 
             </div>
             <span
               ref={ballerSectionRef}
-              className="flex items-center justify-center w-full h-full gradientbg"
+              className="hidden lg:flex items-center justify-center w-full gradientbg py-3"
               style={{
-                clipPath: "polygon(100% 0%, 100% 51%, 100% 80%, 18% 80%, 11% 48%, 0 0)",
+                clipPath: "polygon(100% 0%, 100% 50%, 100% 100%, 18% 100%, 0 0)",
                 opacity: 1,
                 minWidth: "240px",
                 width: "100%",
-                height: "74px",
                 marginRight: "-1px"
               }}
             >
-              <div className="flex items-center h-full ml-[30px]">
+              <div className="flex items-center ml-[30px]">
                 <div className="flex flex-col justify-center">
                   <p className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
                     designed by <br />a certified baller
@@ -100,38 +99,36 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
       ) : (
         // Mobile layout - original layout
         <>
-          <div className="flex items-center space-x-4 px-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 pl-16">
             <Link href="/home" className="flex items-center">
               <div className="flex flex-col">
                 <span className="text-xl text-white font-krungthep mb-1">mymcat.ai</span>
               </div>
             </Link>
-            <div className="w-48">
+            <div className="w-32 sm:w-48">
               <MusicPlayer theme={theme} />
             </div>
           </div>
-          <div className="flex items-center h-full">
-            <div className="flex flex-row w-full items-center gap-4">
-              {/* <SubscriptionManagementButton isGoldMember={isSubscribed} />*/}
+          <div className="flex items-center">
+            <div className="flex flex-row w-full items-center gap-1 sm:gap-2 md:gap-4">
               <MailButton />
-              <div className="flex items-center w-full h-full relative z-[10]">
+              <div className="flex items-center relative z-[10] pr-2 sm:pr-4">
                 <ProfileButton />
               </div> 
             </div>
             <span
               ref={ballerSectionRef}
-              className="flex items-start w-full h-full gradientbg mr-[-1px]"
+              className="hidden md:flex items-center w-full gradientbg mr-[-1px] py-3"
               style={{
-                clipPath: "polygon(100% 0%, 100% 51%, 100% 80%, 18% 80%, 11% 48%, 0 0)",
+                clipPath: "polygon(100% 0%, 100% 50%, 100% 100%, 18% 100%, 0 0)",
                 opacity: 1,
-                width: "100%",
-                height: "74px"
+                width: "100%"
               }}
             >
-              <p className="ms-12 mt-2 pr-1 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
+              <p className="ms-12 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
                 designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
               </p>
-              <div className="mt-2 mx-2">
+              <div className="mx-2">
                 <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
                   <FaInstagram 
                     size={30} 
