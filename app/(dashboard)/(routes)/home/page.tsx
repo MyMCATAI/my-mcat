@@ -23,7 +23,6 @@ import RedeemReferralModal from '@/components/social/friend-request/RedeemReferr
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import IntroVideoPlayer from "@/components/home/IntroVideoPlayer";
-import DraggableKalypso from "@/components/home/DraggableKalypso";
 // Import the extracted components from their new location
 import { LoadingSpinner } from "@/components/home/LoadingSpinner";
 import { ContentWrapper } from "@/components/home/ContentWrapper";
@@ -766,11 +765,6 @@ const HomePage: React.FC = () => {
             />
           )}
         </ContentWrapper>
-
-        {/* Draggable Kalypso at page level - only visible when KalypsoAI tab is active */}
-        {(activePage === 'KalypsoAI' || !activePage) && hasSeenIntroVideo && (
-          <DraggableKalypso buttonSize="25rem" />
-        )}
       </>
     );
   }, [

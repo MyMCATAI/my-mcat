@@ -1067,7 +1067,10 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
                   ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
                   : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               }`}
-              onClick={() => setActiveTab("tab1")}
+              onClick={() => {
+                setActiveTab("tab1");
+                audio.playSound('chatbot-open');
+              }}
             >
               <Cat className="w-6 h-6" />
             </button>

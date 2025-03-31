@@ -16,7 +16,7 @@ interface VolumeCoefficients {
 const DEFAULT_VOLUMES: VolumeCoefficients = {
   master: 0.7,
   music: 0.7,
-  sfx: 0.5,  // Increase to full volume for better audibility
+  sfx: 0.8,  // Increased from 0.5 to 0.8 for better audibility
   loop: 0.5,
   voice: 0.9  // Voice should be loud and clear
 };
@@ -168,7 +168,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
     // Store last played sound with timestamp to prevent multiple rapid plays
     _lastPlayedSounds: {} as Record<string, number>,
-    _soundDebounceTime: 3000, // Increased to 3 seconds (3000ms) from 1000ms
+    _soundDebounceTime: 500, // Reduced from 3000ms to 500ms to make sounds more responsive
 
     // Set song queue
     setSongQueue: (queue) => {
