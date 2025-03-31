@@ -940,8 +940,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
             }
           }}
         >
-          <div className="w-[90vw] max-w-6xl max-h-[90vh] bg-transparent rounded-xl overflow-hidden">
-            <div className="p-4 h-[calc(90vh-4rem)] overflow-auto">
+          <div className="w-[90vw] max-w-6xl h-full bg-transparent rounded-xl overflow-hidden">
+            <div className="p-4 h-full overflow-auto">
               {(examLoading || studyLoading) ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
