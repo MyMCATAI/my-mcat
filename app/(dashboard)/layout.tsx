@@ -88,7 +88,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
       style={{ backgroundImage }}
     >
       <Navbar subscription={subscription}/>
-      <main className="w-full flex-1 relative -mt-8 pt-16">
+      <main className="w-full flex-1 relative">
         {children}
       </main>
     </div>

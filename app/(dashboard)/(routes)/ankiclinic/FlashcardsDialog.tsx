@@ -465,9 +465,13 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 {/* Mobile drawer backdrop and close button */}
                 {isMobile && isDrawerOpen && (
                   <>
-
-                    {/* Drag handle indicator */}
-                    <div className="flex justify-center items-center mb-2">
+                    {/* Drag handle indicator - now clickable */}
+                    <div 
+                      className="flex justify-center items-center mb-2 cursor-pointer hover:opacity-75 transition-opacity py-2"
+                      onClick={() => setIsDrawerOpen(false)}
+                      role="button"
+                      aria-label="Close drawer"
+                    >
                       <div className="w-12 h-1 bg-[--theme-border-color] rounded-full"></div>
                     </div>
                     

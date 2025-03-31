@@ -539,9 +539,9 @@ const getQuestionContent = () => {
     const isCorrect = index === shuffledOptions.correctIndex;
     onMCQAnswer?.(isCorrect);
     
-    // Auto scroll to answer explanation
+    // Auto scroll to answer explanation in desktop view (currently does not work for mobile)
     requestAnimationFrame(() => {
-      answerSectionRef.current?.scrollIntoView({ block: 'start' });
+      if (!isMobile) answerSectionRef.current?.scrollIntoView({ block: 'start' });
     });
   }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
 
