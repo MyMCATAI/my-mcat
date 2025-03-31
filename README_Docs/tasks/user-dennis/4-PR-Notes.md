@@ -1,20 +1,3 @@
-# Dynamic Kalypso Welcome Message Feature
-
-**User Story:** As a student using the MCAT prep platform, I want to be greeted by Kalypso (the AI cat tutor) with personalized messages that acknowledge my recent activity and upcoming tests, so I feel motivated and stay informed about my progress.
-
-**Key Files:**
-- `app/api/kalypso/welcome/route.ts`: New API endpoint that generates personalized welcome messages
-- `components/chatgpt/ChatContainer.tsx`: Updated to fetch and display welcome messages
-- `lib/ai-completion.ts`: Integration with GPT-4o Mini for message generation
-
-**Implementation:**
-- First-time users get a special introduction video and are tracked via `hasSeenIntroVideo` flag
-- Returning users receive a personalized welcome message that includes:
-  - Days since last activity
-  - Latest test score and name
-  - Notification about upcoming test dates with motivation
-- Messages are cached to improve performance and reduce API calls
-- Fallback messages are provided in case of errors
 
 # Global UI Navigation Tracking
 

@@ -4,6 +4,11 @@ globs:
 alwaysApply: true
 ---
 ---
+description: 
+globs: 
+alwaysApply: true
+---
+---
 name: State Management Patterns
 description: Guidelines for accessing store state and actions in components
 globs: ["**/*.tsx", "**/*.ts"]
@@ -45,3 +50,19 @@ const MyComponent = () => {
 
 #### Exception: Store Initialization Components
 The only exception to this pattern is in components specifically designed for store initialization (e.g., `StoreInitializer.tsx`), where direct access to store actions may be required.
+
+---
+
+### Slice Extension Checklist
+
+When adding **new state** or **actions** to any Zustand slice (`/store/slices/*.ts`), you must:
+
+1. ✅ **Export the corresponding selector** from `selectors.ts`
+   - Group it within the correct `useAudio`, `useGame`, `useUI`, `useUser`, or `useVocab` function.
+   - Maintain alphabetical order and logical grouping when possible.
+
+2. ✅ **Ensure correct rendering in `DebugPanel.tsx`**
+   - Add relevant state to the `displayAudioState`, `gameState`, etc. blocks
+   - Avoid including functions; convert audio nodes and objects to string descriptions as needed
+
+This ensures all state changes are easily debuggable and accessible via the consolidated pattern.
