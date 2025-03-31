@@ -193,7 +193,7 @@ const SideBar: React.FC<SideBarProps> = ({
               width="100%"
               height="100%"
               backgroundColor="transparent"
-              avatar="/kalypsoend.gif"
+              avatar="/kalypso/kalypsoend.gif"
             />
           </div>
         </div>
@@ -618,21 +618,21 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
         title: "One Session",
         price: "$150",
         description: "Single tutoring session. Perfect for addressing specific topics or questions.",
-        image: "/kalypsoteaching.png",
+        image: "/kalypso/kalypsoteaching.png",
         type: "single"
       },
       {
         title: "Five Sessions",
         price: "$700",
         description: "Five tutoring sessions package. Great for ongoing support and comprehensive topic coverage.",
-        image: "/kalypsocalendar.png",
+        image: "/kalypso/kalypsocalendar.png",
         type: "five"
       },
       {
         title: "Ten Sessions",
         price: "$1250",
         description: "Ten tutoring sessions package. Best value for long-term preparation and complete MCAT coverage.",
-        image: "/kalypsodiagnostic.png",
+        image: "/kalypso/kalypsodiagnostic.png",
         type: "ten"
       }
     ];

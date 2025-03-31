@@ -374,7 +374,8 @@ export const useUserInfo = (): UseUserInfoReturn => {
     checkHasReferrals,
     unlockGame,
     createNewUser,
-    isSubscribed: !!userInfo?.hasPaid || isNewUserTrial,
+    // isSubscribed: !!userInfo?.hasPaid || isNewUserTrial, // Made platform free for all on March 30
+    isSubscribed: true,
     hasSeenIntroVideo,
     setHasSeenIntroVideo
   };

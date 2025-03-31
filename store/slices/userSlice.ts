@@ -141,7 +141,8 @@ export const useUserStore = create<UserState & UserActions>()(
     
     // User info state - this is the single source of truth
     userInfo: null,
-    isSubscribed: false,
+    // Platform is free for all users
+    isSubscribed: true,
     
     // Stats state
     coins: 0,
@@ -407,18 +408,18 @@ export const useUserStore = create<UserState & UserActions>()(
           baseUpdates.coins = userInfo.score || 0;
         }
 
-        // Add subscription status if changed
-        const newSubStatus = 
-          userInfo.subscriptionType === 'gold' || 
-          userInfo.subscriptionType === 'premium' ||
-          userInfo.subscriptionType?.startsWith('Gold') ||
-          userInfo.subscriptionType?.includes('_Trial') || 
-          isNewUserTrial || 
-          false;
+        // Platform is free for all users - no need to check subscription status
+        // const newSubStatus = 
+        //   userInfo.subscriptionType === 'gold' || 
+        //   userInfo.subscriptionType === 'premium' ||
+        //   userInfo.subscriptionType?.startsWith('Gold') ||
+        //   userInfo.subscriptionType?.includes('_Trial') || 
+        //   isNewUserTrial || 
+        //   false;
           
-        if (newSubStatus !== get().isSubscribed) {
-          baseUpdates.isSubscribed = newSubStatus;
-        }
+        // if (newSubStatus !== get().isSubscribed) {
+        //   baseUpdates.isSubscribed = newSubStatus;
+        // }
 
         // Handle profile updates if available
         if (profileResponse.ok) {
