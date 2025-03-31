@@ -97,6 +97,11 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   
   // Map page to nav id for UI highlighting
   const activeTab = (() => {
+    // If we're on ankiclinic page, highlight the ankiclinic button
+    if (currentPage === 'ankiclinic') {
+      return 'ankiclinic';
+    }
+    // Otherwise use the global navigation state
     const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === activePage);
     return matchingItem ? matchingItem.id : "kalypso-ai";
   })();
@@ -160,63 +165,18 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   };
 
   const handleNavigationClick = (item: NavigationItem) => {
-    console.log(`[HoverSidebar] Navigation clicked: ${item.tab}, current activePage: ${activePage}`);
-    
-    // Update global navigation state using the navigation hook
-    navigateHomeTab(item.tab);
-    console.log(`[HoverSidebar] Called navigateHomeTab with: ${item.tab}`);
-    
-    // Special case for ankiclinic which requires a page navigation
-    if (item.id === 'ankiclinic') {
-      console.log(`[HoverSidebar] Ankiclinic requires page navigation`);
+    // If we're on ankiclinic page and clicking a non-ankiclinic item, redirect to home with tab
+    if (currentPage === 'ankiclinic' && item.id !== 'ankiclinic') {
+      router.push(`/home?tab=${item.tab}`);
+    }
+    // If clicking ankiclinic from any other page, redirect to ankiclinic
+    else if (item.id === 'ankiclinic' && currentPage !== 'ankiclinic') {
       router.push('/ankiclinic');
     }
-    
-    // No need to call onTabChange anymore since the global state update
-    // will trigger a re-render in the HomePage component
-    // This was causing duplicate state updates and unexpected behavior
-  };
-
-  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
-    if (!onTasksUpdate) return;
-    
-    const updatedActivities = activities.map(activity => {
-      if (activity.id === activityId && activity.tasks) {
-        const newTasks = [...activity.tasks];
-        newTasks[taskIndex] = { ...newTasks[taskIndex], completed };
-        return { ...activity, tasks: newTasks };
-      }
-      return activity;
-    });
-    
-    // Update UI immediately
-    onTasksUpdate(updatedActivities);
-    
-    // Send update to API
-    try {
-      await fetch(`/api/calendar-activity`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: activityId,
-          tasks: updatedActivities.find(a => a.id === activityId)?.tasks,
-        }),
-      });
-    } catch (error) {
-      console.error("Error updating task:", error);
-      toast.error("Failed to update task");
+    // If we're already on home, just update the tab
+    else {
+      navigateHomeTab(item.tab);
     }
-  };
-
-  const isActivityCompleted = (activity: Activity) => {
-    if (!activity.tasks || activity.tasks.length === 0) return false;
-    return activity.tasks.every(task => task.completed);
-  };
-
-  const getTodayActivities = () => {
-    return activities.filter(activity => 
-      isToday(new Date(activity.scheduledDate))
-    );
   };
   
   /* ---- Render Methods ----- */

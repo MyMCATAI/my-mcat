@@ -586,7 +586,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
             }
             
             // Return a fallback message if no cache
-            const fallbackMessage = "Meow there, I'm Kalypso! It's great to see you again. How can I help with your MCAT study today?";
+            const fallbackMessage = "Hi there! I'm Kalypso. Welcome to MyMCAT.ai, the MCAT tutoring platform that adapts to you! Put your cursor on the left side of your screen to activate the sidebar. Our service works best when you've taken and reviewed your first exam and have an exam";
             return fallbackMessage;
           }
         }
@@ -642,7 +642,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
           }
           
           // Return a fallback message if the API call fails
-          const fallbackMessage = "Meow there, I'm Kalypso! It's great to see you again. How can I help with your MCAT study today?";
+          const fallbackMessage = "Hi there! I'm Kalypso. Welcome to MyMCAT.ai, the MCAT tutoring platform that adapts to you! Put your cursor on the left side of your screen to activate the sidebar and see all of our suites. We recommend creating a schedule, taking your first practice exam (AAMC Unscored), and then reviewing it so our system knows what to show you!";
           return fallbackMessage;
         }
       },
@@ -795,13 +795,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
                      'rgba(255, 255, 255, 0.1)',
       color: "var(--theme-text-color)",
       width: "100%",
-      boxShadow: `0 0 10px 2px ${
-        currentTheme === 'cyberSpace' ? 'rgba(0, 123, 255, 0.15)' :
-        currentTheme === 'sakuraTrees' ? 'rgba(255, 0, 89, 0.15)' :
-        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.15)' :
-        currentTheme === 'mykonosBlue' ? 'rgba(30, 129, 176, 0.15)' :
-        'rgba(0, 0, 0, 0.1)'
-      }`,
+      boxShadow: `0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)`,
       backdropFilter: "blur(5px)",
     },
     botBubbleStyle: {
@@ -817,11 +811,11 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
                      themeStyles.botBubbleBg,
       backdropFilter: "blur(10px)",
       // Add theme-specific glow (box-shadow) with enhanced intensity
-      boxShadow: currentTheme === 'cyberSpace' ? "0 0 10px 4px rgba(0, 123, 255, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sakuraTrees' ? "0 0 10px 4px rgba(255, 0, 89, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sunsetCity' ? "0 0 14px 5px rgba(255, 99, 71, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'mykonosBlue' ? "0 0 10px 8px rgba(30, 129, 176, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                "0 2px 5px rgba(0, 0, 0, 0.1)",
+      boxShadow: currentTheme === 'cyberSpace' ? "0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sakuraTrees' ? "0 0 8px 2px rgba(255, 0, 89, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sunsetCity' ? "0 0 10px 3px rgba(255, 99, 71, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'mykonosBlue' ? "0 0 8px 4px rgba(30, 129, 176, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                "0 2px 4px rgba(0, 0, 0, 0.1)",
       borderRadius: "0.75rem 0.75rem 0.75rem 0.25rem",
       borderLeft: currentTheme === 'cyberSpace' ? "3px solid #3b82f6" :
                  currentTheme === 'sakuraTrees' ? "3px solid #eb80b0" :
@@ -842,11 +836,11 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
                      themeStyles.userBubbleBg,
       backdropFilter: "blur(10px)",
       // Add theme-specific glow (box-shadow) with enhanced intensity
-      boxShadow: currentTheme === 'cyberSpace' ? "0 0 10px 4px rgba(0, 123, 255, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sakuraTrees' ? "0 0 10px 4px rgba(255, 0, 89, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sunsetCity' ? "0 0 14px 5px rgba(255, 99, 71, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'mykonosBlue' ? "0 0 10px 8px rgba(30, 129, 176, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
-                "0 2px 5px rgba(0, 0, 0, 0.1)",
+      boxShadow: currentTheme === 'cyberSpace' ? "0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sakuraTrees' ? "0 0 8px 2px rgba(255, 0, 89, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sunsetCity' ? "0 0 10px 3px rgba(255, 99, 71, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'mykonosBlue' ? "0 0 8px 4px rgba(30, 129, 176, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
+                "0 2px 4px rgba(0, 0, 0, 0.1)",
       borderRadius: "0.75rem 0.75rem 0.25rem 0.75rem",
       borderRight: currentTheme === 'cyberSpace' ? "3px solid #007afc" :
                   currentTheme === 'sakuraTrees' ? "3px solid #b85475" :
