@@ -9,24 +9,24 @@ datasource db {
 }
 
 model UserInfo {
-  id                     String         @id @default(cuid())
-  userId                 String         @unique
-  bio                    String
-  updatedAt              DateTime       @updatedAt
-  apiCount               Int            @default(0)
-  createdAt              DateTime       @default(now())
-  score                  Int            @default(0)
-  clinicRooms            String         @default("")
-  hasPaid                Boolean        @default(false)
-  subscriptionType       String         @default("")
-  diagnosticScores       Json?
-  firstName              String?        @default("")
-  streak                 Int            @default(0)
-  notificationPreference String         @default("all")
-  unlocks                Json?
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
   devUserId              String?
-  onboardingInfo         Json?
-  profilePhoto           String?        @default("doctor.png")
+  bio                    String
+  updatedAt              DateTime @updatedAt
+  apiCount               Int      @default(0)
+  createdAt              DateTime @default(now())
+  score                  Int      @default(0)
+  clinicRooms            String   @default("")
+  hasPaid                Boolean  @default(false)
+  subscriptionType       String   @default("")
+  diagnosticScores       Json?
+  firstName              String?  @default("")
+  profilePhoto           String?  @default("doctor.png")
+  streak                 Int      @default(0)
+  notificationPreference String   @default("all")
+  unlocks                Json?    @default("[]")
+  onboardingInfo         Json?    @default("{}")
   patientRecord          PatientRecord?
 }
 
@@ -182,25 +182,25 @@ model StudyPlan {
 }
 
 model CalendarActivity {
-  id             String          @id @default(cuid())
-  userId         String
-  studyPlanId    String
-  categoryId     String?
-  activityText   String          @db.Text
-  activityTitle  String
-  hours          Float
-  activityType   String
-  link           String?
-  scheduledDate  DateTime
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  status         String          @default("Not Started")
-  contentId      String?
-  tasks          Json?
-  source         String          @default("")
-  studyPlan      StudyPlan       @relation(fields: [studyPlanId], references: [id])
-  category       Category?       @relation(fields: [categoryId], references: [id])
-  content        Content?        @relation(fields: [contentId], references: [id])
+  id            String         @id @default(cuid())
+  userId        String
+  studyPlanId   String
+  categoryId    String?
+  activityText  String        @db.Text
+  activityTitle String
+  hours         Float
+  activityType  String
+  link          String?
+  scheduledDate DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  status        String        @default("Not Started")
+  contentId     String?
+  tasks         Json?
+  source        String        @default("")
+  studyPlan     StudyPlan     @relation(fields: [studyPlanId], references: [id])
+  category      Category?     @relation(fields: [categoryId], references: [id])
+  content       Content?      @relation(fields: [contentId], references: [id])
   fullLengthExam FullLengthExam?
 
   @@index([userId])
@@ -259,7 +259,7 @@ model Review {
 model PatientRecord {
   id              String    @id @default(cuid())
   userId          String    @unique
-  patientsTreated Int       @default(0)
+  patientsTreated Int      @default(0)
   lastUpdated     DateTime  @updatedAt
   userInfo        UserInfo? @relation(fields: [userId], references: [userId])
 
@@ -273,7 +273,7 @@ model Referral {
   referrerEmail String    @default("")
   friendEmail   String
   createdAt     DateTime  @default(now())
-  friendUserId  String?   @default("")
+  friendUserId  String?    @default("")
   joinedAt      DateTime?
 
   @@index([userId])
@@ -281,41 +281,41 @@ model Referral {
 }
 
 model DataPulse {
-  id                      String          @id @default(cuid())
-  name                    String
-  level                   String          @default("conceptCategory")
-  weight                  Float           @default(1)
-  source                  String          @default("")
-  notes                   String?         @db.Text
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
-  negative                Int             @default(0)
-  positive                Int             @default(0)
-  userId                  String
-  answerExplanation       String?         @db.Text
-  answerText              String?         @db.Text
-  correctedThoughtProcess String?         @db.Text
-  errorType               String?
-  fullLengthExamId        String?
-  originalThoughtProcess  String?         @db.Text
-  questionText            String?         @db.Text
-  section                 String?
-  reviewed                Boolean         @default(false)
-  aiResponse              String?         @db.Text
-  fullLengthExam          FullLengthExam? @relation(fields: [fullLengthExamId], references: [id])
+  id                    String          @id @default(cuid())
+  name                  String
+  level                 String          @default("conceptCategory")
+  weight                Float           @default(1)
+  source                String          @default("")
+  notes                 String?         @db.Text
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  negative              Int             @default(0)
+  positive              Int             @default(0)
+  userId                String
+  questionText          String?         @db.Text
+  answerText            String?         @db.Text
+  answerExplanation     String?         @db.Text
+  originalThoughtProcess String?        @db.Text
+  correctedThoughtProcess String?       @db.Text
+  errorType             String?
+  section               String?
+  aiResponse            String?            @db.Text
+  reviewed              Boolean         @default(false)
+  fullLengthExamId      String?
+  fullLengthExam        FullLengthExam? @relation(fields: [fullLengthExamId], references: [id])
 
   @@index([fullLengthExamId])
 }
 
 model FullLengthExam {
-  id                 String            @id @default(cuid())
+  id                 String           @id @default(cuid())
   userId             String
   title              String
-  calendarActivityId String?           @unique
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  completed          Boolean           @default(false)
-  aiResponse         String?           @db.Text
+  aiResponse         String?         @db.Text
+  calendarActivityId String?         @unique
+  completed          Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   dataPulses         DataPulse[]
   calendarActivity   CalendarActivity? @relation(fields: [calendarActivityId], references: [id])
 
@@ -324,16 +324,16 @@ model FullLengthExam {
 }
 
 model UserActivity {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  type      String
-  location  String
-  startTime DateTime  @default(now())
+  type      String   // e.g., 'page_view', 'quiz_attempt', 'study_session'
+  location  String   // URL or section identifier
+  startTime DateTime @default(now())
   endTime   DateTime?
-  duration  Int?
-  metadata  Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  duration  Int?     // Duration in seconds
+  metadata  Json?    // Additional context data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([type])
@@ -341,14 +341,22 @@ model UserActivity {
 }
 
 model Notification {
+  // Primary identifiers
   id          String    @id @default(cuid())
-  toUserId    String
-  fromUserId  String
-  parentId    String?
-  type        String
-  status      String    @default("active")
-  metadata    Json
-  openedAt    DateTime?
+  toUserId    String    // Recipient of the notification
+  fromUserId  String    // User who triggered notification or "system" for announcements
+  parentId    String?   // Optional - links to original notification when this is a reply
+
+  // Core notification data
+  type        String    // "coin", "reply", etc.
+  status      String    @default("active") // "active", "canceled", "accepted", "rejected"
+  metadata    Json      // For coin type: { 
+                       //   action: "send" | "request" | "reject",
+                       //   amount: number,
+                       // }
+
+  // Timestamps
+  openedAt    DateTime? // When notification was first viewed
   createdAt   DateTime  @default(now())
   lastUpdated DateTime  @updatedAt
 }
