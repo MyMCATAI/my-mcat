@@ -6,6 +6,7 @@
   border: none;
   overflow: hidden;
   box-shadow: var(--theme-adaptive-tutoring-boxShadow), 0 10px 13px -3px rgb(0 0 0 / 0.1), 0 6px 8px -4px rgb(0 0 0 / 0.2);
+  height: 1000px;
 }
 
 /* Header/Toolbar styles */
@@ -52,6 +53,7 @@
 .custom-calendar .rbc-month-header {
   background: color-mix(in srgb, var(--theme-leaguecard-color) 95%, transparent);
 }
+
 /* Day cell styles */
 .custom-calendar .rbc-day-bg {
   transition: all 0.2s ease;
@@ -119,6 +121,7 @@
   color: var(--theme-emphasis-color);
   opacity: 1;
 }
+
 /* Add subtle grid lines */
 .custom-calendar .rbc-day-bg {
   border-right: 1px solid color-mix(in srgb, var(--theme-border-color) 4%, transparent);
@@ -169,6 +172,7 @@
 .custom-calendar .rbc-month-row:first-child .rbc-day-bg:first-child {
   border-top-left-radius: 0.75rem;
 }
+
 .custom-calendar .rbc-month-row:first-child .rbc-day-bg:last-child {
   border-top-right-radius: 0.75rem;
 }
@@ -177,6 +181,7 @@
 .custom-calendar .rbc-month-row:last-child .rbc-day-bg:first-child {
   border-bottom-left-radius: 0.75rem;
 }
+
 .custom-calendar .rbc-month-row:last-child .rbc-day-bg:last-child {
   border-bottom-right-radius: 0.75rem;
 }
@@ -185,6 +190,7 @@
 .custom-calendar .rbc-header:first-child {
   border-top-left-radius: 0.75rem;
 }
+
 .custom-calendar .rbc-header:last-child {
   border-top-right-radius: 0.75rem;
 }
@@ -524,7 +530,7 @@
   border-radius: 0.5rem;
 }
 
-.rbc-overlay > * + * {
+.rbc-overlay>*+* {
   margin-top: 0.5rem;
 }
 
@@ -564,19 +570,24 @@
   top: 50%;
   right: 0.5rem;
   transform: translateY(-50%);
-  color: #22c55e; /* green-500 */
+  color: #22c55e;
+  /* green-500 */
   font-weight: bold;
   font-size: 0.8rem;
 }
 
 .custom-calendar .completed-event .rbc-event-content {
-  padding-right: 1.5rem; /* Make room for the check mark */
+  padding-right: 1.5rem;
+  /* Make room for the check mark */
 }
 
 @keyframes gentle-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }
@@ -587,9 +598,12 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-4px);
   }
@@ -598,4 +612,3 @@
 .animate-float {
   animation: float 2s ease-in-out infinite;
 }
-
