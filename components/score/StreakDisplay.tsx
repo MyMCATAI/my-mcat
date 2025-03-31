@@ -36,12 +36,12 @@ const StreakDisplay = ({ streak, isOpen, onClose }: StreakPopupProps) => {
     } else {
       return {
         image: streak >= 30
-          ? "/kalypsodancing.gif"
+          ? "/kalypso/kalypsodancing.gif"
           : streak >= 14 
             ? "/kalypsofloatinghappy.gif"
             : streak >= 7 
-              ? "/kalypsothumbs.gif"
-              : "/kalypsoyouate.gif",
+              ? "/kalypso/kalypsothumbs.gif"
+              : "/kalypso/kalypsoyouate.gif",
         title: `${streak} DAY STREAK!`,
         subtitle: streak >= 30
           ? "You're a rockstar!"

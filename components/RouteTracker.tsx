@@ -413,20 +413,19 @@ const RouteTracker = () => {
         return fallback;
       }
 
-      // Only check study plan for subscribed users on certain paths
+      // Only log study plan status but don't force redirect
       const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect', '/ankiclinic'];
       const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => pathname?.startsWith(path));
       
       if (isSubscribed && shouldCheckStudyPlan) {
         debugLog('STUDY_PLAN', 'Checking study plan existence');
         
-        // Check if study plan exists
+        // Check if study plan exists but don't redirect
         const hasStudyPlan = await checkStudyPlan();
         
         if (!hasStudyPlan) {
-          debugLog('STUDY_PLAN', 'No study plan - redirecting to examcalendar');
-          const fallback = performRedirect('/examcalendar', 'No study plan');
-          return fallback;
+          debugLog('STUDY_PLAN', 'No study plan - but continuing without redirect');
+          // No redirect to examcalendar anymore
         }
       }
       

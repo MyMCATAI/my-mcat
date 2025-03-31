@@ -36,7 +36,7 @@ const validateData = (data: any) => {
     testsCompleted: 'number',
     totalTestsTaken: 'number',
     totalQuestionsAnswered: 'number',
-    totalCupcakes: 'number',
+    totalCoins: 'number',
   };
 
   for (const [field, type] of Object.entries(requiredFields)) {
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
 - Average Time Per Question: ${data.averageTimePerQuestion} seconds
 - Tests Completed: ${data.testsCompleted}/${data.totalTestsTaken}
 - Total Questions Answered: ${data.totalQuestionsAnswered}
-- Total Cupcakes: ${data.totalCupcakes}
+- Total Coins: ${data.totalCoins}
 
 Please provide a cute and encouraging message based on the above statistics.`
     });
