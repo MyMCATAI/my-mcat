@@ -38,10 +38,10 @@ const RedeemReferralModal: React.FC<RedeemReferralModalProps> = ({
               className="object-cover translate-y-[-22.5%] mx-auto"
             />
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-[--theme-text-color]">
+          <h3 className="text-lg font-semibold mb-2 text-black">
             Referral Bonus!
           </h3>
-          <p className="text-sm text-[--theme-text-color] mb-4">
+          <p className="text-sm text-black mb-4">
             {`You've earned ${coinsEarned} coins from your referral!`}
           </p>
           <div className="flex justify-center gap-4">
