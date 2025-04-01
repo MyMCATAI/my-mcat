@@ -1,22 +1,32 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SettingContent from "@/components/calendar/SettingContent";
+import { Button } from "@/components/ui/button";
 
 export default function ExamCalendarPage() {
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // After video duration (11s) + small buffer, transition to settings
+    // Reduced time to 6s + small buffer
     const timer = setTimeout(() => {
       setShowWelcome(false);
-    }, 11500);
+    }, 6500);
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handlePlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#001226] flex items-center justify-center py-4">
@@ -36,14 +46,28 @@ export default function ExamCalendarPage() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="w-full md:w-[25rem] aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl bg-black/20"
+                className="relative w-full md:w-[25rem] aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl bg-black/20"
               >
                 <video
+                  ref={videoRef}
                   autoPlay
                   playsInline
+                  onPlay={() => setIsPlaying(true)}
                   className="w-full h-full object-cover"
                   src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/KalypsoTrain2.mp4"
                 />
+                {!isPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <Button 
+                      onClick={handlePlayVideo}
+                      variant="ghost"
+                      size="lg"
+                      className="text-white hover:text-white/80"
+                    >
+                      Play Video
+                    </Button>
+                  </div>
+                )}
               </motion.div>
 
               {/* Text Section - Right */}
@@ -61,6 +85,13 @@ export default function ExamCalendarPage() {
                     mymcat.ai
                   </h1>
                 </div>
+                <Button
+                  onClick={() => setShowWelcome(false)}
+                  variant="ghost"
+                  className="text-white/70 hover:text-white mt-4"
+                >
+                  Skip Intro
+                </Button>
               </motion.div>
             </div>
           </motion.div>
