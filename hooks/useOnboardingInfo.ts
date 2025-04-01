@@ -5,19 +5,20 @@ import { useRouter } from 'next/navigation';
 import { isMobileButNotIpad } from '@/lib/utils';
 import { useUser } from '@/store/selectors';
 
-type OnboardingStep = 1 | 2 | 3 | 4 | 5;
+type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const ONBOARDING_STEPS = {
   NAME: 1,          // Step 1: Get user's name
   COLLEGE: 2,       // Step 2: Collect college information
   ACADEMICS: 3,     // Step 3: Get academic details
   GOALS: 4,         // Step 4: Set target score and medical school
-  KALYPSO_DIALOGUE: 5, // Step 5: Kalypso chat - FINAL STEP (onboarding completes here)
+  COINS: 5,         // Step 5: Introduce coins system and referral
+  KALYPSO_DIALOGUE: 6, // Step 6: Kalypso chat - FINAL STEP
 } as const;
 
 // Helper function to ensure type safety when setting the step
 function isValidStep(step: number): step is OnboardingStep {
-  return step >= 1 && step <= 5;
+  return step >= 1 && step <= 6;
 }
 
 // Type for tracking request state
@@ -227,12 +228,12 @@ export function useOnboardingInfo() {
       // Set loading state
       setGoalsSubmitState({ loading: true, error: null, success: false });
       
-      // Update database first - REMOVED setting onboardingComplete here
+      // Update database and move to next step
       await updateOnboardingInfo({
         ...data,
-        currentStep: ONBOARDING_STEPS.KALYPSO_DIALOGUE as OnboardingStep,
+        currentStep: ONBOARDING_STEPS.COINS as OnboardingStep,
       });
-
+      
       // Set success state
       setGoalsSubmitState({ loading: false, error: null, success: true });
     } catch (error) {
@@ -248,40 +249,28 @@ export function useOnboardingInfo() {
 
   const handleKalypsoComplete = async () => {
     try {
-      // Set loading state
-      setKalypsoCompleteState({ loading: true, error: null, success: false });
-      const updatedInfo = await updateOnboardingInfo({
-        onboardingComplete: true, // Mark onboarding as complete immediately
-      });
-
-      
-      // Update local state
-      setOnboardingComplete(true);
-      
-      // Refresh user info to ensure synchronization
-      try {
-        await refreshUserInfo();
-      } catch (refreshError) {
-        // Continue with redirect even if refresh fails
-      }
-      
-      // Redirect based on device
+      // Start the navigation immediately
       if (isMobileButNotIpad()) {
         router.push('/ankiclinic');
       } else {
         router.push('/home');
       }
       
-      // Set success state
-      setKalypsoCompleteState({ loading: false, error: null, success: true });
-    } catch (error) {
-      toast.error("Failed to complete your profile setup");
-      // Set error state
-      setKalypsoCompleteState({ 
-        loading: false, 
-        error: error instanceof Error ? error : new Error('Unknown error completing onboarding'),
-        success: false
+      // Mark onboarding as complete in the local state right away
+      setOnboardingComplete(true);
+      
+      // Update database in the background - no need to await
+      updateOnboardingInfo({
+        onboardingComplete: true, 
+      }).catch((error) => {
+        console.error("Failed to update onboarding status:", error);
+        // Silently handle error - user is already navigating to the platform
       });
+      
+    } catch (error) {
+      // This should rarely happen since we're primarily focused on navigation
+      toast.error("Failed to complete your profile setup");
+      console.error("Navigation error:", error);
     }
   };
 
