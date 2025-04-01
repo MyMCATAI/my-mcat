@@ -6,6 +6,7 @@ import { CollegeStep } from "./components/steps/CollegeStep";
 import { AcademicsStep } from "./components/steps/AcademicsStep";
 import { GoalsStep } from "./components/steps/GoalsStep";
 import { KalypsoDialogueStep } from "./components/steps/KalypsoDialogueStep";
+import { CoinIntroStep } from "./components/steps/CoinIntroStep";
 
 
 export default function OnboardingPage() {
@@ -16,8 +17,16 @@ export default function OnboardingPage() {
     handleAcademicsSubmit,
     handleGoalsSubmit,
     handleKalypsoComplete,
+    updateOnboardingInfo,
     currentStep 
   } = useOnboardingInfo();
+
+  const handleCoinsSubmit = async (data: { friendEmail?: string }) => {
+    // Just move to the next step
+    await updateOnboardingInfo({
+      currentStep: ONBOARDING_STEPS.KALYPSO_DIALOGUE,
+    });
+  };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -32,11 +41,17 @@ export default function OnboardingPage() {
         return <AcademicsStep onSubmit={handleAcademicsSubmit} />;
       case ONBOARDING_STEPS.GOALS:
         return <GoalsStep onSubmit={handleGoalsSubmit} />;
+      case ONBOARDING_STEPS.COINS:
+        return <CoinIntroStep 
+          onSubmit={handleCoinsSubmit}
+          firstName={onboardingInfo?.firstName || "Future Doctor"}
+        />;
       case ONBOARDING_STEPS.KALYPSO_DIALOGUE:
-        return <KalypsoDialogueStep onComplete={handleKalypsoComplete} 
-        firstName={onboardingInfo?.firstName || "Future Doctor"}
-        targetScore={onboardingInfo?.targetScore}
-        targetMedSchool={onboardingInfo?.targetMedSchool}
+        return <KalypsoDialogueStep 
+          onComplete={handleKalypsoComplete} 
+          firstName={onboardingInfo?.firstName || "Future Doctor"}
+          targetScore={onboardingInfo?.targetScore}
+          targetMedSchool={onboardingInfo?.targetMedSchool}
         />;
       default:
         return <NameStep onSubmit={handleNameSubmit} />;
