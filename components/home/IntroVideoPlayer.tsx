@@ -4,7 +4,7 @@ import { useRef, useState, type FC } from 'react';
 import { motion } from 'framer-motion';
 
 // Define demo video URL directly in this component
-const firstTimeDemoVideo = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCAT+Software+and+Mission-VEED.mp4";
+const firstTimeDemoVideo = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/IntroVideo1.mp4";
 
 interface IntroVideoPlayerProps {
   onComplete: () => void;
