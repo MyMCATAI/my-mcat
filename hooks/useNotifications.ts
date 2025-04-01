@@ -125,7 +125,7 @@ export const useNotifications = () => {
 
     // Set up WebSocket or polling for real-time updates
     useEffect(() => {
-        const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
+        const interval = setInterval(fetchNotifications, 300000); // Poll every 5 minutes
         return () => clearInterval(interval);
     }, [fetchNotifications]);
 

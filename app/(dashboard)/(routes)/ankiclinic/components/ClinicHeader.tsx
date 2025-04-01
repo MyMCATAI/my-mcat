@@ -216,7 +216,7 @@ const ClinicHeader = ({
         <TutorialVidDialog
           isOpen={isTutorialOpen}
           onClose={() => setIsTutorialOpen(false)}
-          videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/DoctorsOffice.mp4"
+          videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiClinicVideo(1).mp4"
         />
       )}
     </>
