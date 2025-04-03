@@ -151,11 +151,12 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
       return [];
     }
 
-    // Filter out section-level pulses and group by section and name
+    // Filter out section-level pulses and CARS section, then group by section and name
     const groupedPulses = dataPulses
       .filter(pulse => {
         console.log('Processing pulse:', pulse);
-        return pulse.level !== "section";
+        // Filter out section-level pulses and CARS section
+        return pulse.level !== "section" && pulse.section !== "CARs";
       })
       .reduce((acc, pulse) => {
         // Get the standardized section name (C/P, CARS, etc.)
