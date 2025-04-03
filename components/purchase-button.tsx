@@ -24,7 +24,7 @@ interface PurchaseButtonProps {
 export function PurchaseButton({ 
   text = "Purchase Coins", 
   className = "bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]",
-  tooltipText = "Purchase additional coins to access more features",
+  tooltipText = "Get additional coins to access more features",
   children,
   autoOpen = false,
   userCoinCount = 1

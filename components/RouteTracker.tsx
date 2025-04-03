@@ -412,6 +412,20 @@ const RouteTracker = () => {
         const fallback = performRedirect('/ankiclinic', 'Not subscribed');
         return fallback;
       }
+      
+      // Check if home is unlocked - redirect to ankiclinic if not
+      if (pathname === '/home') {
+        // Parse unlocks to check if 'kalypso-ai' is unlocked
+        const unlocks = userInfo?.unlocks ? 
+          (typeof userInfo.unlocks === 'string' ? JSON.parse(userInfo.unlocks) : userInfo.unlocks) : 
+          [];
+          
+        if (!unlocks.includes('kalypso-ai')) {
+          debugLog('FEATURE_GATE', 'Kalypso AI not unlocked - redirecting to ankiclinic');
+          const fallback = performRedirect('/ankiclinic', 'Kalypso AI not unlocked');
+          return fallback;
+        }
+      }
 
       // Only log study plan status but don't force redirect
       const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect', '/ankiclinic'];
