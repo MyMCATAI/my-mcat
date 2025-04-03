@@ -14,6 +14,9 @@ import { ProfileButton } from '@/components/navbar/ProfileButton';
 import { MailButton } from '@/components/navbar/MailButton';
 import MusicPlayer from "@/components/navbar/musicplayer";
 
+/* --- Constants ----- */
+const SCROLL_THRESHOLD = 2;
+
 /* --- Types ---- */
 type Song = {
   title: string;
@@ -22,25 +25,91 @@ type Song = {
 
 interface NavbarProps {
   subscription?: string;
+  onVisibilityChange?: (isVisible: boolean) => void;
 }
 
-const Navbar = ({ subscription = "free" }: NavbarProps) => {
+const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
   /* ---- Refs --- */
   const ballerSectionRef = useRef(null);
+  const prevScrollPos = useRef(0);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
 
   /* ---- State ----- */
   const pathname = usePathname();
-  const { theme, window } = useUI();
+  const { theme, window: uiWindow } = useUI();
   const { isSubscribed } = useUserInfo();
-  const { isDesktop } = window;
+  const { isDesktop } = uiWindow;
+  const [visible, setVisible] = useState(true);
+
+  /* --- Effects --- */
+  useEffect(() => {
+    // Only apply scroll behavior on home page
+    if (!pathname?.includes('/home')) {
+      setVisible(true);
+      return;
+    }
+
+    // Find the scroll container (the div with overflow-auto)
+    scrollContainerRef.current = document.querySelector('.overflow-auto');
+    if (!scrollContainerRef.current) {
+      console.warn('Could not find scroll container');
+      return;
+    }
+
+    const handleScroll = (e: Event) => {
+      const container = e.target as HTMLElement;
+      const currentScrollPos = container.scrollTop;
+      
+      // Simple logic: if scrolling down, hide; if scrolling up, show
+      if (currentScrollPos > prevScrollPos.current + SCROLL_THRESHOLD) {
+        setVisible(false);
+      } else if (currentScrollPos < prevScrollPos.current - SCROLL_THRESHOLD) {
+        setVisible(true);
+      }
+
+      // Always show at the very top
+      if (currentScrollPos <= 0) {
+        setVisible(true);
+      }
+
+      prevScrollPos.current = currentScrollPos;
+    };
+
+    // Initialize scroll position
+    prevScrollPos.current = scrollContainerRef.current.scrollTop;
+    
+    // Add scroll listener to the container
+    scrollContainerRef.current.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [pathname]);
+
+  // Notify parent component of visibility changes
+  useEffect(() => {
+    onVisibilityChange?.(visible);
+  }, [visible, onVisibilityChange]);
 
   // Hiding navbar on test questions page
   if (pathname?.includes('/test/testquestions')) {
     return null;
   }
 
+  // Different navbar styles based on route
+  const isHomePage = pathname?.includes('/home');
+  
   return (
-    <nav className="flex items-center justify-between bg-transparent h-fit relative z-[40]">
+    <nav 
+      className={`
+        flex items-center justify-between h-16
+        ${isHomePage ? 'fixed top-0 left-0 right-0 transition-transform duration-200 ease-in-out' : 'relative'}
+        ${isHomePage && !visible ? '-translate-y-full' : 'translate-y-0'}
+        bg-black/50 backdrop-blur-md
+      `}
+    >
       {isDesktop ? (
         // Desktop layout - matching main branch styling
         <div className="flex items-center justify-between w-full pl-16">

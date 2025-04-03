@@ -16,13 +16,13 @@ interface UIState {
   window: WindowSize
   currentRoute: string
   theme: ThemeType
-  
+
   // New navigation state
   navigation: {
     page: string
     subSection: Record<string, any>
   }
-  
+
   // Content context
   context: Record<string, any>
 }
@@ -31,7 +31,7 @@ interface UIActions {
   setWindowSize: (size: WindowSize) => void
   setCurrentRoute: (route: string) => void
   setTheme: (theme: ThemeType) => void
-  
+
   // New navigation actions
   setPage: (page: string) => void
   setSubSection: (updates: Record<string, any>) => void
@@ -55,13 +55,13 @@ export const useUIStore = create<UISlice>()(
         },
         currentRoute: '/',
         theme: 'cyberSpace',
-        
+
         // Initialize navigation state
         navigation: {
           page: 'KalypsoAI',
           subSection: {}
         },
-        
+
         // Initialize content context
         context: {},
 
@@ -74,12 +74,16 @@ export const useUIStore = create<UISlice>()(
             localStorage.setItem('theme', theme)
           }
         },
-        
+
         // Navigation actions
         setPage: (page) => {
           console.log(`[uiSlice] setPage called with: ${page}`);
-          // Only update if the page is actually changing
+          // Only update if the page is actually changing and navigation is initialized
           set((state) => {
+            if (!state.navigation) {
+              console.error('[uiSlice] Navigation state not initialized');
+              return {};
+            }
             if (state.navigation.page === page) {
               console.log(`[uiSlice] setPage - no change needed, page already: ${page}`);
               return {}; // Return empty object = no state change
@@ -93,25 +97,43 @@ export const useUIStore = create<UISlice>()(
             };
           });
         },
-        
-        setSubSection: (updates) => set((state) => ({
-          navigation: {
-            ...state.navigation,
-            subSection: {
-              ...state.navigation.subSection,
+
+        setSubSection: (updates) => set((state) => {
+          if (!state.navigation) {
+            console.error('[uiSlice] Navigation state not initialized');
+            return {};
+          }
+          return {
+            navigation: {
+              ...state.navigation,
+              subSection: {
+                ...state.navigation.subSection,
+                ...updates
+              }
+            }
+          };
+        }),
+
+        setContext: (updates) => set((state) => {
+          if (!state.context) {
+            console.error('[uiSlice] Context not initialized');
+            return {};
+          }
+          return {
+            context: {
+              ...state.context,
               ...updates
             }
+          };
+        }),
+
+        clearContext: () => set((state) => {
+          if (!state.context) {
+            console.error('[uiSlice] Context not initialized');
+            return {};
           }
-        })),
-        
-        setContext: (updates) => set((state) => ({
-          context: {
-            ...state.context,
-            ...updates
-          }
-        })),
-        
-        clearContext: () => set({ context: {} })
+          return { context: {} };
+        })
       }),
       {
         name: 'ui-store'
