@@ -260,12 +260,9 @@ export function useOnboardingInfo() {
         console.error("Failed to update onboarding status:", error);
         // Silently handle error - user is already navigating to the platform
       });
-      if (isMobileButNotIpad()) {
-        router.push('/ankiclinic');
-      } else {
-        router.push('/home');
-      }
       
+      // Always redirect to AnkiClinic after onboarding completion regardless of device
+      router.push('/ankiclinic');
       
     } catch (error) {
       // This should rarely happen since we're primarily focused on navigation
