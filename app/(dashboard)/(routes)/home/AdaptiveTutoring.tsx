@@ -103,7 +103,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   });
   const [catIconInteracted, setCatIconInteracted] = useState(false);
 
-  const [isEmptyButtonHovered, setIsEmptyButtonHovered] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const emptyButtonRef = useRef<HTMLDivElement>(null);
   const [emptyButtonPosition, setEmptyButtonPosition] = useState({
     top: 0,
@@ -486,7 +486,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   }, [updatePodcastPosition]);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout | undefined;
     if (isPodcastHovered) {
       setShowPodcast(true);
     } else {
@@ -596,76 +596,24 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     updateEmptyButtonPosition();
     window.addEventListener("resize", updateEmptyButtonPosition);
-    return () =>
+    
+    // Close settings when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isSettingsOpen && 
+          emptyButtonRef.current && 
+          !emptyButtonRef.current.contains(event.target as Node) &&
+          !document.querySelector('.settings-modal')?.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
       window.removeEventListener("resize", updateEmptyButtonPosition);
-  }, [updateEmptyButtonPosition]);
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    if (isEmptyButtonHovered) {
-      setShowPodcast(false); // Hide podcast sidebar if it's showing
-    } else {
-      timeoutId = setTimeout(() => {
-        setIsEmptyButtonHovered(false);
-      }, 300); // Slight delay before hiding to prevent flickering
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isEmptyButtonHovered]);
-
-
-  const handleTopicComplete = async (categoryId: string) => {
-    try {
-      // Mark category as complete
-      await fetch('/api/category/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoryId }),
-      });
-
-      // Fetch fresh categories
-      await fetchCategories();
-
-    } catch (error) {
-      console.error("Error completing topic:", error);
-      toast({
-        title: "Error",
-        description: "Failed to complete topic. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  useEffect(() => {
-    // Load checked categories from localStorage on mount
-    const savedCategories = localStorage.getItem("checkedCategories");
-    if (savedCategories) {
-      const parsedCategories = JSON.parse(savedCategories);
-      setCheckedCategories(parsedCategories);
-
-      // If there are saved categories, set the first one as selected
-      if (parsedCategories.length > 0) {
-        setSelectedCategory(parsedCategories[0].conceptCategory);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    // Cleanup function to ensure we don't have an invalid selected category
-    return () => {
-      if (checkedCategories.length > 0) {
-        const categoryExists = checkedCategories.some(
-          (cat) => cat.conceptCategory === lastSelectedCategory
-        );
-        
-        if (!categoryExists) {
-          setLastSelectedCategory(checkedCategories[0].conceptCategory);
-        }
-      }
-    };
-  }, [checkedCategories, lastSelectedCategory]);
+  }, [updateEmptyButtonPosition, isSettingsOpen]);
 
   useEffect(() => {
     // Check if initial tutorial should play (first visit and not played)
@@ -702,6 +650,67 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       setRunTutorialPart1(true);
     }
   }, []);
+
+  // Restore the handleTopicComplete function
+  const handleTopicComplete = async (categoryId: string) => {
+    try {
+      // Mark category as complete
+      await fetch('/api/category/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId }),
+      });
+
+      // Fetch fresh categories
+      await fetchCategories();
+
+    } catch (error) {
+      console.error("Error completing topic:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete topic. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Restore localStorage checked categories effect
+  useEffect(() => {
+    // Load checked categories from localStorage on mount
+    const savedCategories = localStorage.getItem("checkedCategories");
+    if (savedCategories) {
+      const parsedCategories = JSON.parse(savedCategories);
+      setCheckedCategories(parsedCategories);
+
+      // If there are saved categories, set the first one as selected
+      if (parsedCategories.length > 0) {
+        setSelectedCategory(parsedCategories[0].conceptCategory);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Cleanup function to ensure we don't have an invalid selected category
+    return () => {
+      if (checkedCategories.length > 0) {
+        const categoryExists = checkedCategories.some(
+          (cat) => cat.conceptCategory === lastSelectedCategory
+        );
+        
+        if (!categoryExists) {
+          setLastSelectedCategory(checkedCategories[0].conceptCategory);
+        }
+      }
+    };
+  }, [checkedCategories, lastSelectedCategory]);
+
+  // After the fetchCategories useEffect, update to show we are also hiding podcast when settings open
+  useEffect(() => {
+    if (isSettingsOpen) {
+      // Hide podcast sidebar if it's showing when settings open
+      setShowPodcast(false); 
+    }
+  }, [isSettingsOpen]);
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
@@ -740,11 +749,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     backgroundColor: "var(--theme-adaptive-tutoring-color)",
                     boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
                   }}
-                  onMouseEnter={() => {
-                    setIsEmptyButtonHovered(true);
+                  onClick={() => {
                     updateEmptyButtonPosition();
+                    setIsSettingsOpen(!isSettingsOpen);
                   }}
-                  onMouseLeave={() => setIsEmptyButtonHovered(false)}
                 >
                   <div className="relative w-full h-full flex flex-col justify-center items-center">
                     <div className="settings-container flex-col">
@@ -1297,84 +1305,88 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         catIconInteracted={catIconInteracted}
       />
 
-    {isEmptyButtonHovered && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="fixed rounded-lg border-[--theme-border-color] border-2 shadow-lg z-[35] bg-[--theme-leaguecard-color] overflow-hidden"
-              style={{
-                top: `${emptyButtonPosition.top}rem`,
-                left: `${emptyButtonPosition.left + 8}rem`,
-                width: "40rem",
-                height: "80vh",
-                maxHeight: "calc(100vh - 4rem)",
-              }}
-              onMouseEnter={() => setIsEmptyButtonHovered(true)}
-              onMouseLeave={() => setIsEmptyButtonHovered(false)}
-            >
-              <ATSSettingContent
-                checkedCategories={checkedCategories}
-                setCheckedCategories={setCheckedCategories}
-              />
-            </motion.div>
-          )}
-          
-          {showPodcast && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="fixed w-56 rounded-lg p-3 shadow-lg z-[35] bg-[--theme-hover-color]"
-              style={{
-                top: `${podcastPosition.top - 5}rem`,
-                left: `${podcastPosition.left - 15}rem`,
-              }}
-              onMouseEnter={() => setIsPodcastHovered(true)}
-              onMouseLeave={() => setIsPodcastHovered(false)}
-            >
-              <h3 className="text-[--theme-hover-text] font-semibold mb-2">
-                MyMCAT Podcast
-              </h3>
-              <hr className="border-[--theme-hover-text] opacity-30 mb-2" />
-              {(() => {
-                const currentCategory = categories.find(
-                  (cat) => cat.conceptCategory === selectedCategory
-                );
-                if (!currentCategory?.podcastLinks) return null;
+      {isSettingsOpen && (
+        <div 
+          className="fixed inset-0 bg-transparent z-[34]" 
+          onClick={() => setIsSettingsOpen(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed rounded-lg border-[--theme-border-color] border-2 shadow-lg z-[35] bg-[--theme-leaguecard-color] overflow-hidden settings-modal"
+            style={{
+              top: `${emptyButtonPosition.top}rem`,
+              left: `${emptyButtonPosition.left + 8}rem`,
+              width: "40rem",
+              height: "80vh",
+              maxHeight: "calc(100vh - 4rem)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ATSSettingContent
+              checkedCategories={checkedCategories}
+              setCheckedCategories={setCheckedCategories}
+            />
+          </motion.div>
+        </div>
+      )}
+      
+      {showPodcast && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="fixed w-56 rounded-lg p-3 shadow-lg z-[35] bg-[--theme-hover-color]"
+          style={{
+            top: `${podcastPosition.top - 5}rem`,
+            left: `${podcastPosition.left - 15}rem`,
+          }}
+          onMouseEnter={() => setIsPodcastHovered(true)}
+          onMouseLeave={() => setIsPodcastHovered(false)}
+        >
+          <h3 className="text-[--theme-hover-text] font-semibold mb-2">
+            MyMCAT Podcast
+          </h3>
+          <hr className="border-[--theme-hover-text] opacity-30 mb-2" />
+          {(() => {
+            const currentCategory = categories.find(
+              (cat) => cat.conceptCategory === selectedCategory
+            );
+            if (!currentCategory?.podcastLinks) return null;
 
-                let links: string[] = [];
-                try {
-                  links = JSON.parse(currentCategory.podcastLinks);
-                } catch (e) {
-                  console.error("Error parsing podcast links:", e);
-                  return null;
-                }
+            let links: string[] = [];
+            try {
+              links = JSON.parse(currentCategory.podcastLinks);
+            } catch (e) {
+              console.error("Error parsing podcast links:", e);
+              return null;
+            }
 
-                return links.map((link, index) => {
-                  const platform = getPodcastPlatform(link);
-                  if (!platform || !platformIcons[platform]) return null;
+            return links.map((link, index) => {
+              const platform = getPodcastPlatform(link);
+              if (!platform || !platformIcons[platform]) return null;
 
-                  const Icon = platformIcons[platform];
+              const Icon = platformIcons[platform];
 
-                  return (
-                    <a
-                      key={index}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-2 w-full p-2 rounded transition-all duration-300 text-[--theme-hover-text] hover:bg-[rgba(255,255,255,0.1)]"
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="text-sm">{platformText[platform]}</span>
-                    </a>
-                  );
-                });
-              })()}
-            </motion.div>
-          )}
+              return (
+                <a
+                  key={index}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 w-full p-2 rounded transition-all duration-300 text-[--theme-hover-text] hover:bg-[rgba(255,255,255,0.1)]"
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm">{platformText[platform]}</span>
+                </a>
+              );
+            });
+          })()}
+        </motion.div>
+      )}
     </div>
   );
 };
