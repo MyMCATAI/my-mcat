@@ -39,6 +39,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
   const { isSubscribed } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [navbarVisible, setNavbarVisible] = useState(true);
 
   /* --- Effects --- */
   useEffect(() => {
@@ -87,10 +88,23 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
       className="flex flex-col min-h-screen h-[100dvh] bg-cover bg-center bg-no-repeat overflow-auto" 
       style={{ backgroundImage }}
     >
-      <Navbar subscription={subscription}/>
-      <main className="w-full flex-1 relative">
-        {children}
-      </main>
+      <Navbar subscription={subscription} onVisibilityChange={setNavbarVisible} />
+      {pathname?.includes('/home') ? (
+        <div 
+          className={`
+            w-full flex-1 relative transition-transform duration-200 ease-in-out z-0
+            ${navbarVisible ? 'translate-y-0' : '-translate-y-[20px]'}
+          `}
+        >
+          <main className="w-full h-full pt-16">
+            {children}
+          </main>
+        </div>
+      ) : (
+        <main className="w-full flex-1 relative">
+          {children}
+        </main>
+      )}
     </div>
    );
 }
