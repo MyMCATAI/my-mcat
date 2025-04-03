@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
 import { useNavigation } from "@/store/selectors";
+import { createPortal } from 'react-dom';
 
 /* ----- Types ---- */
 interface Task {
@@ -91,6 +92,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   // Use navigation selector hook
   const { activePage, navigateHomeTab } = useNavigation();
@@ -112,6 +114,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   
   /* --- Animations & Effects --- */
   useEffect(() => {
+    setMounted(true);
     // Check if we're on a mobile device
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -120,7 +123,9 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
     
-    return () => window.removeEventListener('resize', checkIfMobile);
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
   }, []);
   
   useEffect(() => {
@@ -165,6 +170,12 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   };
 
   const handleNavigationClick = (item: NavigationItem) => {
+    // Ensure navigation state is initialized
+    if (typeof navigateHomeTab !== 'function') {
+      console.error('Navigation not initialized yet');
+      return;
+    }
+
     // If we're on ankiclinic page and clicking a non-ankiclinic item, redirect to home with tab
     if (currentPage === 'ankiclinic' && item.id !== 'ankiclinic') {
       router.push(`/home?tab=${item.tab}`);
@@ -192,14 +203,16 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     );
   };
   
-  return (
+  if (!mounted) return null;
+
+  const sidebarContent = (
     <>
       {/* Mobile toggle button - only shown when sidebar is hidden */}
       {!isVisible && (
         <button
           onClick={toggleSidebar}
           className={cn(
-            "fixed left-4 z-[40] p-2 rounded-full bg-[--theme-emphasis-color] text-[--theme-hover-text] shadow-lg",
+            "fixed left-4 z-50 p-2 rounded-full bg-[--theme-emphasis-color] text-[--theme-hover-text] shadow-lg",
             isMobile ? "top-[6px]" : "top-[10px]"
           )}
           aria-label="Open navigation"
@@ -299,6 +312,8 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       </div>
     </>
   );
+
+  return createPortal(sidebarContent, document.body);
 };
 
 export default HoverSidebar; 
