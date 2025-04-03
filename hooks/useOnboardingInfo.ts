@@ -249,13 +249,7 @@ export function useOnboardingInfo() {
 
   const handleKalypsoComplete = async () => {
     try {
-      // Start the navigation immediately
-      if (isMobileButNotIpad()) {
-        router.push('/ankiclinic');
-      } else {
-        router.push('/home');
-      }
-      
+
       // Mark onboarding as complete in the local state right away
       setOnboardingComplete(true);
       
@@ -266,6 +260,12 @@ export function useOnboardingInfo() {
         console.error("Failed to update onboarding status:", error);
         // Silently handle error - user is already navigating to the platform
       });
+      if (isMobileButNotIpad()) {
+        router.push('/ankiclinic');
+      } else {
+        router.push('/home');
+      }
+      
       
     } catch (error) {
       // This should rarely happen since we're primarily focused on navigation

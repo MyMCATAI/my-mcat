@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+"use client"
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, dateFnsLocalizer, ToolbarProps, View } from 'react-big-calendar';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { parse } from 'date-fns/parse';
@@ -11,6 +13,7 @@ import WeeklyCalendarModal from '@/components/calendar/WeeklyCalendarModal';
 import ReplaceEventModal from '@/components/calendar/ReplaceEventModal';
 import toast from 'react-hot-toast';
 import { CalendarEvent, ReplacementData } from '@/types/calendar';
+import { cn } from '@/lib/utils';
 
 const locales = {
   'en-US': require('date-fns/locale/en-US'),
@@ -23,6 +26,16 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
+
+// Utility function to check if there are any upcoming non-exam activities
+const hasUpcomingNonExamActivities = (events: CalendarEvent[]): boolean => {
+  const now = new Date();
+  return events.some(event => {
+    const isUpcoming = new Date(event.start) >= now;
+    const isNonExam = event.activityType !== 'Exam';
+    return isUpcoming && isNonExam;
+  });
+};
 
 interface TestCalendarProps {
   events: CalendarEvent[];
@@ -102,6 +115,8 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
   const generateText = buttonLabels?.generate || "Generate";
   const summarizeText = buttonLabels?.summarize || "Summarize";
   const showSummarize = buttonLabels?.hideSummarize !== true;
+  
+  const shouldShowGenerateIndicator = !hasUpcomingNonExamActivities(events);
 
   return (
     <div className="rbc-toolbar">
@@ -130,12 +145,34 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
               {summarizeText}
             </button>
           )}
-          <button
-            onClick={onGenerate}
-            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-8 py-2 rounded-lg text-sm border-[3px] border-solid !border-[--theme-border-color] animate-float"
-          >
-            {generateText}
-          </button>
+          <div className="relative inline-block">
+            <button
+              onClick={onGenerate}
+              className={cn(
+                "bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-8 py-2 rounded-lg text-sm border-[3px] border-solid !border-[--theme-border-color]",
+                shouldShowGenerateIndicator ? "animate-float ring-4 ring-[--theme-emphasis-color] ring-opacity-50" : ""
+              )}
+            >
+              {generateText}
+            </button>
+            
+            {shouldShowGenerateIndicator && (
+              <div className="absolute left-1/2 -translate-x-1/2 mt-3 z-[9999] w-max">
+                <div className="relative animate-bounce">
+                  {/* Diamond pointer */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-black rotate-45 shadow-sm z-0">
+                    <div className="absolute inset-0 bg-[--theme-emphasis-color]"></div>
+                  </div>
+                  
+                  {/* Main tooltip */}
+                  <div className="relative bg-black text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap z-10">
+                    <div className="absolute inset-0 bg-[--theme-emphasis-color] rounded-lg"></div>
+                    <div className="relative z-10">Click here to create your study schedule!</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

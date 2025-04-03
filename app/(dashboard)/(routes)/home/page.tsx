@@ -697,7 +697,7 @@ const HomePage: React.FC = () => {
                         onComplete={handleIntroVideoComplete}
                       />
                     ) : (
-                      <ChatContainer chatbotRef={chatbotRef} />
+                      <ChatContainer chatbotRef={chatbotRef} activities={activities} />
                     )}
                   </div>
                 )}

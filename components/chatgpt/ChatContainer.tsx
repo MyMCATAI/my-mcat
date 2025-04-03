@@ -12,6 +12,7 @@ import { useExamActivities } from "@/hooks/useCalendarActivities";
 import TestCalendar from '@/components/calendar/TestCalendar';
 import { X } from "lucide-react";
 import type { CalendarEvent } from "@/types/calendar";
+import type { FetchedActivity } from "@/types";
 // import TutorReportModal from "./TutorReportModal";
 // Import required CSS for the calendar
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -19,6 +20,7 @@ import "@/components/styles/CustomCalendar.css";
 import { useUser, useUI } from "@/store/selectors";
 import { generateWelcomeMessage } from "@/components/chatgpt/ChatContainerInitialMesage";
 import { useGame } from "@/store/selectors";
+import UserContextPanel from "./UserContextPanel";
 
 // Dynamically import the chatbot component
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
@@ -38,9 +40,10 @@ interface ChatContainerProps {
   chatbotRef?: React.MutableRefObject<{
     sendMessage: (message: string, messageContext?: string) => void;
   }>;
+  activities?: FetchedActivity[];
 }
 
-const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps) => {
   /* ---- State ----- */
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -891,22 +894,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
           flow={flow}
         />
         
-        {/* Themed welcome banner - only show when not responding */}
-        {!isBotResponding && welcomeVisible && (
-          <div 
-            className="absolute top-16 right-5 w-48 p-3 rounded-lg backdrop-blur-sm text-xs z-10 animate-slide-in"
-            style={{ 
-              backgroundColor: themeStyles.botBubbleBg,
-              borderLeft: `3px solid var(--theme-hover-color)`,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-            }}>
-            <p className="mb-2 font-medium">Welcome to your {currentTheme === 'mykonosBlue' ? 'Mykonos retreat' 
-                                            : currentTheme === 'sakuraTrees' ? 'Sakura garden'
-                                            : currentTheme === 'sunsetCity' ? 'Sunset city'
-                                            : 'Cyber space'}</p>
-            <p>Ask Kalypso about your MCAT study plan, or try scheduling a new task.</p>
-          </div>
-        )}
+        {/* User Context Panel for onboarding tasks */}
+        <UserContextPanel activities={activities} />
       </div>
 
       {/* Audio control indicator */}
