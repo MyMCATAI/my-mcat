@@ -25,17 +25,28 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
     }
   };
 
-
   return (
     <Dialog open={isOpen} >
-      <DialogContent className="z-[100] bg-[--theme-leaguecard-color]">
+      <DialogContent className="z-[100] bg-[--theme-leaguecard-color] max-w-4xl w-[90vw] md:w-[80vw] lg:w-[70vw]">
         <DialogHeader>
-          <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
+          <DialogTitle className="text-[--theme-text-color] text-center text-xl md:text-2xl">{"Welcome to The Anki Clinic!"}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <p className="text-center text-[--theme-text-color] mb-4">
             {"Welcome to the Anki Clinic, a fun and competitive Anki experience! Join our Discord community to connect with other students and access additional study resources."}
           </p>
+          
+          {/* Video player */}
+          <div className="w-full mb-4 rounded overflow-hidden">
+            <video
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiClinicVideo(1).mp4"
+              controls
+              className="w-full h-auto"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
           <div className="space-y-4">
             <div className="mb-4">
               <Button 

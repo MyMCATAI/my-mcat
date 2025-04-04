@@ -22,6 +22,8 @@ import OfficeContainer from './OfficeContainer';
 import ResourcesMenu from './ResourcesMenu';
 import { useUser } from "@/store/selectors";
 
+import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
+
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
   ssr: false,
@@ -963,6 +965,11 @@ const DoctorsOfficePage = () => {
             visibleImages={visibleImages}
             toggleGroup={toggleGroup}
           />
+          
+          {/* Feature unlock banner */}
+          <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
+            <FeatureUnlockBanner />
+          </div>
         </div>
       </Suspense>
 
@@ -978,7 +985,7 @@ const DoctorsOfficePage = () => {
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
       />}
-      {/* Add HoverSidebar instead of FloatingButton */}
+
       <HoverSidebar
         activities={activities}
         onTasksUpdate={fetchActivities}

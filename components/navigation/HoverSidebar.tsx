@@ -1,17 +1,23 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { format, isToday, isTomorrow } from "date-fns";
-import { ChevronLeft, ChevronRight, Book, BookOpen, GraduationCap, Brain, Clock, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
-import { useNavigation } from "@/store/selectors";
+import { useNavigation, useUser } from "@/store/selectors";
 import { createPortal } from 'react-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { PurchaseButton } from "@/components/purchase-button";
+import Image from "next/image";
+import { useFeatureUnlock } from "@/hooks/useFeatureUnlock";
+import { UnlockDialog } from "@/components/unlock-dialog";
 
 /* ----- Types ---- */
 interface Task {
@@ -36,6 +42,10 @@ interface NavigationItem {
   name: string;
   tab: string;
   icon: React.ReactNode;
+  requiresUnlock?: boolean;
+  unlockCost?: number;
+  description?: string;
+  photo?: string;
 }
 
 interface HoverSidebarProps {
@@ -46,37 +56,57 @@ interface HoverSidebarProps {
   isSubscribed?: boolean;
 }
 
-const NAVIGATION_ITEMS: NavigationItem[] = [
+export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     id: "kalypso-ai",
     name: "Kalypso AI",
     tab: "KalypsoAI",
-    icon: <Brain className="w-5 h-5" />
-  },
-  {
-    id: "tests",
-    name: "Practice Tests",
-    tab: "Tests",
-    icon: <Book className="w-5 h-5" />
+    icon: <Brain className="w-5 h-5" />,
+    requiresUnlock: true,
+    unlockCost: 5,
+    description: "Your personal AI assistant for MCAT preparation. Get personalized study guidance, a custom study plan generator, and answers to your questions.",
+    photo: "/kalypso/kalypsocalendar.png"
   },
   {
     id: "cars",
     name: "CARS Suite",
     tab: "CARS",
-    icon: <BookOpen className="w-5 h-5" />
+    icon: <BookOpen className="w-5 h-5" />,
+    requiresUnlock: true,
+    unlockCost: 15,
+    description: "Critical Analysis and Reasoning Skills practice with advanced tools and strategies.",
+    photo: "/kalypso/kalypotesting.png"
   },
   {
     id: "tutoring",
-    name: "Tutoring Suite",
+    name: "Adaptive Content",
     tab: "AdaptiveTutoringSuite",
-    icon: <GraduationCap className="w-5 h-5" />
+    icon: <GraduationCap className="w-5 h-5" />,
+    requiresUnlock: true,
+    unlockCost: 20,
+    description: "Adaptive learning system that adjusts to your knowledge gaps and provides content currated for you.",
+    photo: "/kalypso/kalypsoteaching.png"
+  },
+  
+  {
+    id: "tests",
+    name: "Practice Test Review",
+    tab: "Tests",
+    icon: <Book className="w-5 h-5" />,
+    requiresUnlock: true,
+    unlockCost: 30,
+    description: "Review your full-length MCAT practice tests with focused feedback and performance tracking.",
+    photo: "/kalypso/kalypotesting.png"
   },
   {
     id: "ankiclinic",
     name: "Anki Clinic",
     tab: "AnkiClinic",
-    icon: <Clock className="w-5 h-5" />
-  }
+    icon: <Clock className="w-5 h-5" />,
+    requiresUnlock: false,
+    description: "Earn coins while mastering concepts through flashcards in a fun clinical setting.",
+    photo: "/kalypso/KalypsoPicture.png"
+  },
 ];
 
 const HoverSidebar: React.FC<HoverSidebarProps> = ({
@@ -93,9 +123,28 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<NavigationItem | null>(null);
   
   // Use navigation selector hook
   const { activePage, navigateHomeTab } = useNavigation();
+  
+  // Get user info and coins
+  const { userInfo, coins } = useUser();
+  
+  // Feature unlock hook
+  const { isFeatureUnlocked } = useFeatureUnlock();
+  
+  // Check if any navigation items are unlocked
+  const hasAnyUnlocked = useMemo(() => {
+    return NAVIGATION_ITEMS.some(item => 
+      item.requiresUnlock && isFeatureUnlocked(item.id)
+    );
+  }, [isFeatureUnlocked]);
+  
+  // Determine if the button should be highlighted
+  // Highlight when we're on ankiclinic page and no features are unlocked
+  const shouldHighlightButton = currentPage === 'ankiclinic' && !hasAnyUnlocked;
   
   // Map page to nav id for UI highlighting
   const activeTab = (() => {
@@ -176,6 +225,14 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       return;
     }
 
+    // Check if the item requires unlock
+    if (item.requiresUnlock && !isFeatureUnlocked(item.id)) {
+      // Open unlock dialog instead of navigating
+      setSelectedItem(item);
+      setUnlockDialogOpen(true);
+      return;
+    }
+
     // If we're on ankiclinic page and clicking a non-ankiclinic item, redirect to home with tab
     if (currentPage === 'ankiclinic' && item.id !== 'ankiclinic') {
       router.push(`/home?tab=${item.tab}`);
@@ -187,6 +244,14 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     // If we're already on home, just update the tab
     else {
       navigateHomeTab(item.tab);
+    }
+  };
+
+  const handleUnlockSuccess = (itemId: string) => {
+    // If we're on ankiclinic, navigate to the newly unlocked section
+    const item = NAVIGATION_ITEMS.find(item => item.id === itemId);
+    if (item && currentPage === 'ankiclinic') {
+      router.push(`/home?tab=${item.tab}`);
     }
   };
   
@@ -212,12 +277,18 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         <button
           onClick={toggleSidebar}
           className={cn(
-            "fixed left-4 z-50 p-2 rounded-full bg-[--theme-emphasis-color] text-[--theme-hover-text] shadow-lg",
+            "fixed left-4 z-50 p-2 rounded-full shadow-lg transition-all duration-300",
+            shouldHighlightButton 
+              ? "bg-emerald-500 text-white ring-4 ring-emerald-300 ring-opacity-50 animate-pulse scale-110" 
+              : "bg-[--theme-emphasis-color] text-[--theme-hover-text]",
             isMobile ? "top-[6px]" : "top-[10px]"
           )}
           aria-label="Open navigation"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className={cn(
+            "w-5 h-5",
+            shouldHighlightButton && "animate-bounce"
+          )} />
         </button>
       )}
       
@@ -273,14 +344,21 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         <div className="flex-1 overflow-hidden">
           {visibleSection === 'nav' ? (
             <div className="p-4 space-y-2">
-              {NAVIGATION_ITEMS.map(item => (
+              {NAVIGATION_ITEMS.map(item => {
+                const isUnlocked = isFeatureUnlocked(item.id);
+                // Special highlight for Kalypso AI when not unlocked
+                const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
+                
+                return (
                 <button
                   key={item.id}
                   className={cn(
-                    "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300",
+                    "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
                     activeTab === item.id
                       ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                      : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                      : isKalypsoHighlighted 
+                          ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
+                          : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                   )}
                   onClick={() => {
                     handleNavigationClick(item);
@@ -290,12 +368,53 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
                     }
                   }}
                 >
-                  <div className="flex-shrink-0">
+                  {/* Subtle border animation for Kalypso */}
+                  {isKalypsoHighlighted && (
+                    <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
+                  )}
+                  
+                  <div className={cn(
+                    "flex-shrink-0",
+                    isKalypsoHighlighted && "text-emerald-500"
+                  )}>
                     {item.icon}
                   </div>
-                  <span className="font-medium">{item.name}</span>
+                  <span className={cn(
+                    "font-medium",
+                    isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
+                  )}>
+                    {item.name}
+                    {isKalypsoHighlighted && (
+                      <span className="ml-1 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+                        (Recommended)
+                      </span>
+                    )}
+                  </span>
+                  {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
+                    <div className={cn(
+                      "ml-auto flex items-center gap-1",
+                      isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
+                    )}>
+                      <Lock className="w-4 h-4" />
+                      {item.unlockCost && (
+                        <div className={cn(
+                          "flex items-center text-xs",
+                          isKalypsoHighlighted && "font-bold"
+                        )}>
+                          <span>{item.unlockCost}</span>
+                          <Image 
+                            src="/coin.png" 
+                            alt="coins" 
+                            width={12} 
+                            height={12} 
+                            className="ml-0.5" 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </button>
-              ))}
+              )})}
             </div>
           ) : (
             <div className="h-full overflow-y-auto">
@@ -313,7 +432,21 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     </>
   );
 
-  return createPortal(sidebarContent, document.body);
+  return createPortal(
+    <>
+      {sidebarContent}
+      
+      {/* Use the UnlockDialog component */}
+      <UnlockDialog 
+        isOpen={unlockDialogOpen}
+        onOpenChange={setUnlockDialogOpen}
+        item={selectedItem}
+        userCoins={coins}
+        onSuccess={handleUnlockSuccess}
+      />
+    </>,
+    document.body
+  );
 };
 
 export default HoverSidebar; 
