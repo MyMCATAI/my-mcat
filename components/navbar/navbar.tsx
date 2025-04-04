@@ -107,7 +107,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
         flex items-center justify-between h-16
         ${isHomePage ? 'fixed top-0 left-0 right-0 transition-transform duration-200 ease-in-out' : 'relative'}
         ${isHomePage && !visible ? '-translate-y-full' : 'translate-y-0'}
-        bg-black/50 backdrop-blur-md
+        transparent
       `}
     >
       {isDesktop ? (
