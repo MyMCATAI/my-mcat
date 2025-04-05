@@ -4,6 +4,7 @@ import { useUIStore } from './slices/uiSlice'
 import { useGameStore } from './slices/gameSlice'
 import { useUserStore } from './slices/userSlice'
 import { useVocabStore } from './slices/vocabSlice'
+import { useKnowledgeStore } from './slices/knowledgeSlice'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
@@ -493,4 +494,53 @@ export const useClinicData = () => {
     calculateDailyPatients,
     performDailyCalculations
   };
-}; 
+};
+
+/* --- Knowledge Profile Selector ---- */
+export const useKnowledge = () => {
+  // Knowledge state
+  const sections = useKnowledgeStore((state) => state.sections)
+  const sectionSummaries = useKnowledgeStore((state) => state.sectionSummaries)
+  const weakestConcepts = useKnowledgeStore((state) => state.weakestConcepts)
+  const isLoading = useKnowledgeStore((state) => state.isLoading)
+  const lastFetched = useKnowledgeStore((state) => state.lastFetched)
+  const error = useKnowledgeStore((state) => state.error)
+  
+  // Knowledge actions
+  const fetchKnowledgeProfiles = useKnowledgeStore((state) => state.fetchKnowledgeProfiles)
+  const resetKnowledgeProfiles = useKnowledgeStore((state) => state.resetKnowledgeProfiles)
+  const checkAndUpdateKnowledgeProfiles = useKnowledgeStore((state) => state.checkAndUpdateKnowledgeProfiles)
+  
+  // Computed statistics
+  const overallMastery = sectionSummaries.length > 0 
+    ? sectionSummaries.reduce((sum, s) => sum + s.averageMastery, 0) / sectionSummaries.length
+    : 0
+    
+  const strongestSection = sectionSummaries.length > 0
+    ? [...sectionSummaries].sort((a, b) => b.averageMastery - a.averageMastery)[0]
+    : null
+  
+  const weakestSection = sectionSummaries.length > 0
+    ? [...sectionSummaries].sort((a, b) => a.averageMastery - b.averageMastery)[0]
+    : null
+  
+  return {
+    // Raw data
+    sections,
+    sectionSummaries,
+    weakestConcepts,
+    isLoading,
+    lastFetched,
+    error,
+    
+    // Computed data
+    overallMastery,
+    strongestSection,
+    weakestSection,
+    
+    // Actions
+    fetchKnowledgeProfiles,
+    resetKnowledgeProfiles,
+    checkAndUpdateKnowledgeProfiles
+  }
+} 

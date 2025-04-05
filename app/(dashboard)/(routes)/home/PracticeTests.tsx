@@ -581,7 +581,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                     ?.fullLengthExam?.dataPulses
                 }}
                 onBack={() => setActiveTest(null)} 
-                onRefresh={fetchExamActivities}
+                onRefresh={async () => {
+                  await fetchExamActivities();
+                }}
               />
             </div>
           ) : (
