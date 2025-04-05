@@ -56,8 +56,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { message, context, threadId, generateAudio, assistantId } = body;
 
-    console.log('Received message:');
-    console.log('Generate audio:', generateAudio);
     if (!userId) {
       console.log('Unauthorized: No userId');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
