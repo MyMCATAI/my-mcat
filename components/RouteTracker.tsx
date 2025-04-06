@@ -415,14 +415,17 @@ const RouteTracker = () => {
       
       // Check if home is unlocked - redirect to ankiclinic if not
       if (pathname === '/home') {
-        // Parse unlocks to check if 'kalypso-ai' is unlocked
+        // Parse unlocks to check if user has any non-game unlocks
         const unlocks = userInfo?.unlocks ? 
           (typeof userInfo.unlocks === 'string' ? JSON.parse(userInfo.unlocks) : userInfo.unlocks) : 
           [];
           
-        if (!unlocks.includes('kalypso-ai')) {
-          debugLog('FEATURE_GATE', 'Kalypso AI not unlocked - redirecting to ankiclinic');
-          const fallback = performRedirect('/ankiclinic', 'Kalypso AI not unlocked');
+        // Check if user has any unlocks that aren't "game"
+        const hasNonGameUnlocks = unlocks.length > 0 && unlocks.some((unlock: string) => unlock !== 'game');
+        
+        if (!hasNonGameUnlocks) {
+          debugLog('FEATURE_GATE', 'No non-game unlocks - redirecting to ankiclinic');
+          const fallback = performRedirect('/ankiclinic', 'No non-game features unlocked');
           return fallback;
         }
       }
