@@ -104,7 +104,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
   return (
     <nav 
       className={`
-        flex items-center justify-between h-16
+        flex items-center justify-between h-16 z-10
         ${isHomePage ? 'fixed top-0 left-0 right-0 transition-transform duration-200 ease-in-out' : 'relative'}
         ${isHomePage && !visible ? '-translate-y-full' : 'translate-y-0'}
         transparent

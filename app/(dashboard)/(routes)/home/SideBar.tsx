@@ -26,6 +26,7 @@ import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 import { useAudio } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
+import { cn } from "@/lib/utils";
 
 interface Task {
   text: string;
@@ -77,7 +78,13 @@ const SideBar: React.FC<SideBarProps> = ({
   showTasks = true
 }) => {
   const { userInfo } = useUserInfo();
+  const audio = useAudio();
   
+  // Initialize audio context when component mounts
+  useEffect(() => {
+    audio.initializeAudioContext();
+  }, [audio]);
+
   const getInitialActiveTab = () => {
     if (!isSubscribed) {
       return "tab2"; // Default to Tasks tab even for non-subscribers
@@ -108,7 +115,6 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('RBT');
-  const audio = useAudio();
 
   // Add task-related state
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
@@ -341,6 +347,8 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const [loadingTasks, setLoadingTasks] = useState<Record<string, boolean>>({});
+
   const renderTasks = () => {
     if (!isSubscribed) {
       return (
@@ -468,8 +476,12 @@ const SideBar: React.FC<SideBarProps> = ({
                                 )
                               : null
                           }
-                          disabled={!isToday(currentDate)}
-                          className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={!isToday(currentDate) || loadingTasks[`${activity.id}-${index}`]}
+                          isLoading={loadingTasks[`${activity.id}-${index}`]}
+                          className={cn(
+                            !isToday(currentDate) ? "opacity-50 cursor-not-allowed" : "",
+                            "data-[state=checked]:bg-[--theme-hover-color] data-[state=checked]:text-[--theme-hover-text]"
+                          )}
                         />
                         <label
                           htmlFor={`task-${activity.id}-${index}`}
@@ -600,7 +612,13 @@ const SideBar: React.FC<SideBarProps> = ({
     taskIndex: number,
     completed: boolean
   ) => {
+    // Create a unique key for this task
+    const taskKey = `${activityId}-${taskIndex}`;
+    
     try {
+      // Set loading state for this specific task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: true }));
+      
       const activity = todayActivities.find((a: Activity) => a.id === activityId);
       if (!activity || !activity.tasks) return;
 
@@ -676,6 +694,9 @@ const SideBar: React.FC<SideBarProps> = ({
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
+    } finally {
+      // Clear loading state for this task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: false }));
     }
   };
 

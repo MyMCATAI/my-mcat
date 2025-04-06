@@ -5,6 +5,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { isToday } from "date-fns";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { useAudio } from '@/store/selectors';
 
 interface Task {
   text: string;
@@ -35,13 +36,18 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
   onHover,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-
-  const todayActivities = activities.filter((activity: Activity) => 
+  const listRef = useRef<HTMLDivElement>(null);
+  const audio = useAudio();
+  const todayActivities = activities.filter((activity) =>
     isToday(new Date(activity.scheduledDate))
   );
+  const [loadingTasks, setLoadingTasks] = useState<Record<string, boolean>>({});
+
+  // Initialize audio context when component mounts
+  useEffect(() => {
+    audio.initializeAudioContext();
+  }, [audio]);
 
   const goToNext = () => {
     setCurrentIndex((prev) => 
@@ -56,7 +62,13 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
   };
 
   const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+    // Create a unique key for this task
+    const taskKey = `${activityId}-${taskIndex}`;
+    
     try {
+      // Set loading state for this specific task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: true }));
+
       const activity = todayActivities.find((a: Activity) => a.id === activityId);
       if (!activity || !activity.tasks) return;
 
@@ -82,10 +94,8 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task: Task) => task.completed);
       if (allTasksCompleted) {
-        // Play success sound
-        if (audioRef.current) {
-          audioRef.current.play().catch(console.error);
-        }
+        // Play levelup sound
+        audio.playSound('levelup');
 
         // Get activity details from backend
         const activityResponse = await fetch(`/api/calendar-activity`);
@@ -112,6 +122,9 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
+    } finally {
+      // Clear loading state for this task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: false }));
     }
   };
 
@@ -255,6 +268,9 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
                               checked as boolean
                             )
                           }
+                          disabled={loadingTasks[`${todayActivities[currentIndex].id}-${index}`]}
+                          isLoading={loadingTasks[`${todayActivities[currentIndex].id}-${index}`]}
+                          className="data-[state=checked]:bg-[--theme-hover-color] data-[state=checked]:text-[--theme-hover-text]"
                         />
                         <label
                           htmlFor={`floating-task-${todayActivities[currentIndex].id}-${index}`}
@@ -276,8 +292,6 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
             </p>
           )}
         </div>
-
-        <audio ref={audioRef} src="/levelup.mp3" />
       </div>
     </motion.div>
   );
