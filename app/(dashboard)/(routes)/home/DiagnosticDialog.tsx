@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 interface DiagnosticDialogProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
     ps: ''
   });
   const [noDiagnostic, setNoDiagnostic] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isFormValid = () => {
     if (noDiagnostic) return true;
@@ -42,6 +44,7 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await axios.post("/api/diagnostic-scores", {
         diagnosticScores: noDiagnostic ? null : scores
@@ -52,12 +55,18 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
     } catch (error) {
       console.error(error);
       toast.error("Failed to save diagnostic scores. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} modal onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[28rem] text-black" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={isOpen}>
+      <DialogContent 
+        className="sm:max-w-[28rem] text-black" 
+        onPointerDownOutside={(e) => e.preventDefault()}
+        closeButtonClassName="hidden"
+      >
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold mb-4">
             Welcome to the Adaptive Tutoring Suite
@@ -150,9 +159,16 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
             <Button 
               type="submit" 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isLoading}
             >
-              Next
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Next'
+              )}
             </Button>
           </form>
         </div>
