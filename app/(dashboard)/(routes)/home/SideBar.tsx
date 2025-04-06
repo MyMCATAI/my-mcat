@@ -88,7 +88,7 @@ const SideBar: React.FC<SideBarProps> = ({
         return "tab2"; // Tasks tab
       case "CARS":
       case "AdaptiveTutoringSuite":
-        return "tab2"; // Default to Tasks tab
+        return "tab1"; // Default to Chatbot tab
       case "Tests":
         return "tab2"; // Default to Tasks tab
       case "KalypsoAI":
