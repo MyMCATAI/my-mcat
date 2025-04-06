@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useUser, useAudio, useNavigation } from "@/store/selectors";
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { useFeatureUnlock } from "@/hooks/useFeatureUnlock";
+import { FEATURE_UNLOCK } from "@/components/navigation/HoverSidebar";
 import type { FetchedActivity } from "@/types";
 import { isToday } from "date-fns";
 import Summary from "./Summary";
@@ -26,6 +28,7 @@ import IntroVideoPlayer from "@/components/home/IntroVideoPlayer";
 // Import the extracted components from their new location
 import { LoadingSpinner } from "@/components/home/LoadingSpinner";
 import { ContentWrapper } from "@/components/home/ContentWrapper";
+import LockedFeatureOverlay from "@/components/LockedFeatureOverlay";
 
 /* ----------------------------------------- Types ------------------------------------------ */
 type KalypsoState = "wait" | "talk" | "end" | "start";
@@ -48,6 +51,7 @@ const HomePage: React.FC = () => {
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
   const { activePage, navigateHomeTab, updateSubSection } = useNavigation();
+  const { isFeatureUnlocked } = useFeatureUnlock();
   const paymentStatus = searchParams?.get("payment");
   
   // Track renders in development only
@@ -691,42 +695,68 @@ const HomePage: React.FC = () => {
               <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
                 {/* Main content area - conditional rendering based on active page */}
                 {(activePage === 'KalypsoAI' || !activePage) && (
-                  <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-hidden relative">
                     {!hasSeenIntroVideo ? (
                       <IntroVideoPlayer 
                         onComplete={handleIntroVideoComplete}
                       />
                     ) : (
-                      <ChatContainer chatbotRef={chatbotRef} activities={activities} />
+                      <>
+                        <ChatContainer chatbotRef={chatbotRef} activities={activities} />
+                        {!isFeatureUnlocked(FEATURE_UNLOCK.KALYPSO_AI) && (
+                          <LockedFeatureOverlay featureId={FEATURE_UNLOCK.KALYPSO_AI} />
+                        )}
+                      </>
                     )}
                   </div>
                 )}
                 {activePage === 'Summary' && (
-                  <MemoizedSummary 
-                    handleSetTab={handleTabChange}
-                    isActive={true}
-                    chatbotRef={chatbotRef}
-                    userInfo={userInfo}
-                  />
+                  <div className="h-full overflow-hidden relative">
+                    <MemoizedSummary 
+                      handleSetTab={handleTabChange}
+                      isActive={true}
+                      chatbotRef={chatbotRef}
+                      userInfo={userInfo}
+                    />
+                  </div>
                 )}
                 {activePage === 'AdaptiveTutoringSuite' && (
-                  <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-hidden relative">
                     <MemoizedAdaptiveTutoring 
                       toggleChatBot={toggleChatBot}
                       setChatbotContext={updateChatbotContext}
                       chatbotRef={chatbotRef}
                       onActivityChange={handleActivityChange}
                     />
+                    {!isFeatureUnlocked(FEATURE_UNLOCK.TUTORING) && (
+                      <LockedFeatureOverlay featureId={FEATURE_UNLOCK.TUTORING} />
+                    )}
                   </div>
                 )}
-                {activePage === 'CARS' && <TestingSuit />}
-                {activePage === 'flashcards' && <FlashcardDeck />}
+                {activePage === 'CARS' && (
+                  <div className="h-full overflow-hidden relative">
+                    <TestingSuit />
+                    {!isFeatureUnlocked(FEATURE_UNLOCK.CARS) && (
+                      <LockedFeatureOverlay featureId={FEATURE_UNLOCK.CARS} />
+                    )}
+                  </div>
+                )}
+                {activePage === 'flashcards' && (
+                  <div className="h-full overflow-hidden relative">
+                    <FlashcardDeck />
+                  </div>
+                )}
                 {activePage === 'Tests' && (
-                  <PracticeTests 
-                    handleSetTab={handleTabChange} 
-                    chatbotRef={chatbotRef}
-                    onActivitiesUpdate={fetchActivities}
-                  />
+                  <div className="h-full overflow-hidden relative">
+                    <PracticeTests 
+                      handleSetTab={handleTabChange} 
+                      chatbotRef={chatbotRef}
+                      onActivitiesUpdate={fetchActivities}
+                    />
+                    {!isFeatureUnlocked(FEATURE_UNLOCK.TESTS) && (
+                      <LockedFeatureOverlay featureId={FEATURE_UNLOCK.TESTS} />
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -788,7 +818,8 @@ const HomePage: React.FC = () => {
     uiState.kalypsoState,
     updateUIState,
     fetchActivities,
-    setActivities
+    setActivities,
+    isFeatureUnlocked
   ]);
 
   return content;
