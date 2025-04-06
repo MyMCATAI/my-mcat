@@ -2,11 +2,15 @@ import { useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useUser } from "@/store/selectors";
 import { useRouter } from "next/navigation";
+import { FEATURE_UNLOCK } from "@/components/navigation/HoverSidebar";
+
+// Union type to support both string and enum values for backward compatibility
+type FeatureId = FEATURE_UNLOCK | string;
 
 interface UseFeatureUnlockResult {
   isUnlocking: boolean;
-  unlockFeature: (featureId: string, cost: number, name: string, navigateTo?: string) => Promise<boolean>;
-  isFeatureUnlocked: (featureId: string) => boolean;
+  unlockFeature: (featureId: FeatureId, cost: number, name: string, navigateTo?: string) => Promise<boolean>;
+  isFeatureUnlocked: (featureId: FeatureId) => boolean;
 }
 
 export const useFeatureUnlock = (): UseFeatureUnlockResult => {
@@ -20,16 +24,16 @@ export const useFeatureUnlock = (): UseFeatureUnlockResult => {
     : [];
   
   // Check if a feature is unlocked
-  const isFeatureUnlocked = useCallback((featureId: string) => {
+  const isFeatureUnlocked = useCallback((featureId: FeatureId) => {
     // AnkiClinic is always unlocked
-    if (featureId === 'ankiclinic') return true;
+    if (featureId === FEATURE_UNLOCK.ANKICLINIC || featureId === 'ankiclinic') return true;
     
     return Array.isArray(userUnlocks) && userUnlocks.includes(featureId);
   }, [userUnlocks]);
   
   // Unlock a feature by ID and cost
   const unlockFeature = useCallback(async (
-    featureId: string, 
+    featureId: FeatureId, 
     cost: number, 
     name: string,
     navigateTo?: string
