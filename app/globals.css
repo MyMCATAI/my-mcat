@@ -1109,3 +1109,54 @@ html::-webkit-scrollbar {
   transition: none !important;
   animation-duration: 0ms !important;
 }
+
+/* Animation for prompt suggestions */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Prompt suggestions positioning and styling */
+.prompt-suggestions {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 12px;
+  background-color: rgba(var(--theme-card-color, 0, 0, 0), 0.5);
+  backdrop-filter: blur(5px);
+  border-radius: 12px;
+  margin: 0 16px 70px 16px;
+}
+
+/* Theme-specific styling for prompt suggestions */
+.theme-cyberSpace-suggestions button {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 6px 1px rgba(0, 123, 255, 0.3);
+}
+
+.theme-sakuraTrees-suggestions button {
+  border-color: rgba(235, 128, 176, 0.4);
+  box-shadow: 0 0 6px 1px rgba(235, 128, 176, 0.3);
+}
+
+.theme-sunsetCity-suggestions button {
+  border-color: rgba(255, 99, 71, 0.4);
+  box-shadow: 0 0 6px 1px rgba(255, 99, 71, 0.3);
+}
+
+.theme-mykonosBlue-suggestions button {
+  border-color: rgba(76, 181, 230, 0.4);
+  box-shadow: 0 0 6px 1px rgba(76, 181, 230, 0.3);
+}

@@ -1,26 +1,50 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
-import type { Styles } from "react-chatbotify";
-import { useAudio, useTheme } from '@/store/selectors';
+import { useAudio, useTheme, useUser, useUI, useGame, useKnowledge } from '@/store/selectors';
 import { useAllCalendarActivities } from "@/hooks/useCalendarActivities";
-import { useExamActivities } from "@/hooks/useCalendarActivities";
+import { useExamActivities, FetchedActivity } from "@/hooks/useCalendarActivities";
 import TestCalendar from '@/components/calendar/TestCalendar';
-import { X } from "lucide-react";
 import type { CalendarEvent } from "@/types/calendar";
-import type { FetchedActivity } from "@/types";
-// import TutorReportModal from "./TutorReportModal";
-// Import required CSS for the calendar
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
-import { useUser, useUI } from "@/store/selectors";
-import { generateWelcomeMessage } from "@/components/chatgpt/ChatContainerInitialMesage";
-import { useGame } from "@/store/selectors";
 import UserContextPanel from "./UserContextPanel";
+import { 
+  generateKnowledgeSummary, 
+  generateUserContext, 
+  checkAndGenerateWelcomeMessage,
+  formatWelcomeMessage,
+  getTimeGreeting,
+  getTodaysStudyActivities,
+  getUpcomingExamActivities,
+  getUpcomingWeekActivities,
+  createFirstPersonContext
+} from "@/components/chatgpt/AIUtils";
+import {
+  setupCommandKeyToggleHandler,
+  setupTextareaEnterHandler
+} from "@/components/chatgpt/KeyboardUtils";
+import {
+  createDebouncedAudioToggle,
+  createVoiceAudioHandlers
+} from "@/components/chatgpt/AudioUtils";
+import {
+  processExamActivities,
+  processStudyActivities,
+  combineCalendarEvents,
+} from "@/components/chatgpt/CalendarUtils";
+import {
+  generateChatbotFlow,
+  generateChatbotSettings,
+  generateChatbotStyles
+} from "@/components/chatgpt/ChatbotConfig";
+import {
+  createContextLogObject,
+  logDebugData
+} from "@/components/chatgpt/DebugUtils";
+import PromptSuggestions from "@/components/chatgpt/PromptSuggestions";
 
 // Dynamically import the chatbot component
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
@@ -53,14 +77,14 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isFirstResponse, setIsFirstResponse] = useState(true);
-  const [lastToggleTime, setLastToggleTime] = useState<number>(0);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [isBotResponding, setIsBotResponding] = useState(false);
-  const [welcomeVisible, setWelcomeVisible] = useState(true);
+  const [welcomeVisible, setWelcomeVisible] = useState(true); // Always true - welcome message is permanently visible
   const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
   const [isTutorReportOpen, setIsTutorReportOpen] = useState(false);
   const [isWelcomeMessageTemporary, setIsWelcomeMessageTemporary] = useState(false);
+  const [messageCount, setMessageCount] = useState(0); // Track number of messages
   
   // Add game state
   const { streakDays, testScore, userLevel, totalPatients } = useGame();
@@ -73,51 +97,46 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
   // Get current theme
   const currentTheme = useTheme();
   
-  // Get theme-specific styles
-  const getThemeStyles = () => {
-    switch(currentTheme) {
-      case 'sakuraTrees':
-        return {
-          botBubbleBg: 'rgba(251, 240, 248, 0.85)',
-          userBubbleBg: 'rgba(196, 122, 155, 0.85)',
-          overlayBg: 'rgba(250, 238, 244, 0.3)',
-          inputBg: 'rgba(251, 240, 248, 0.6)'
-        };
-      case 'sunsetCity':
-        return {
-          botBubbleBg: 'rgba(36, 23, 58, 0.85)',
-          userBubbleBg: 'rgba(255, 99, 71, 0.85)',
-          overlayBg: 'rgba(36, 23, 58, 0.3)',
-          inputBg: 'rgba(36, 23, 58, 0.6)'
-        };
-      case 'mykonosBlue':
-        return {
-          botBubbleBg: 'rgba(231, 250, 251, 0.85)',
-          userBubbleBg: 'rgba(30, 129, 176, 0.85)',
-          overlayBg: 'rgba(231, 250, 251, 0.3)',
-          inputBg: 'rgba(231, 250, 251, 0.6)'
-        };
-      default:
-        return {
-          botBubbleBg: 'rgba(0, 18, 38, 0.85)',
-          userBubbleBg: 'rgba(0, 122, 252, 0.85)',
-          overlayBg: 'rgba(0, 18, 38, 0.3)',
-          inputBg: 'rgba(0, 18, 38, 0.6)'
-        };
-    }
-  };
-  
-  const themeStyles = getThemeStyles();
-  
   /* ---- Refs --- */
-  const cmdPressedRef = useRef(false);
-  const cmdPressedTime = useRef<number | null>(null);
-  const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
   const audio = useAudio();
   
   // Get user data from store to pass to the API
   const { userInfo } = useUser();
   const { isSubscribed } = useUser();
+  
+  // Get knowledge profile data
+  const { 
+    weakestConcepts, 
+    sectionSummaries, 
+    overallMastery,
+    isLoading: knowledgeLoading, 
+    fetchKnowledgeProfiles,
+    checkAndUpdateKnowledgeProfiles
+  } = useKnowledge();
+  
+  // Create audio handlers using utility functions
+  const audioHandlers = createVoiceAudioHandlers(audio);
+  
+  // Create debounced audio toggle
+  const toggleAudio = createDebouncedAudioToggle(
+    (newState) => {
+      if (!audioEnabled) {
+        audio.playSound('chatbot-open');
+      }
+      setAudioEnabled(newState);
+    },
+    audioEnabled,
+    500
+  );
+  
+  // Setup command key handler for audio toggling
+  useEffect(() => {
+    const cmdKeyHandler = setupCommandKeyToggleHandler(toggleAudio);
+    // Setup listeners and get cleanup function
+    const cleanup = cmdKeyHandler.setupListeners();
+    // Return cleanup to remove listeners when component unmounts
+    return cleanup;
+  }, [toggleAudio]);
   
   // Prefetch welcome message as soon as the component mounts
   useEffect(() => {
@@ -150,60 +169,94 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
       }
 
       // If we had a temporary message and now activities are loaded, update it
-      if (isWelcomeMessageTemporary) {
-        // Generate template welcome message with user context
-        const gameState = {
-          streakDays,
-          testScore,
-          userLevel,
-          totalPatients
-        };
-
-        // Generate the welcome message using our template function
-        const templateMessage = generateWelcomeMessage({
-          userInfo,
-          examActivities,
-          studyActivities,
-          gameState
-        });
-        
-        // Use the template message
-        setWelcomeMessage(templateMessage);
-        setIsWelcomeMessageTemporary(false); // No longer temporary
-        
-        // Cache the message with timestamp for future use
-        localStorage.setItem(localStorageKey, JSON.stringify({
-          message: templateMessage,
-          timestamp: Date.now()
-        }));
-        
-        return;
+      if (isWelcomeMessageTemporary || !welcomeMessage) {
+        try {
+          // Create context data for welcome message using our first-person context
+          const firstPersonContext = createFirstPersonContext(
+            userInfo,
+            isSubscribed,
+            {
+              userLevel,
+              streakDays,
+              totalPatients,
+              testScore
+            },
+            {
+              weakestConcepts,
+              sectionSummaries,
+              overallMastery
+            },
+            {
+              examActivities,
+              studyActivities
+            },
+            {
+              audioEnabled
+            }
+          );
+          
+          // Create welcome context structured for the formatter
+          const welcomeContext = {
+            user: {
+              userId: userInfo?.userId,
+              firstName: userInfo?.firstName,
+              subscription: isSubscribed ? 'Premium' : 'Free',
+              hasFullProfile: !!userInfo?.onboardingInfo?.onboardingComplete
+            },
+            game: {
+              level: userLevel,
+              streakDays,
+              totalPatients,
+              testScore
+            },
+            knowledge: {
+              overallMastery: overallMastery ? `${Math.round(overallMastery * 100)}%` : null,
+              weakestConcepts: weakestConcepts?.slice(0, 3).map(concept => ({
+                concept: concept.concept,
+                section: concept.section,
+                mastery: `${Math.round(concept.mastery * 100)}%`
+              })),
+              sectionSummaries: sectionSummaries?.map(section => ({
+                name: section.section,
+                mastery: `${Math.round(section.averageMastery * 100)}%`,
+                conceptCount: section.totalConcepts
+              }))
+            },
+            calendar: {
+              totalExams: examActivities?.length || 0,
+              totalStudyActivities: studyActivities?.length || 0,
+              todaysActivities: getTodaysStudyActivities(studyActivities),
+              upcomingExams: getUpcomingExamActivities(examActivities)
+            },
+            time: {
+              greeting: getTimeGreeting(),
+              hour: new Date().getHours(),
+              isWeekend: [0, 6].includes(new Date().getDay()),
+              isLateNight: new Date().getHours() >= 22 || new Date().getHours() <= 5
+            }
+          };
+          
+          // Use our context to generate a message
+          const message = formatWelcomeMessage(welcomeContext);
+          
+          // Cache the message
+          localStorage.setItem(localStorageKey, JSON.stringify({
+            message,
+            timestamp: Date.now()
+          }));
+          
+          // Update state
+          setWelcomeMessage(message);
+          setIsWelcomeMessageTemporary(false);
+        } catch (error) {
+          console.error("[Welcome] Error generating welcome message:", error);
+          
+          // Use a fallback message in case of error
+          const fallbackMessage = `Hello ${userInfo?.firstName || 'there'}! Welcome to MyMCAT.ai. How can I help you today?`;
+          setWelcomeMessage(fallbackMessage);
+          setIsWelcomeMessageTemporary(false);
+        }
       }
-
-      // Generate template welcome message with user context
-      const gameState = {
-        streakDays,
-        testScore,
-        userLevel,
-        totalPatients
-      };
-
-      // Generate the welcome message using our template function
-      const templateMessage = generateWelcomeMessage({
-        userInfo,
-        examActivities,
-        studyActivities,
-        gameState
-      });
-      
-      // Use the template message
-      setWelcomeMessage(templateMessage);
-      
-      // Cache the message with timestamp for future use
-      localStorage.setItem(localStorageKey, JSON.stringify({
-        message: templateMessage,
-        timestamp: Date.now()
-      }));
     };
     
     prefetchWelcomeMessage();
@@ -211,163 +264,51 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
     return () => {
       // Cleanup
     };
-  }, [userInfo, welcomeMessage, examActivities, studyActivities, streakDays, testScore, userLevel, totalPatients, examLoading, studyLoading, isWelcomeMessageTemporary]);
+  }, [
+    userInfo, welcomeMessage, examActivities, studyActivities, 
+    streakDays, testScore, userLevel, totalPatients, 
+    examLoading, studyLoading, isWelcomeMessageTemporary,
+    overallMastery, weakestConcepts, sectionSummaries
+  ]);
   
   useEffect(() => {
     if (!isMounted) {
       setIsMounted(true);
     }
     
-    // Hide welcome message after 10 seconds
-    const welcomeTimer = setTimeout(() => {
-      setWelcomeVisible(false);
-    }, 10000);
+    // Welcome message will always be visible now
+    setWelcomeVisible(true);
     
-    return () => clearTimeout(welcomeTimer);
+    // No need for a timer to hide the welcome message
+    
+    return () => {
+      // Cleanup
+    };
   }, [isMounted]);
   
   useEffect(() => {
     if (chatbotRef) {
-      chatbotRef.current = {
-        sendMessage: (message: string, messageContext?: string) => {
-          // Set the textarea value and simulate Enter press
-          const textarea = document.querySelector('.rcb-chat-input-textarea');
-          if (textarea instanceof HTMLTextAreaElement) {
-            // Set value and trigger input event
-            textarea.value = message;
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            
-            // Create and dispatch Enter keydown event
-            const enterEvent = new KeyboardEvent('keydown', {
-              key: 'Enter',
-              code: 'Enter',
-              keyCode: 13,
-              which: 13,
-              bubbles: true,
-              // Add the context as custom data
-              ...(messageContext && { __context: messageContext })
-            });
-            
-            // Focus the textarea and dispatch the event
-            textarea.focus();
-            setTimeout(() => {
-              textarea.dispatchEvent(enterEvent);
-            }, 100);
-          }
+      // Use textarea enter handler to set up message sending
+      const textareaHandler = setupTextareaEnterHandler('.rcb-chat-input-textarea', (message, context) => {
+        if (chatbotRef.current) {
+          chatbotRef.current.sendMessage(message, context);
         }
+      });
+      
+      chatbotRef.current = {
+        sendMessage: textareaHandler.simulateEnterKeyPress
       };
     }
   }, [chatbotRef]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.key === 'Meta' || event.key === 'Control') && !event.repeat) {
-        // Only set command pressed if no other keys are already pressed
-        if (!cmdPressedRef.current) {
-          cmdPressedRef.current = true;
-          cmdPressedTime.current = Date.now();
-        }
-      } else if (cmdPressedRef.current) {
-        // If any other key is pressed while Command is down, mark it as a combo
-        // This prevents toggling audio when Command is used for shortcuts
-        cmdPressedTime.current = null;
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Meta' || event.key === 'Control') {
-        // Only toggle if it was a standalone Command press (not part of a combo)
-        if (cmdPressedRef.current && cmdPressedTime.current) {
-          const pressDuration = Date.now() - cmdPressedTime.current;
-          if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
-            // Clear any existing timer to prevent multiple toggles
-            if (cmdReleaseTimer.current) {
-              clearTimeout(cmdReleaseTimer.current);
-            }
-            
-            cmdReleaseTimer.current = setTimeout(() => {
-              toggleAudio();
-              cmdReleaseTimer.current = null;
-            }, 50); // Small delay to ensure no other keys were pressed
-          }
-        }
-        cmdPressedRef.current = false;
-        cmdPressedTime.current = null;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      if (cmdReleaseTimer.current) {
-        clearTimeout(cmdReleaseTimer.current);
-      }
-    };
-  }, []);
   
   useEffect(() => {
     if (examActivities && studyActivities) {
-      const examEvents = examActivities.map((activity) => {
-        // Map exam titles to shorter display names
-        let displayTitle = "EXAM";
-        if (activity.activityTitle === "MCAT Exam") {
-          displayTitle = "MCAT";
-        } else if (activity.activityTitle.includes("Unscored Sample")) {
-          displayTitle = "Unscored";
-        } else if (activity.activityTitle.includes("Full Length Exam")) {
-          const number = activity.activityTitle.match(/\d+/)?.[0];
-          displayTitle = `FL${number}`;
-        } else if (activity.activityTitle.includes("Sample Scored")) {
-          displayTitle = "Scored";
-        }
-
-        return {
-          id: activity.id,
-          title: displayTitle,
-          start: new Date(activity.scheduledDate),
-          end: new Date(activity.scheduledDate),
-          allDay: true,
-          activityText: activity.activityText,
-          hours: activity.hours,
-          activityType: activity.activityType,
-          resource: { 
-            ...activity, 
-            eventType: 'exam' as const,
-            fullTitle: activity.activityTitle,
-            activityText: activity.activityText,
-            hours: activity.hours,
-            activityType: activity.activityType,
-            activityTitle: activity.activityTitle,
-            status: activity.status
-          }
-        };
-      });
-
-      const studyEvents = studyActivities.map((activity) => ({
-        id: activity.id,
-        title: activity.activityTitle,
-        start: new Date(activity.scheduledDate),
-        end: new Date(activity.scheduledDate),
-        allDay: true,
-        activityText: activity.activityText,
-        hours: activity.hours,
-        activityType: activity.activityType,
-        resource: { 
-          ...activity, 
-          eventType: 'study' as const,
-          fullTitle: `${activity.activityTitle} (${activity.hours}h)`,
-          activityText: activity.activityText,
-          hours: activity.hours,
-          activityType: activity.activityType,
-          activityTitle: activity.activityTitle,
-          status: activity.status
-        }
-      }));
-
-      setCalendarEvents([...examEvents, ...studyEvents]);
+      // Use calendar utils to process and combine activities
+      const examEvents = processExamActivities(examActivities);
+      const studyEvents = processStudyActivities(studyActivities);
+      const combined = combineCalendarEvents(examEvents, studyEvents);
+      
+      setCalendarEvents(combined);
     }
   }, [examActivities, studyActivities]);
 
@@ -378,47 +319,236 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
     }
   }, [isCalendarModalOpen, fetchExamActivities, refetchStudyActivities]);
   
+  /* --- Animations & Effects --- */
+  // Debug useEffect to log all available context
+  useEffect(() => {
+    // Use debug utils to create and log context
+    const contextLogObject = createContextLogObject(
+      userInfo,
+      isSubscribed,
+      {
+        streakDays,
+        testScore,
+        userLevel,
+        totalPatients
+      },
+      {
+        weakestConcepts,
+        sectionSummaries,
+        overallMastery,
+        isLoading: knowledgeLoading
+      },
+      {
+        examActivities,
+        studyActivities
+      },
+      {
+        currentTheme,
+        audioEnabled
+      },
+      {
+        welcomeMessage,
+        welcomeVisible,
+        isWelcomeMessageTemporary
+      }
+    );
+    
+    // Create knowledge summary for logging
+    const knowledgeSummary = generateKnowledgeSummary(
+      weakestConcepts,
+      sectionSummaries,
+      overallMastery
+    );
+    
+    // Log debug data
+    logDebugData(
+      contextLogObject,
+      {
+        examActivity: examActivities?.length ? examActivities[0] : undefined,
+        studyActivity: studyActivities?.length ? studyActivities[0] : undefined,
+        userInfo,
+        weakestConcept: weakestConcepts?.length ? weakestConcepts[0] : undefined,
+        sectionSummary: sectionSummaries?.length ? sectionSummaries[0] : undefined,
+        knowledgeSummary: knowledgeSummary
+      }
+    );
+  }, [
+    userInfo, isSubscribed, streakDays, testScore, userLevel, totalPatients,
+    examActivities, studyActivities, currentTheme, audioEnabled,
+    welcomeMessage, welcomeVisible, isWelcomeMessageTemporary,
+    weakestConcepts, sectionSummaries, overallMastery, knowledgeLoading
+  ]);
+  
+  // Fetch knowledge profiles on mount and check if update is needed
+  useEffect(() => {
+    // First fetch current data
+    fetchKnowledgeProfiles();
+    
+    // Then check if we need to update (only if we have a user ID)
+    if (userInfo?.userId) {
+      checkAndUpdateKnowledgeProfiles(userInfo.userId);
+    }
+  }, [fetchKnowledgeProfiles, checkAndUpdateKnowledgeProfiles, userInfo?.userId]);
+  
+  // Add detailed context logging for welcome message fabrication
+  useEffect(() => {
+    // Only log once we have all the data loaded
+    if (!examLoading && !studyLoading && !knowledgeLoading && userInfo) {
+      // Create context data for welcome message
+      const welcomeContext = {
+        user: {
+          userId: userInfo?.userId,
+          firstName: userInfo?.firstName,
+          subscription: isSubscribed ? 'Premium' : 'Free',
+          hasFullProfile: !!userInfo?.onboardingInfo?.onboardingComplete
+        },
+        game: {
+          level: userLevel,
+          streakDays,
+          totalPatients,
+          testScore
+        },
+        knowledge: {
+          overallMastery: overallMastery ? `${Math.round(overallMastery * 100)}%` : null,
+          weakestConcepts: weakestConcepts?.slice(0, 3).map(concept => ({
+            concept: concept.concept,
+            section: concept.section,
+            mastery: `${Math.round(concept.mastery * 100)}%`
+          })),
+          sectionSummaries: sectionSummaries?.map(section => ({
+            name: section.section,
+            mastery: `${Math.round(section.averageMastery * 100)}%`,
+            conceptCount: section.totalConcepts
+          }))
+        },
+        calendar: {
+          totalExams: examActivities?.length || 0,
+          totalStudyActivities: studyActivities?.length || 0,
+          todaysActivities: getTodaysStudyActivities(studyActivities),
+          upcomingExams: getUpcomingExamActivities(examActivities),
+          // Add the weekly activities for future use
+          weeklyActivities: getUpcomingWeekActivities(studyActivities, examActivities)
+        },
+        time: {
+          greeting: getTimeGreeting(),
+          hour: new Date().getHours(),
+          isWeekend: [0, 6].includes(new Date().getDay()),
+          isLateNight: new Date().getHours() >= 22 || new Date().getHours() <= 5
+        }
+      };
+      
+      // Generate a sample welcome message
+      const sampleMessage = formatWelcomeMessage(welcomeContext);
+      
+      // Create first-person context for comparison
+      const firstPersonContext = createFirstPersonContext(
+        userInfo,
+        isSubscribed,
+        {
+          userLevel,
+          streakDays,
+          totalPatients,
+          testScore
+        },
+        {
+          weakestConcepts,
+          sectionSummaries,
+          overallMastery
+        },
+        {
+          examActivities,
+          studyActivities
+        },
+        {
+          audioEnabled
+        }
+      );
+      
+    }
+  }, [
+    examActivities, studyActivities, userInfo, isSubscribed, 
+    streakDays, testScore, userLevel, totalPatients,
+    weakestConcepts, sectionSummaries, overallMastery,
+    examLoading, studyLoading, knowledgeLoading, audioEnabled
+  ]);
+  
+  // Add this effect to track messages in the chat window
+  useEffect(() => {
+    // Function to listen for DOM changes to detect new messages
+    const observeMessages = () => {
+      // Check for the chatbot container first
+      const chatContainer = document.querySelector('.rcb-chat-container');
+      if (!chatContainer) return;
+      
+      // Setup observer to watch for changes in the message container
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            // Count the user messages
+            const userMessages = document.querySelectorAll('.rcb-message-container .rcb-message-bubble.rcb-message-bubble-user');
+            // Update message count based on UI rather than our own counter
+            setMessageCount(userMessages.length);
+          }
+        });
+      });
+      
+      // Start observing the container for DOM changes
+      const messagesContainer = chatContainer.querySelector('.rcb-chat-messages');
+      if (messagesContainer) {
+        observer.observe(messagesContainer, { childList: true, subtree: true });
+      }
+      
+      // Return cleanup function
+      return () => {
+        observer.disconnect();
+      };
+    };
+    
+    // Start observing once mounted
+    if (isMounted) {
+      // Wait a bit for the chat to initialize
+      const timer = setTimeout(observeMessages, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMounted]);
+  
   /* ---- Event Handlers ----- */
   const handleSendMessage = async (message: string, messageContext?: string) => {
+    // Increment message count when a message is sent
+    setMessageCount(prev => prev + 1);
+    
     setIsLoading(true);
     setError(null);
     setIsBotResponding(true);
     
-    // Create a comprehensive user context object
-    const userProfileContext = {
-      user: {
-        id: userInfo?.userId || 'anonymous',
-        name: userInfo?.firstName || 'User',
-        subscription: isSubscribed ? 'premium' : 'free'
+    // Generate a first-person narrative context for the AI
+    const firstPersonContext = createFirstPersonContext(
+      userInfo,
+      isSubscribed,
+      {
+        userLevel,
+        streakDays,
+        totalPatients,
+        testScore
       },
-      game: {
-        level: userLevel || 'Beginner',
-        streakDays: streakDays || 0,
-        totalPatients: totalPatients || 0,
-        testScore: testScore || 0,
-        anki: {
-          clinicStatus: 'PATIENT LEVEL', // Updated to use the string you mentioned for game status
-          patientsPerDay: 20, // Replace with actual data from your state if available
-          totalTreated: totalPatients || 0
-        }
+      {
+        weakestConcepts,
+        sectionSummaries,
+        overallMastery
       },
-      activities: {
-        examCount: examActivities?.length || 0,
-        studyCount: studyActivities?.length || 0,
-        upcomingExam: examActivities?.length > 0 ? {
-          title: examActivities[0].activityTitle,
-          date: examActivities[0].scheduledDate
-        } : null
+      {
+        examActivities,
+        studyActivities
       },
-      preferences: {
-        audio: audioEnabled
+      {
+        audioEnabled
       }
-    };
+    );
     
-    // Combine any existing message context with our profile context
+    // Combine any existing message context with our first-person context
     const combinedContext = messageContext ? 
-      messageContext + "\n\nUser Profile: " + JSON.stringify(userProfileContext) :
-      "User Profile: " + JSON.stringify(userProfileContext);
+      `${messageContext}\n\n===== USER CONTEXT =====\nThe following is a first-person description of my current status, schedule, knowledge profile, and preferences. Use this information to personalize your responses and provide relevant advice about my MCAT studies.\n\n${firstPersonContext}\n===== END USER CONTEXT =====` :
+      `===== USER CONTEXT =====\nThe following is a first-person description of my current status, schedule, knowledge profile, and preferences. Use this information to personalize your responses and provide relevant advice about my MCAT studies.\n\n${firstPersonContext}\n===== END USER CONTEXT =====`;
       
     try {    
       const response = await fetch('/api/conversation', {
@@ -446,7 +576,13 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
       }
       
       if (audioEnabled && data.audio) {
-        playAudio(data.audio);
+        audioHandlers.playVoiceAudio(data.audio);
+        setIsPlaying(true);
+        
+        // Set isPlaying to false after a short delay
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 500);
       }
       
       // Check if this is the first response and tutorial hasn't been played
@@ -501,367 +637,93 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
     await refetchStudyActivities();
   };
 
-  const playAudio = (audioBase64: string) => {
-    setIsPlaying(true);
-    
-    // Use the voice channel instead of music channel
-    audio.playVoice(audioBase64);
-    
-    // Set isPlaying to false after a short delay
-    setTimeout(() => {
-      setIsPlaying(false);
-    }, 500);
-  };
-
   const stopAudio = () => {
     setIsPlaying(false);
-    audio.stopVoice();
+    audioHandlers.stopVoiceAudio();
   };
 
-  const toggleAudio = () => {
-    // Prevent rapid toggling by enforcing a minimum time between toggles
-    const now = Date.now();
-    const timeSinceLastToggle = now - lastToggleTime;
-    
-    // Only allow toggle if it's been at least 500ms since the last toggle
-    if (timeSinceLastToggle < 500) {
-      return;
+  // Add a handler for prompt suggestions
+  const handleSuggestionClick = (prompt: string) => {
+    if (chatbotRef && chatbotRef.current) {
+      chatbotRef.current.sendMessage(prompt);
     }
-    
-    setLastToggleTime(now);
-    
-    if (!audioEnabled) {
-      audio.playSound('chatbot-open');
-    }
-    setAudioEnabled(!audioEnabled);
   };
 
   /* ---- ChatBot Settings ----- */
-  const flow = {
-    start: {
-      message: async () => {
-        // Define keys once to ensure consistency - same as in prefetch effect
-        const localStorageKey = `welcome-message-${userInfo?.userId || 'anonymous'}`;
-        const lastApiCallTimeKey = `welcome-api-last-call-${userInfo?.userId || 'anonymous'}`;
-        
-        // We already have the message from prefetching
+  // Use utility function to generate chatbot flow
+  const flow = generateChatbotFlow(
+    handleSendMessage,
+    async () => {
+      // If we already have the welcome message from prefetching
         if (welcomeMessage) {
           return welcomeMessage;
         }
         
-        // As a fallback, if somehow we don't have it yet
-        
-        // Check cache in localStorage first before making any API calls 
-        const cachedData = localStorage.getItem(localStorageKey);
-        
-        if (cachedData) {
-          try {
-            const { message, timestamp } = JSON.parse(cachedData);
-            const now = Date.now();
-            const cacheAge = now - timestamp;
-            const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours - Match prefetch cache duration
-            
-            // Use cached message if it's not too old
-            if (cacheAge < MAX_CACHE_AGE) {
-              return message;
-            }
-          } catch (err) {
-            // Silent error handling
+      // If we have all the necessary data but somehow don't have a welcome message yet
+      if (userInfo && !examLoading && !studyLoading && !knowledgeLoading) {
+        // Create context data for welcome message
+        const welcomeContext = {
+          user: {
+            userId: userInfo?.userId,
+            firstName: userInfo?.firstName,
+            subscription: isSubscribed ? 'Premium' : 'Free',
+            hasFullProfile: !!userInfo?.onboardingInfo?.onboardingComplete
+          },
+          game: {
+            level: userLevel,
+            streakDays,
+            totalPatients,
+            testScore
+          },
+          knowledge: {
+            overallMastery: overallMastery ? `${Math.round(overallMastery * 100)}%` : null,
+            weakestConcepts: weakestConcepts?.slice(0, 3).map(concept => ({
+              concept: concept.concept,
+              section: concept.section,
+              mastery: `${Math.round(concept.mastery * 100)}%`
+            })),
+            sectionSummaries: sectionSummaries?.map(section => ({
+              name: section.section,
+              mastery: `${Math.round(section.averageMastery * 100)}%`,
+              conceptCount: section.totalConcepts
+            }))
+          },
+          calendar: {
+            totalExams: examActivities?.length || 0,
+            totalStudyActivities: studyActivities?.length || 0,
+            todaysActivities: getTodaysStudyActivities(studyActivities),
+            upcomingExams: getUpcomingExamActivities(examActivities),
+            weeklyActivities: getUpcomingWeekActivities(studyActivities, examActivities)
+          },
+          time: {
+            greeting: getTimeGreeting(),
+            hour: new Date().getHours(),
+            isWeekend: [0, 6].includes(new Date().getDay()),
+            isLateNight: new Date().getHours() >= 22 || new Date().getHours() <= 5
           }
-        }
+        };
         
-        // Check rate limiting
-        const lastApiCallTime = localStorage.getItem(lastApiCallTimeKey);
-        if (lastApiCallTime) {
-          const now = Date.now();
-          const timeSinceLastCall = now - Number(lastApiCallTime);
-          const MIN_API_CALL_INTERVAL = 10000; // 10 seconds - Match prefetch rate limit
-          
-          if (timeSinceLastCall < MIN_API_CALL_INTERVAL) {
-            // Try to use cached message even if older
-            if (cachedData) {
-              try {
-                const { message } = JSON.parse(cachedData);
-                return message;
-              } catch (err) {
-                // Silent error - we'll use fallback below
-              }
-            }
-            
-            // Return a fallback message if no cache
-            const fallbackMessage = "Hi there! I'm Kalypso. Welcome to MyMCAT.ai, the MCAT tutoring platform that adapts to you! Put your cursor on the left side of your screen to activate the sidebar. Our service works best when you've taken and reviewed your first exam and have an exam";
-            return fallbackMessage;
-          }
-        }
-        
-        // Making the API call directly without rate limiting check, since this is the fallback
-        // Record API call time
-        localStorage.setItem(lastApiCallTimeKey, Date.now().toString());
-        
-        setIsBotResponding(true);
-        const fallbackFetchStartTime = Date.now();
-        try {
-          // Using a longer timeout since this is our last attempt
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (longer than prefetch)
-          
-          const response = await fetch("/api/kalypso/welcome", {
-            method: "GET", 
-            cache: 'no-cache',
-            headers: {
-              'Cache-Control': 'max-age=300' // Cache for 5 minutes
-            },
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`Failed to fetch welcome message: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          
-          // Cache the successful response - SAME AS IN PREFETCH
-          localStorage.setItem(localStorageKey, JSON.stringify({
-            message: data.message,
-            timestamp: Date.now()
-          }));
-          
-          setIsBotResponding(false);
-          return data.message;
-        } catch (error) {
-          setIsBotResponding(false);
-          
-          // Check for stale cache as last resort before using hardcoded fallback
-          const staleCachedData = localStorage.getItem(localStorageKey);
-          if (staleCachedData) {
-            try {
-              const { message } = JSON.parse(staleCachedData);
-              return message;
-            } catch (err) {
-              // Silent error handling
-            }
-          }
-          
-          // Return a fallback message if the API call fails
-          const fallbackMessage = "Hi there! I'm Kalypso. Welcome to MyMCAT.ai, the MCAT tutoring platform that adapts to you! Put your cursor on the left side of your screen to activate the sidebar and see all of our suites. We recommend creating a schedule, taking your first practice exam (AAMC Unscored), and then reviewing it so our system knows what to show you!";
-          return fallbackMessage;
-        }
-      },
-      path: "loop",
-    },
-    loop: {
-      message: async (params: { userInput: string, messageContext?: string }) => {
-        const response = await handleSendMessage(params.userInput, params.messageContext);
-        return response;
-      },
-      path: "loop",
-    },
-  };
+        // Use our utility function to format the welcome message
+        return formatWelcomeMessage(welcomeContext);
+      }
+      
+      // Fallback message
+      return `Hello ${userInfo?.firstName || 'there'}! Welcome to MyMCAT.ai. How can I help you today?`;
+    }
+  );
 
-  const settings = {
-    general: {
-      embedded: true,
-      showHeader: true,
-      showFooter: false,
-    },
-    event: {
-      rcbUserSubmitText: true,
-      rcbPreInjectMessage: true,
-      rcbPostInjectMessage: true,
-    },
-    chatWindow: {
-      autoJumpToBottom: true,
-    },
-    chatInput: {
-      enabledPlaceholderText: "Chat with Kalypso",
-      color: "var(--theme-text-color)",
-      blockSpam: true,
-    },
-    chatHistory: { 
-      storageKey: "mcat_assistant_chat_history", 
-      disabled: true,
-      initialMessages: []
-    },
-    header: {
-      showAvatar: false,
-      title: (
-        <div className="flex items-center justify-between w-full">
-          <div className="flex text-[--theme-text-color] items-center gap-3">
-            <div className="flex items-center">
-              <button
-                onClick={toggleAudio}
-                className={cn(
-                  "px-2 py-1 text-xs rounded-full transition-colors",
-                  audioEnabled ? "text-[--theme-hover-color]" : "text-[--theme-text-color] hover:text-[--theme-hover-color]"
-                )}
-              >
-                {audioEnabled ? "🔊" : "🔇"}
-              </button>
-              <span
-                className="text-[9px] ml-1 text-[--theme-text-color]"
-              >
-                {audioEnabled ? "speak with the mic" : "toggle voice with 'cmd' key"}
-              </span>
-            </div>
-            {QUICK_ACTIONS.map((action) => (
-              <button
-                key={action.id}
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300", 
-                  "border border-[--theme-border-color]", 
-                  activeTab === action.id 
-                    ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                    : "bg-[rgba(255,255,255,0.1)] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                )}
-                onClick={() => handleTabClick(action.id)}
-              >
-                {action.text}
-              </button>
-            ))}
-          </div>
-        </div>
-      ),
-    },
-    notification: {
-      disabled: true,
-    },
-    voice: {
-      disabled: !audioEnabled,
-      defaultToggledOn: true,
-      language: "en-US",
-      autoSendDisabled: false,
-      autoSendPeriod: 3000,
-      sendAsAudio: false,
-      timeoutPeriod: 50000,
-    },
-    botBubble: {
-      simStream: true,
-      streamSpeed: audioEnabled ? 80 : 25,
-    },
-  };
+  // Use utility function to generate chatbot settings
+  const settings = generateChatbotSettings(
+    audioEnabled,
+    currentTheme,
+    activeTab,
+    QUICK_ACTIONS,
+    handleTabClick,
+    toggleAudio
+  );
 
-  const styles: Styles = {
-    chatWindowStyle: {
-      display: "flex",
-      flexDirection: "column" as const,
-      height: "calc(100vh - 9rem)",
-      width: "100%",
-      backgroundColor: "transparent",
-      position: "relative",
-      zIndex: 1,
-    },
-    bodyStyle: {
-      flexGrow: 1,
-      overflowY: "auto" as const,
-      backgroundColor: "transparent",
-    },
-    chatInputContainerStyle: {
-      position: 'sticky',
-      bottom: 0,
-      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(0, 0, 0, 0.3)' :
-                      currentTheme === 'sakuraTrees' ? 'rgba(251, 240, 248, 0.3)' :
-                      currentTheme === 'sunsetCity' ? 'rgba(36, 23, 58, 0.3)' :
-                      currentTheme === 'mykonosBlue' ? 'rgba(231, 250, 251, 0.3)' :
-                      'rgba(0, 0, 0, 0.3)',
-      backdropFilter: "blur(10px)",
-      borderTop: `2px solid ${
-        currentTheme === 'cyberSpace' ? 'rgba(59, 130, 246, 0.5)' :
-        currentTheme === 'sakuraTrees' ? 'rgba(235, 128, 176, 0.5)' :
-        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.5)' :
-        currentTheme === 'mykonosBlue' ? 'rgba(76, 181, 230, 0.5)' :
-        'var(--theme-border-color)'
-      }`,
-      padding: "1rem",
-      width: "100%",
-      zIndex: 2,
-      boxShadow: currentTheme === 'cyberSpace' ? "0 -5px 15px -5px rgba(0, 123, 255, 0.2)" :
-                currentTheme === 'sakuraTrees' ? "0 -5px 15px -5px rgba(255, 0, 89, 0.2)" :
-                currentTheme === 'sunsetCity' ? "0 -5px 15px -5px rgba(255, 99, 71, 0.2)" :
-                currentTheme === 'mykonosBlue' ? "0 -5px 15px -5px rgba(30, 129, 176, 0.2)" :
-                "0 -5px 15px -5px rgba(0, 0, 0, 0.1)",
-    },
-    chatInputAreaStyle: {
-      border: `1px solid ${
-        currentTheme === 'cyberSpace' ? 'rgba(59, 130, 246, 0.7)' :
-        currentTheme === 'sakuraTrees' ? 'rgba(235, 128, 176, 0.7)' :
-        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.7)' :
-        currentTheme === 'mykonosBlue' ? 'rgba(76, 181, 230, 0.7)' :
-        'var(--theme-border-color)'
-      }`,
-      borderRadius: "12px",
-      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(255, 255, 255, 0.1)' :
-                     currentTheme === 'sakuraTrees' ? 'rgba(255, 255, 255, 0.2)' :
-                     currentTheme === 'sunsetCity' ? 'rgba(255, 255, 255, 0.1)' :
-                     currentTheme === 'mykonosBlue' ? 'rgba(255, 255, 255, 0.2)' :
-                     'rgba(255, 255, 255, 0.1)',
-      color: "var(--theme-text-color)",
-      width: "100%",
-      boxShadow: `0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)`,
-      backdropFilter: "blur(5px)",
-    },
-    botBubbleStyle: {
-      fontSize: "1rem",
-      fontWeight: "500",
-      fontFamily:
-        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: "var(--theme-text-color)",
-      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(0, 18, 38, 0.95)' :
-                     currentTheme === 'sakuraTrees' ? 'rgba(251, 240, 248, 0.95)' :
-                     currentTheme === 'sunsetCity' ? 'rgba(36, 23, 58, 0.95)' :
-                     currentTheme === 'mykonosBlue' ? 'rgba(231, 250, 251, 0.95)' :
-                     themeStyles.botBubbleBg,
-      backdropFilter: "blur(10px)",
-      // Add theme-specific glow (box-shadow) with enhanced intensity
-      boxShadow: currentTheme === 'cyberSpace' ? "0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sakuraTrees' ? "0 0 8px 2px rgba(255, 0, 89, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sunsetCity' ? "0 0 10px 3px rgba(255, 99, 71, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'mykonosBlue' ? "0 0 8px 4px rgba(30, 129, 176, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                "0 2px 4px rgba(0, 0, 0, 0.1)",
-      borderRadius: "0.75rem 0.75rem 0.75rem 0.25rem",
-      borderLeft: currentTheme === 'cyberSpace' ? "3px solid #3b82f6" :
-                 currentTheme === 'sakuraTrees' ? "3px solid #eb80b0" :
-                 currentTheme === 'sunsetCity' ? "3px solid #ff9baf" :
-                 currentTheme === 'mykonosBlue' ? "3px solid #4cb5e6" :
-                 "3px solid var(--theme-hover-color)",
-    },
-    userBubbleStyle: {
-      fontSize: "1rem",
-      fontWeight: "500",
-      fontFamily:
-        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: "white",
-      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(0, 122, 252, 0.95)' :
-                     currentTheme === 'sakuraTrees' ? 'rgba(196, 122, 155, 0.95)' :
-                     currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.95)' :
-                     currentTheme === 'mykonosBlue' ? 'rgba(30, 129, 176, 0.95)' :
-                     themeStyles.userBubbleBg,
-      backdropFilter: "blur(10px)",
-      // Add theme-specific glow (box-shadow) with enhanced intensity
-      boxShadow: currentTheme === 'cyberSpace' ? "0 0 8px 2px rgba(0, 123, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sakuraTrees' ? "0 0 8px 2px rgba(255, 0, 89, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'sunsetCity' ? "0 0 10px 3px rgba(255, 99, 71, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                currentTheme === 'mykonosBlue' ? "0 0 8px 4px rgba(30, 129, 176, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)" :
-                "0 2px 4px rgba(0, 0, 0, 0.1)",
-      borderRadius: "0.75rem 0.75rem 0.25rem 0.75rem",
-      borderRight: currentTheme === 'cyberSpace' ? "3px solid #007afc" :
-                  currentTheme === 'sakuraTrees' ? "3px solid #b85475" :
-                  currentTheme === 'sunsetCity' ? "3px solid #ff6347" :
-                  currentTheme === 'mykonosBlue' ? "3px solid #1e81b0" :
-                  "3px solid var(--theme-hover-color)",
-      textAlign: "left",
-    },
-    headerStyle: {
-      background: themeStyles.overlayBg, // Theme-specific header background
-      backdropFilter: "blur(5px)",
-      borderBottom: "1px solid var(--theme-border-color)",
-      padding: "0.75rem 1rem",
-    },
-    chatHistoryButtonStyle: {
-      fontSize: "0.5rem !important", 
-    },
-  };
+  // Use utility function to generate chatbot styles
+  const styles = generateChatbotStyles(currentTheme);
 
   const themes = [{ id: "simple_blue", version: "0.1.0" }];
 
@@ -896,6 +758,14 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
         
         {/* User Context Panel for onboarding tasks */}
         <UserContextPanel activities={activities} />
+        
+        {/* Prompt Suggestions */}
+        <PromptSuggestions 
+          onSendMessage={handleSuggestionClick}
+          messageCount={messageCount}
+          currentTheme={currentTheme}
+          className="absolute bottom-0 left-0 right-0 z-10"
+        />
       </div>
 
       {/* Audio control indicator */}
@@ -950,10 +820,6 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
         </div>
       )}
 
-      {/* Tutor Report Modal
-      {isTutorReportOpen && (
-        <TutorReportModal onClose={() => setIsTutorReportOpen(false)} />
-      )} */}
     </div>
   );
 };

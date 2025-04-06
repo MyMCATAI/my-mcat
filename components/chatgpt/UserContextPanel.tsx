@@ -9,11 +9,6 @@ import type { FetchedActivity } from "@/types"
 
 const TASKS = [
   {
-    id: 'use-anki',
-    title: 'Try out Anki flashcards',
-    route: '/ankiclinic',
-  },
-  {
     id: 'plan-exam',
     title: 'Plan your exam and study schedule',
     route: '/examcalendar',
