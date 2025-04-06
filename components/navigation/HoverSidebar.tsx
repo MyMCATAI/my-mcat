@@ -20,6 +20,15 @@ import { useFeatureUnlock } from "@/hooks/useFeatureUnlock";
 import { UnlockDialog } from "@/components/unlock-dialog";
 
 /* ----- Types ---- */
+// Feature unlock enum for type safety
+export enum FEATURE_UNLOCK {
+  KALYPSO_AI = "kalypso-ai",
+  CARS = "cars",
+  TUTORING = "tutoring",
+  TESTS = "tests",
+  ANKICLINIC = "ankiclinic"
+}
+
 interface Task {
   text: string;
   completed: boolean;
@@ -38,7 +47,7 @@ interface Activity {
 }
 
 interface NavigationItem {
-  id: string;
+  id: FEATURE_UNLOCK;
   name: string;
   tab: string;
   icon: React.ReactNode;
@@ -58,7 +67,7 @@ interface HoverSidebarProps {
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
-    id: "kalypso-ai",
+    id: FEATURE_UNLOCK.KALYPSO_AI,
     name: "Kalypso AI",
     tab: "KalypsoAI",
     icon: <Brain className="w-5 h-5" />,
@@ -68,7 +77,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     photo: "/kalypso/kalypsocalendar.png"
   },
   {
-    id: "cars",
+    id: FEATURE_UNLOCK.CARS,
     name: "CARS Suite",
     tab: "CARS",
     icon: <BookOpen className="w-5 h-5" />,
@@ -78,7 +87,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     photo: "/kalypso/kalypotesting.png"
   },
   {
-    id: "tutoring",
+    id: FEATURE_UNLOCK.TUTORING,
     name: "Adaptive Content",
     tab: "AdaptiveTutoringSuite",
     icon: <GraduationCap className="w-5 h-5" />,
@@ -89,17 +98,17 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   
   {
-    id: "tests",
+    id: FEATURE_UNLOCK.TESTS,
     name: "Practice Test Review",
     tab: "Tests",
     icon: <Book className="w-5 h-5" />,
     requiresUnlock: true,
     unlockCost: 30,
     description: "Review your full-length MCAT practice tests with focused feedback and performance tracking.",
-    photo: "/kalypso/kalypotesting.png"
+    photo: "/kalypso/kalypsodiagnostic.png"
   },
   {
-    id: "ankiclinic",
+    id: FEATURE_UNLOCK.ANKICLINIC,
     name: "Anki Clinic",
     tab: "AnkiClinic",
     icon: <Clock className="w-5 h-5" />,
