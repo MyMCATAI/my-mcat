@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { Task } from "@/types";
 
 export interface DataPulse {
   id: string;
@@ -31,6 +32,42 @@ export interface CalendarActivity {
   status: string;
   hours: number;
   fullLengthExam?: FullLengthExam;
+  userId: string;
+  studyPlanId: string;
+  categoryId: string | null;
+  link: string | null;
+  tasks?: Task[];
+}
+
+export type FetchedActivity = CalendarActivity;
+
+/**
+ * Helper function to ensure activity objects have all required properties
+ * This prevents type errors when API responses might not include all expected fields
+ */
+export function normalizeActivity(activity: Partial<FetchedActivity>): FetchedActivity {
+  return {
+    id: activity.id || '',
+    userId: activity.userId || '',
+    studyPlanId: activity.studyPlanId || '',
+    categoryId: activity.categoryId || null,
+    activityTitle: activity.activityTitle || '',
+    activityText: activity.activityText || '',
+    hours: activity.hours || 0,
+    activityType: activity.activityType || '',
+    link: activity.link || null,
+    status: activity.status || 'PENDING',
+    scheduledDate: activity.scheduledDate || new Date().toISOString(),
+    tasks: activity.tasks || [],
+    ...(activity.fullLengthExam && { fullLengthExam: activity.fullLengthExam })
+  };
+}
+
+/**
+ * Normalize an array of activities
+ */
+export function normalizeActivities(activities: Partial<FetchedActivity>[]): FetchedActivity[] {
+  return activities.map(activity => normalizeActivity(activity));
 }
 
 interface CreateExamActivityParams {
@@ -53,8 +90,10 @@ export function useExamActivities() {
         throw new Error('Failed to fetch exam activities');
       }
       const data = await response.json();
-      setActivities(data);
-      return data;
+      // Normalize the data to ensure all properties exist
+      const normalizedData = normalizeActivities(data);
+      setActivities(normalizedData);
+      return normalizedData;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch exam activities'));
       throw err;
@@ -175,9 +214,11 @@ export function useAllCalendarActivities() {
       const data = await response.json();
       // Filter out exam activities
       const nonExamActivities = data.filter(
-        (activity: CalendarActivity) => activity.activityType !== 'Exam'
+        (activity: Partial<CalendarActivity>) => activity.activityType !== 'Exam'
       );
-      setActivities(nonExamActivities);
+      // Normalize the data to ensure all properties exist
+      const normalizedActivities = normalizeActivities(nonExamActivities);
+      setActivities(normalizedActivities);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch activities'));
       throw err;
