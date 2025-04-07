@@ -150,13 +150,10 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
       return;
     }
     
-    // Only fetch once per session check
-    if (sessionStorage.getItem(prefetchKey)) {
+    // Only fetch once per session check - but only if we have a non-temporary message
+    if (!isWelcomeMessageTemporary && sessionStorage.getItem(prefetchKey)) {
       return;
     }
-    
-    // Mark this fetch as attempted for this session
-    sessionStorage.setItem(prefetchKey, 'true');
     
     const prefetchWelcomeMessage = async () => {
       // Wait for activities to load
@@ -248,6 +245,9 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
           // Update state
           setWelcomeMessage(message);
           setIsWelcomeMessageTemporary(false);
+          
+          // Only now mark the prefetch as complete since we have a real message
+          sessionStorage.setItem(prefetchKey, 'true');
         } catch (error) {
           console.error("[Welcome] Error generating welcome message:", error);
           
@@ -255,6 +255,9 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
           const fallbackMessage = `Hello ${userInfo?.firstName || 'there'}! Welcome to MyMCAT.ai. How can I help you today?`;
           setWelcomeMessage(fallbackMessage);
           setIsWelcomeMessageTemporary(false);
+          
+          // Still mark prefetch as complete even with fallback
+          sessionStorage.setItem(prefetchKey, 'true');
         }
       }
     };
