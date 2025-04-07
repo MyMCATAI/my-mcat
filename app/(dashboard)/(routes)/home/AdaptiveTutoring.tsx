@@ -25,6 +25,8 @@ import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
 import ReactConfetti from "react-confetti";
+import { useUI } from '@/store/selectors';
+import { useAudio } from '@/store/selectors';
 
 interface ContentItem {
   id: string;
@@ -68,6 +70,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   onActivityChange,
 }) => {
+  const { toast } = useToast();
+  const audio = useAudio();
   const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [contentType, setContentType] = useState("video");
@@ -84,6 +88,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [checkedCategories, setCheckedCategories] = useState<CategoryWithCompletion[]>([]);
   const [playedSeconds, setPlayedSeconds] = useState<number>(0);
+  const [isPdfLoading, setIsPdfLoading] = useState(true);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -113,7 +118,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [tutorialKey, setTutorialKey] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [selectedTopicToComplete, setSelectedTopicToComplete] = useState<{id: string, name: string} | null>(null);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -173,11 +179,47 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setShowDiagnosticDialog(false);
     await fetchCategories();
     
+    // Store that user has seen the diagnostic dialog
+    localStorage.setItem("hasSeenDiagnosticDialog", "true");
+    
     // Only start tutorial if it hasn't been played
     if (!localStorage.getItem("initialTutorialPlayed")) {
       setRunTutorialPart1(true);
     }
   };
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("/api/user-info");
+        if (!response.ok) throw new Error("Failed to fetch user info");
+
+        const userInfo = await response.json();
+
+        // Check if user has seen the dialog before
+        const hasSeenDialog = localStorage.getItem("hasSeenDiagnosticDialog") === "true";
+        if (hasSeenDialog) {
+          setShowDiagnosticDialog(false);
+          return;
+        }
+
+        // Check if diagnostic scores exist and are not empty
+        const diagnosticScores = userInfo.diagnosticScores;
+        const hasCompletedDiagnostic =
+          diagnosticScores &&
+          Object.values(diagnosticScores).some((score) => score !== "");
+
+        // Only show diagnostic dialog if user hasn't completed it
+        setShowDiagnosticDialog(!hasCompletedDiagnostic);
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+        // If there's an error and user hasn't seen dialog, show it
+        setShowDiagnosticDialog(!localStorage.getItem("hasSeenDiagnosticDialog"));
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   useEffect(() => {
     // Create a set of unique categories based on checkedCategories and initialCategories
@@ -326,9 +368,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleContentClick = (contentId: string) => {
-    setCurrentContentId(contentId);
     const clickedContent = content.find((item) => item.id === contentId);
     if (clickedContent) {
+      if (clickedContent.type === "reading") {
+        setIsPdfLoading(true);  // Reset loading state when switching PDFs
+      }
+      setCurrentContentId(contentId);
       setContentType(clickedContent.type);
 
       if (clickedContent.type === "video") {
@@ -411,8 +456,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleBookClick = () => {
-
     setContentType("reading");
+    setIsPdfLoading(true);  // Reset loading state when switching to reading materials
 
     const firstPDF = content.find((item) => item.type === "reading");
     if (firstPDF) {
@@ -522,6 +567,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     if (chatbotRef.current?.sendMessage) {
       chatbotRef.current.sendMessage(message);
       setCatIconInteracted(true);
+      audio.playSound('chatbot-open');
     } else {
       console.warn("ChatBot ref not ready");
     }
@@ -547,32 +593,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       window.dispatchEvent(event);
     }
   };
-
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const response = await fetch("/api/user-info");
-        if (!response.ok) throw new Error("Failed to fetch user info");
-
-        const userInfo = await response.json();
-
-        // Check if diagnostic scores exist and are not empty
-        const diagnosticScores = userInfo.diagnosticScores;
-        const hasCompletedDiagnostic =
-          diagnosticScores &&
-          Object.values(diagnosticScores).some((score) => score !== "");
-
-        // Only show diagnostic dialog if user hasn't completed it
-        setShowDiagnosticDialog(!hasCompletedDiagnostic);
-      } catch (error) {
-        console.error("Error fetching user info:", error);
-        // If there's an error, we'll show the diagnostic dialog as a fallback
-        setShowDiagnosticDialog(true);
-      }
-    };
-
-    fetchUserInfo();
-  }, []);
 
   // Add this function to handle cat icon interaction
   const handleCatIconClick = () => {
@@ -712,6 +732,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, [isSettingsOpen]);
 
+  const handleCompleteDialogOpenChange = (open: boolean) => {
+    setIsCompleteDialogOpen(open);
+    if (!open) {
+      setSelectedTopicToComplete(null);
+    }
+  };
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       {showConfetti && (
@@ -802,17 +829,17 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     }}
                   >
                     <div className="relative w-full h-full flex flex-col justify-center items-center">
-                      <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
-                        <p className="text-[--theme-text-color] text-xs p-1 mt-2 truncate w-full">
+                      <div className="absolute inset-0 flex flex-col justify-between items-center">
+                        <div className="m-auto transform scale-90">
+                          <Icon
+                            name={category.icon}
+                            className="w-6 h-6"
+                            color={category.color}
+                          />
+                        </div>
+                        <p className="text-[--theme-text-color] text-xs p-1 truncate w-full text-center">
                           {category?.conceptCategory || "No title"}
                         </p>
-                      </div>
-                      <div className="m-auto transform scale-90">
-                        <Icon
-                          name={category.icon}
-                          className="w-6 h-6"
-                          color={category.color}
-                        />
                       </div>
                     </div>
                   </div>
@@ -834,124 +861,101 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
             }}
           >
-            <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleCameraClick}
-                      className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                    >
-                      <div className="w-6 h-6 relative theme-box">
-                        <Image
-                          src="/camera.svg"
-                          layout="fill"
-                          objectFit="contain"
-                          alt="camera"
-                          className="theme-svg"
-                        />
-                      </div>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                    <p className="text-white">Video Lectures</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleBookClick}
-                      className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                    >
-                      <div className="w-6 h-6 relative theme-box">
-                        <Image
-                          src="/bookopened.svg"
-                          layout="fill"
-                          objectFit="contain"
-                          alt="book opened"
-                          className="theme-svg"
-                        />
-                      </div>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                    <p className="text-white">Reading Materials</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <div className="flex items-center relative group">
-                  <div className="flex items-center transition-opacity duration-300 group-hover:opacity-0">
-                    <p className="text-m px-10 flex items-center">
-                      {selectedCategory &&
-                        categories.find(
-                          (cat) =>
-                            cat.conceptCategory === selectedCategory &&
-                            cat.isCompleted
-                        ) && (
-                          <span className="flex items-center text-green-500 mr-2">
-                            <Check className="w-4 h-4" />
-                            {categories.find(
-                              (cat) => cat.conceptCategory === selectedCategory
-                            )?.conceptMastery !== undefined && 
-                            categories.find(
-                              (cat) => cat.conceptCategory === selectedCategory
-                            )?.conceptMastery! < 0.3 && (
-                              <span className="text-xs text-green-500 ml-1">(Review Needed)</span>
-                            )}
-                          </span>
-                        )}
-                      {selectedCategory || ""}
-                    </p>
-                  </div>
-                  {selectedCategory && (
-                    <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {categories.find(
-                        (cat) => cat.conceptCategory === selectedCategory
-                      )?.isCompleted ? (
-                        <p className="text-green-500 flex items-center">
-                          <Check className="w-4 h-4 mr-1" />
-                          Completed
-                        </p>
-                      ) : (
-                        <CompleteTopicButton
-                          categoryId={
-                            categories.find(
-                              (cat) => cat.conceptCategory === selectedCategory
-                            )?.id || ""
-                          }
-                          categoryName={selectedCategory}
-                          onComplete={handleTopicComplete}
-                          setShowConfetti={setShowConfetti}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleQuizTabClick}
-                      className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                    >
-                      <div className="w-7 h-7 relative theme-box">
-                        <Image
-                          src="/exam.svg"
-                          layout="fill"
-                          objectFit="contain"
-                          alt="exam"
-                          className="theme-svg"
-                        />
-                      </div>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                    <p className="text-white">Practice Questions</p>
-                  </TooltipContent>
-                </Tooltip>
-
+            <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2 relative">
+              <div className="flex items-center justify-center gap-4">
                 <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleCameraClick}
+                        className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                      >
+                        <div className="w-6 h-6 relative theme-box">
+                          <Image
+                            src="/camera.svg"
+                            layout="fill"
+                            objectFit="contain"
+                            alt="camera"
+                            className="theme-svg"
+                          />
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                      <p className="text-white">Video Lectures</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleBookClick}
+                        className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                      >
+                        <div className="w-6 h-6 relative theme-box">
+                          <Image
+                            src="/bookopened.svg"
+                            layout="fill"
+                            objectFit="contain"
+                            alt="book opened"
+                            className="theme-svg"
+                          />
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                      <p className="text-white">Reading Materials</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <div className="flex items-center relative group">
+                    <div className="flex items-center">
+                      <p className="text-m px-10 flex items-center">
+                        {selectedCategory &&
+                          categories.find(
+                            (cat) =>
+                              cat.conceptCategory === selectedCategory &&
+                              cat.isCompleted
+                          ) && (
+                            <span className="flex items-center text-green-500 mr-2">
+                              <Check className="w-4 h-4" />
+                              {categories.find(
+                                (cat) => cat.conceptCategory === selectedCategory
+                              )?.conceptMastery !== undefined && 
+                              categories.find(
+                                (cat) => cat.conceptCategory === selectedCategory
+                              )?.conceptMastery! < 0.3 && (
+                                <span className="text-xs text-green-500 ml-1">(Review Needed)</span>
+                              )}
+                            </span>
+                          )}
+                        {selectedCategory || ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleQuizTabClick}
+                        className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                      >
+                        <div className="w-7 h-7 relative theme-box">
+                          <Image
+                            src="/exam.svg"
+                            layout="fill"
+                            objectFit="contain"
+                            alt="exam"
+                            className="theme-svg"
+                          />
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                      <p className="text-white">Practice Questions</p>
+                    </TooltipContent>
+                  </Tooltip>
+
                   <Tooltip delayDuration={0}>
                     <DropdownMenu>
                       <div className="flex items-center">
@@ -985,7 +989,43 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     </DropdownMenu>
                   </Tooltip>
                 </TooltipProvider>
-              </TooltipProvider>
+              </div>
+
+              {selectedCategory && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const category = categories.find(cat => cat.conceptCategory === selectedCategory);
+                          if (category?.isCompleted) return;
+                          setSelectedTopicToComplete({
+                            id: category?.id || "",
+                            name: selectedCategory
+                          });
+                          setIsCompleteDialogOpen(true);
+                        }}
+                        className={`absolute top-2 right-0 p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 ${
+                          categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
+                            ? 'text-green-500' 
+                            : 'text-[--theme-text-color]'
+                        }`}
+                      >
+                        <Check className="w-7 h-7" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-[#001226] border border-[#5F7E92]">
+                      <p className="text-white">
+                        {categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
+                          ? 'Topic completed' 
+                          : 'Mark topic as completed'
+                        }
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
 
             <div className="p-2 flex-grow overflow-y-auto scrollbar-hide">
@@ -1092,24 +1132,44 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                                     <Minimize2 size={24} />
                                   </div>
                                 </button>
+                                {isPdfLoading && (
+                                  <div className="absolute inset-0 bg-[--theme-adaptive-tutoring-color] rounded-lg flex flex-col gap-4 p-6">
+                                    <div className="flex items-center gap-4">
+                                      <Skeleton className="h-8 w-8" />
+                                      <Skeleton className="h-8 w-48" />
+                                    </div>
+                                    <Skeleton className="h-full w-full" />
+                                  </div>
+                                )}
                                 <iframe
                                   src={`https://drive.google.com/file/d/${extractFileId(
                                     currentContent.link
                                   )}/preview`}
-                                  className="w-full h-full rounded-lg"
+                                  className={`w-full h-full rounded-lg ${isPdfLoading ? 'hidden' : ''}`}
                                   title={currentContent.title}
                                   allow="autoplay"
+                                  onLoad={() => setIsPdfLoading(false)}
                                 ></iframe>
                               </div>
                             </DialogContent>
                           </Dialog>
+                          {isPdfLoading && (
+                            <div className="absolute inset-0 bg-[--theme-adaptive-tutoring-color] rounded-lg flex flex-col gap-4 p-6">
+                              <div className="flex items-center gap-4">
+                                <Skeleton className="h-8 w-8" />
+                                <Skeleton className="h-8 w-48" />
+                              </div>
+                              <Skeleton className="h-full w-full" />
+                            </div>
+                          )}
                           <iframe
                             src={`https://drive.google.com/file/d/${extractFileId(
                               currentContent.link
                             )}/preview`}
-                            className="w-full h-full rounded-lg"
+                            className={`w-full h-full rounded-lg ${isPdfLoading ? 'hidden' : ''}`}
                             title={currentContent.title}
                             allow="autoplay"
+                            onLoad={() => setIsPdfLoading(false)}
                           ></iframe>
                         </div>
                         <div className="mt-4 flex justify-between items-center">
@@ -1386,6 +1446,16 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             });
           })()}
         </motion.div>
+      )}
+      {selectedTopicToComplete && (
+        <CompleteTopicButton
+          categoryId={selectedTopicToComplete.id}
+          categoryName={selectedTopicToComplete.name}
+          onComplete={handleTopicComplete}
+          setShowConfetti={setShowConfetti}
+          isOpen={isCompleteDialogOpen}
+          onOpenChange={handleCompleteDialogOpenChange}
+        />
       )}
     </div>
   );

@@ -121,8 +121,13 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   const currentCardIndexRef = useRef<number>(0);
   const answerSectionRef = useRef<HTMLDivElement>(null);
   const questionContainerRef = useRef<HTMLDivElement>(null);
+  const hasFetchedRef = useRef<boolean>(false);
   const isMCQ = flashcards[currentCardIndex]?.questionType === 'normal';
   const { playSound } = useAudio();
+
+/* -------------------------------------------- Mobile ------------------------------------------- */
+  const windowSize = useWindowSize();
+  const isMobile = !windowSize.isDesktop;
 
 /* ------------------------------------------ Callbacks ------------------------------------------ */
   const handleDeckComplete = useCallback(() => {
@@ -327,6 +332,26 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     toggleReveal();
   }, [isAnswerRevealed, toggleReveal]);
 
+    const handleOptionClick = useCallback((index: number, e?: React.MouseEvent) => {
+    playSound('flashcard-select').catch(err => console.error("Error playing select sound:", err));
+    if (answeredMCQ) return;
+    
+    e?.stopPropagation();
+    setSelectedOption(index);
+    setIsAnswerRevealed(true);
+    setHasSeenAnswer(true);
+    setAnsweredMCQ(true);
+    onAnswerReveal?.(true);
+
+    const isCorrect = index === shuffledOptions.correctIndex;
+    onMCQAnswer?.(isCorrect);
+    
+    // Auto scroll to answer explanation in desktop view (currently does not work for mobile)
+    requestAnimationFrame(() => {
+      if (!isMobile) answerSectionRef.current?.scrollIntoView({ block: 'start' });
+    });
+  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isTransitioning || isChatFocused || isFeedbackOpen) return;
@@ -341,6 +366,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   
       // Progress MCQ on any key press after answering
       if (isMCQ) {
+        // Handle number keys for MCQ selection
+        if (!answeredMCQ && !isMobile) {
+          const numKey = parseInt(event.key);
+          if (numKey >= 1 && numKey <= shuffledOptions.length) {
+            event.preventDefault();
+            event.stopPropagation();
+            handleOptionClick(numKey - 1);
+            return;
+          }
+        }
+
         if (!answeredMCQ) return;
         event.preventDefault();
         event.stopPropagation();
@@ -401,9 +437,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     hasSeenAnswer,
     handleSwipe,
     toggleReveal,
-    isFeedbackOpen
+    isFeedbackOpen,
+    shuffledOptions.length,
+    handleOptionClick,
+    isMobile
   ]);
-
 
   useEffect(() => {
     if (currentCardIndex >= flashcards.length && flashcards.length > 0 && !isDeckCompleted) {
@@ -415,7 +453,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     let mounted = true;
     
     const fetch = async () => { 
-      if (mounted) {
+      if (mounted && !hasFetchedRef.current) {
+        hasFetchedRef.current = true;
         await fetchFlashcards();
       }
     };
@@ -435,14 +474,20 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   }, [currentCardIndex]);
 
   useEffect(() => {
-    if (flashcards[currentCardIndex]?.questionType === 'normal' && 
-        flashcards[currentCardIndex]?.questionOptions?.length > 0) {
-      setShuffledOptions(getShuffledOptions(flashcards[currentCardIndex].questionOptions));
+    // Only shuffle and reset if this is a new card (not just a re-render)
+    const currentCard = flashcards[currentCardIndex];
+    if (!currentCard) return;
+
+    if (currentCard.questionType === 'normal' && 
+        currentCard.questionOptions?.length > 0 &&
+        !isAnswerRevealed) { // Only shuffle if answer isn't revealed yet
+      setShuffledOptions(getShuffledOptions(currentCard.questionOptions));
     }
     setIsAnswerRevealed(false);
     setHasSeenAnswer(false);
     setSelectedOption(-1);
     setAnsweredMCQ(false);
+    onAnswerReveal?.(false);
   }, [currentCardIndex, flashcards]);
 
   // Add effect to notify parent of question changes
@@ -525,30 +570,12 @@ const getQuestionContent = () => {
     return shuffledOptions;
   };
 
-  const handleOptionClick = useCallback((index: number, e: React.MouseEvent) => {
-    playSound('flashcard-select').catch(err => console.error("Error playing select sound:", err));
-    if (answeredMCQ) return;
-    
-    e.stopPropagation();
-    setSelectedOption(index);
-    setIsAnswerRevealed(true);
-    setHasSeenAnswer(true);
-    setAnsweredMCQ(true);
-    onAnswerReveal?.(true);
-
-    const isCorrect = index === shuffledOptions.correctIndex;
-    onMCQAnswer?.(isCorrect);
-    
-    // Auto scroll to answer explanation in desktop view (currently does not work for mobile)
-    requestAnimationFrame(() => {
-      if (!isMobile) answerSectionRef.current?.scrollIntoView({ block: 'start' });
-    });
-  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
-
   const fetchFlashcards = async () => {
+    console.log('fetchFlashcards called');
     setIsLoading(true);
     try {
       if (roomId === 'WaitingRoom0') {
+        console.log('Handling tutorial room');
         const tutorialFlashcards = tutorialQuestions.map(question => ({
           ...question,
           difficulty: 1,
@@ -632,9 +659,6 @@ const getQuestionContent = () => {
   };
 
 /* ----------------------------------------- Render -------------------------------------------- */
-  // Use useWindowSize hook to detect mobile
-  const windowSize = useWindowSize();
-  const isMobile = !windowSize.isDesktop;
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
@@ -686,7 +710,18 @@ const getQuestionContent = () => {
                               relative
                             `}
                           >
-                            <div className="text-left">
+                            {/* Number indicator for desktop */}
+                            {!isMobile && (
+                              <div className={`absolute left-3 top-3 text-sm font-medium ${
+                                isAnswerRevealed && (
+                                  index === shuffledOptions.correctIndex || 
+                                  (index === selectedOption && index !== shuffledOptions.correctIndex)
+                                ) ? 'text-white' : 'text-gray-500'
+                              }`}>
+                                {index + 1}
+                              </div>
+                            )}
+                            <div className={`text-left ${!isMobile ? 'pl-8' : ''}`}>
                               <ContentRenderer 
                                 content={option}
                                 className={`${

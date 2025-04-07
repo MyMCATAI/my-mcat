@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isTomorrow } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 
 /* --- Constants ----- */
 const SIDEBAR_ITEMS = [
@@ -147,6 +148,7 @@ const ChatSidebar = ({ className, isSubscribed = true }: ChatSidebarProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [activities, setActivities] = useState<Activity[]>(MOCK_ACTIVITIES);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [loadingTasks, setLoadingTasks] = useState<Record<string, boolean>>({});
   
   /* --- Animations & Effects --- */
   useEffect(() => {
@@ -185,17 +187,31 @@ const ChatSidebar = ({ className, isSubscribed = true }: ChatSidebarProps) => {
     router.push(href);
   };
 
-  const handleTaskCompletion = (activityId: string, taskIndex: number, completed: boolean) => {
-    setActivities(prevActivities => 
-      prevActivities.map(activity => {
-        if (activity.id === activityId && activity.tasks) {
-          const newTasks = [...activity.tasks];
-          newTasks[taskIndex] = { ...newTasks[taskIndex], completed };
-          return { ...activity, tasks: newTasks };
-        }
-        return activity;
-      })
-    );
+  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+    // Create a unique key for this task
+    const taskKey = `${activityId}-${taskIndex}`;
+    
+    try {
+      // Set loading state for this specific task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: true }));
+
+      setActivities(prevActivities => 
+        prevActivities.map(activity => {
+          if (activity.id === activityId && activity.tasks) {
+            const newTasks = [...activity.tasks];
+            newTasks[taskIndex] = { ...newTasks[taskIndex], completed };
+            return { ...activity, tasks: newTasks };
+          }
+          return activity;
+        })
+      );
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
+    } finally {
+      // Clear loading state for this task
+      setLoadingTasks(prev => ({ ...prev, [taskKey]: false }));
+    }
   };
 
   const isActivityCompleted = (activity: Activity) => {
@@ -331,6 +347,8 @@ const ChatSidebar = ({ className, isSubscribed = true }: ChatSidebarProps) => {
                               checked as boolean
                             )
                           }
+                          disabled={loadingTasks[`${activity.id}-${index}`]}
+                          isLoading={loadingTasks[`${activity.id}-${index}`]}
                           className="data-[state=checked]:bg-[--theme-hover-color] data-[state=checked]:text-[--theme-hover-text]"
                         />
                         <label
