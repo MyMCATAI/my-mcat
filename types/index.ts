@@ -237,6 +237,7 @@ export interface OnboardingInfo {
 export enum ProductType {
   COINS_10 = "coins_10",
   COINS_50 = "coins_50",
+  COINS_100 = "coins_100",
   COINS_10_DISCOUNT = "coins_10_discount",
   MD_PREMIUM = "md_premium",
   MD_GOLD = "md_gold",
