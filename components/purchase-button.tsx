@@ -46,7 +46,7 @@ export function PurchaseButton({
     }
   };
 
-  const handlePurchase = async (productType: ProductType) => {
+  const handlePurchase = async (productType: ProductType | "anki_game") => {
     try {
       setLoadingStates(prev => ({ ...prev, [productType]: true }));
       
@@ -83,25 +83,25 @@ export function PurchaseButton({
 
   const pricingOptions = [
     {
-      title: "Earn StudyCoins",
-      price: "Play Daily",
-      description: "Earn free coins by playing our Anki flashcard game and studying consistently. Master concepts while earning rewards for your hard work and dedication.",
-      image: "/kalypso/kalypotesting.png",
-      productType: "anki_game" as any
-    },
-    {
       title: "10 StudyCoins",
       price: "$4.99",
-      description: "One-time purchase of 10 coins. Use them to unlock premium features, AI-powered analytics, and Kalypso AI assistance. Perfect for focused study sessions.",
+      description: "\"Should rename you Lloyd the way you're taking L after L\" — Kalypso.",
       image: "/10coins.png",
       productType: ProductType.COINS_10
     },
     {
       title: "25 StudyCoins",
       price: "$9.99",
-      description: "One-time purchase of 25 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
+      description: "\"Oh, you're going to lock in now? No, no. Relax. Watch some TV, go hang with your friends, I mean, it's just a test, right?\" — Kalypso",
       image: "/50coins.png",
       productType: ProductType.COINS_50
+    },
+    {
+      title: "100 StudyCoins",
+      price: "$25.00",
+      description: "\"Whoa, look at you. Big spender. Two chapters deep and now you think you're him? Sit down, legend.\" — Kalypso",
+      image: "/100coins.png",
+      productType: ProductType.COINS_100
     },
   ];
 
@@ -144,7 +144,7 @@ export function PurchaseButton({
         onOpenChange={handleOpenChange}
       >
         <DialogContent 
-          className="max-w-4xl bg-[--theme-mainbox-color] backdrop-blur-sm bg-opacity-95 text-[--theme-text-color] border border-transparent z-[102] rounded-xl p-6 shadow-xl"
+          className="max-w-4xl bg-[--theme-mainbox-color] backdrop-blur-sm bg-opacity-95 text-[--theme-text-color] border border-transparent z-[102] rounded-xl p-4 shadow-xl"
           onPointerDownOutside={(e) => {
             if (userCoinCount === 0) {
               e.preventDefault();
@@ -157,7 +157,7 @@ export function PurchaseButton({
           }}
         >
           <DialogHeader>
-            <DialogTitle className="text-3xl font-bold text-center mb-8 text-[--theme-text-color] relative">
+            <DialogTitle className="text-3xl font-bold text-center mb-4 text-[--theme-text-color] relative">
               <span className="text-[--theme-text-color]">
                 Get StudyCoins
               </span>
@@ -165,78 +165,59 @@ export function PurchaseButton({
             </DialogTitle>
             <p className="text-center text-[--theme-text-color]/70 -mt-4 mb-4">Choose how you want to get coins for premium features</p>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
             {pricingOptions.map((option, index) => (
               <button 
                 key={index}
                 onClick={() => handlePurchase(option.productType)}
                 disabled={loadingStates[option.productType] || (option.productType !== "anki_game" && isLoading)}
-                className={`rounded-xl p-6 flex flex-col items-center space-y-4 transition-all duration-300 relative h-full w-full text-left
-                  ${option.productType === "anki_game"
-                    ? 'bg-[--theme-leaguecard-color] border-2 border-green-300/50 hover:border-green-300 hover:scale-[1.02]'
-                    : option.productType === ProductType.COINS_50
-                      ? 'bg-[--theme-leaguecard-color] border-2 border-purple-300/50 hover:border-purple-300 hover:scale-[1.05] md:scale-[1.03] z-10'
-                      : 'bg-[--theme-leaguecard-color] border-2 border-transparent hover:border-blue-300/50 hover:scale-[1.01]'}
+                className={`rounded-xl p-4 flex flex-col items-center space-y-2 transition-all duration-300 relative h-full w-full text-left
+                  ${option.productType === ProductType.COINS_100
+                    ? 'bg-[--theme-leaguecard-color] border-2 border-purple-300/50 hover:border-purple-300 hover:scale-[1.05] md:scale-[1.03] z-10'
+                    : 'bg-[--theme-leaguecard-color] border-2 border-transparent hover:border-blue-300/50 hover:scale-[1.01]'}
                   ${loadingStates[option.productType] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{ 
-                  boxShadow: option.productType === "anki_game"
-                    ? '0 0 15px rgba(134, 239, 172, 0.25)'
-                    : option.productType === ProductType.COINS_50
+                  boxShadow: option.productType === ProductType.COINS_100
                       ? '0 0 15px rgba(167, 139, 250, 0.3)'
                       : 'var(--theme-button-boxShadow)',
                   transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = option.productType === "anki_game"
-                    ? '0 0 20px rgba(134, 239, 172, 0.35)'
-                    : option.productType === ProductType.COINS_50
+                  e.currentTarget.style.boxShadow = option.productType === ProductType.COINS_100
                       ? '0 0 20px rgba(167, 139, 250, 0.4)'
                       : '0 0 15px rgba(59, 130, 246, 0.3)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = option.productType === "anki_game"
-                    ? '0 0 15px rgba(134, 239, 172, 0.25)'
-                    : option.productType === ProductType.COINS_50
+                  e.currentTarget.style.boxShadow = option.productType === ProductType.COINS_100
                       ? '0 0 15px rgba(167, 139, 250, 0.3)'
                       : 'var(--theme-button-boxShadow)';
                 }}
               >
-                {option.productType === "anki_game" && (
-                  <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md transform rotate-6 z-[103]">
-                    Free
-                  </div>
-                )}
-                {option.productType === ProductType.COINS_50 && (
+                {option.productType === ProductType.COINS_100 && (
                   <div className="absolute -top-3 -right-3 bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md transform rotate-6 z-[103]">
                     Best Value
                   </div>
                 )}
-                <div className={`relative w-[130px] h-[130px] mb-4 rounded-full overflow-hidden 
-                  ${option.productType === "anki_game" 
-                    ? 'bg-gradient-to-b from-green-100 to-white p-1'
-                    : option.productType === ProductType.COINS_50
+                <div className={`relative w-[110px] h-[110px] mb-2 rounded-full overflow-hidden 
+                  ${option.productType === ProductType.COINS_100
                       ? 'bg-gradient-to-b from-purple-100 to-white p-1'
                       : 'bg-gradient-to-b from-blue-100 to-white p-1'}`}>
                   <Image
                     src={option.image}
                     alt={option.title}
-                    width={120}
-                    height={120}
+                    width={100}
+                    height={100}
                     className="rounded-full object-cover h-full w-full pointer-events-none transition-transform duration-500 hover:scale-105"
                   />
                 </div>
                 <h3 className={`text-xl font-bold pointer-events-none transition-colors
-                  ${option.productType === "anki_game" 
-                    ? 'text-green-600'
-                    : option.productType === ProductType.COINS_50
+                  ${option.productType === ProductType.COINS_100
                       ? 'text-purple-600'
                       : 'text-[--theme-text-color]'}`}>
                   {option.title}
                 </h3>
                 <p className={`text-2xl font-bold pointer-events-none
-                  ${option.productType === "anki_game" 
-                    ? 'text-green-500'
-                    : option.productType === ProductType.COINS_50
+                  ${option.productType === ProductType.COINS_100
                       ? 'text-purple-500'
                       : 'text-[--theme-text-color]'}`}>
                   {option.price}
@@ -246,9 +227,7 @@ export function PurchaseButton({
                 </p>
                 <div 
                   className={`w-full mt-auto px-4 py-3 rounded-lg text-center font-medium text-white pointer-events-none transition-all duration-300
-                    ${option.productType === "anki_game"
-                      ? 'bg-green-500 shadow-md shadow-green-500/10'
-                      : option.productType === ProductType.COINS_50
+                    ${option.productType === ProductType.COINS_100
                         ? 'bg-purple-500 shadow-md shadow-purple-500/10'
                         : 'bg-blue-500 shadow-md shadow-blue-500/10'}`}
                 >
@@ -260,26 +239,47 @@ export function PurchaseButton({
                         <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
                     )
-                    : option.productType === "anki_game" 
-                      ? (
-                        <div className="flex items-center justify-center">
-                          <span>Play Now</span>
-                          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
-                        </div>
-                      ) 
-                      : (
-                        <div className="flex items-center justify-center">
-                          <span>Purchase</span>
-                          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                      )}
+                    : (
+                      <div className="flex items-center justify-center">
+                        <span>Purchase</span>
+                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    )}
                 </div>
               </button>
             ))}
+          </div>
+
+          <div className="flex justify-center p-4 mt-4">
+            <button 
+              onClick={() => handlePurchase("anki_game")}
+              disabled={loadingStates["anki_game"] || isLoading}
+              className={`relative flex flex-col items-center space-y-3 p-4 rounded-lg transition-all duration-200 w-full max-w-sm 
+                        bg-[--theme-leaguecard-color] border-2 border-green-300/50 hover:border-green-300 hover:scale-[1.02]
+                        ${loadingStates["anki_game"] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              style={{ 
+                boxShadow: '0 0 15px rgba(134, 239, 172, 0.25)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 20px rgba(134, 239, 172, 0.35)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 15px rgba(134, 239, 172, 0.25)'; }}
+            >
+              <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md transform rotate-6 z-[103]">
+                Free
+              </div>
+              <Image
+                src="/kalypso/kalypotesting.png"
+                alt="Earn Coins Anki Game"
+                width={80}
+                height={80}
+                className="rounded-full object-cover pointer-events-none"
+              />
+              <p className="text-sm text-[--theme-text-color] text-center font-medium">
+                Want to earn coins for free? Play the anki game!
+              </p>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
