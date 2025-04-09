@@ -188,6 +188,10 @@ export async function POST(req: Request) {
             productType as ProductType,
             productName as ProductName
           );
+
+          console.log("coinAmount", coinAmount)
+          console.log("productType", productType)
+          console.log("productName", productName)
           const isPremium = productType === ProductType.MD_PREMIUM;
 
           // First check if user exists
