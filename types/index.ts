@@ -246,7 +246,7 @@ export enum ProductType {
   ANKI_GAME = "anki_game"
 }
 
-export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium" | "MDGold" | "MDGoldAnnual" | "MDGoldBiannual"; // these are set in the stripe product metadata in Stripe Dashboard
+export type ProductName = "TenCoins" | "FiftyCoins" | "HundredCoins"| "MDPremium" | "MDGold" | "MDGoldAnnual" | "MDGoldBiannual"; // these are set in the stripe product metadata in Stripe Dashboard
 
 // Type guard to check if a string is a valid ProductType
 export function isValidProductType(type: string): type is ProductType {
@@ -258,6 +258,8 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
   // First check product name if provided
   if (productName) {
     switch (productName) {
+      case "HundredCoins":
+        return 100;
       case "FiftyCoins":
         return 25;
       case "TenCoins":
@@ -270,6 +272,8 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
 
   // Fall back to product type if no name or unrecognized name
   switch (productType) {
+    case ProductType.COINS_100:
+      return 100;
     case ProductType.COINS_50:
       return 25;
     case ProductType.COINS_10:
