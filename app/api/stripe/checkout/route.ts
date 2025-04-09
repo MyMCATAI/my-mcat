@@ -211,7 +211,7 @@ export async function POST(request: Request) {
           priceId = process.env.STRIPE_PRICE_50_ID!;
           break;
         case ProductType.COINS_100:
-          priceId = process.env.STRIPE_PRICE_100_ID!;
+          priceId = process.env.STRIPE_PRICE_100_ID_TEST!;
           break;
         case ProductType.MD_PREMIUM:
           priceId = process.env.STRIPE_PRICE_PREMIUM_ID!;
