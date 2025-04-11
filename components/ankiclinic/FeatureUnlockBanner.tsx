@@ -59,7 +59,7 @@ export const FeatureUnlockBanner = () => {
       </button>
       
       <div className="flex flex-col md:flex-row items-center gap-4">
-        <div className={`p-2 bg-emerald-500/20 rounded-full flex-shrink-0 animate-pulse rotate-45`}>
+        <div className={`p-2 bg-emerald-500/20 rounded-full flex-shrink-0 animate-pulse ${isMobile ? 'rotate-45' : ''}`}>
           {isMobile ? (
             <ChevronRight className="w-8 h-8 text-emerald-400" />
           ) : (
@@ -89,9 +89,9 @@ export const FeatureUnlockBanner = () => {
                 to access the navigation menu and unlock exciting features like {nextUnlockable?.name || "Kalypso AI"}.
               </>
             ) : (
-              <>Hover near the <span className="font-bold text-emerald-300 animate-pulse">highlighted menu button</span> on the left edge of your screen 
-                <span className="inline-block animate-bounce mx-1 rotate-45">↖</span> 
-                to open the navigation sidebar and unlock exciting new features like {nextUnlockable?.name || "Kalypso AI"}.
+              <>Click on the <span className="font-bold text-emerald-300 animate-pulse">Kalypso profile pic</span> on the left side of your screen 
+                <span className="inline-block animate-bounce mx-1">←</span> 
+                to open the chat dialog and unlock exciting new features like {nextUnlockable?.name || "Kalypso AI"}.
               </>
             )}
           </p>

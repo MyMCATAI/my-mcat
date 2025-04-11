@@ -65,9 +65,10 @@ interface ChatContainerProps {
     sendMessage: (message: string, messageContext?: string) => void;
   }>;
   activities?: FetchedActivity[];
+  containerProps?: React.HTMLAttributes<HTMLDivElement>;
 }
 
-const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps) => {
+const ChatContainer = ({ className, chatbotRef, activities, containerProps }: ChatContainerProps) => {
   /* ---- State ----- */
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -748,8 +749,11 @@ const ChatContainer = ({ className, chatbotRef, activities }: ChatContainerProps
     style={{ 
       borderColor: 'var(--theme-border-color)',
       borderWidth: '1px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-    }}>
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      ...(containerProps?.style || {})
+    }}
+    {...containerProps}
+    >
       {/* Chatbot container */}
       <div className="flex-1 relative">
         <DynamicChatBot
