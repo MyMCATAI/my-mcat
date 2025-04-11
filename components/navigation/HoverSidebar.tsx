@@ -1,20 +1,13 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo} from "react";
 import { useRouter } from "next/navigation";
-import { format, isToday, isTomorrow } from "date-fns";
-import { ChevronLeft, ChevronRight, Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock } from "lucide-react";
-import { FaCheckCircle } from "react-icons/fa";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
 import { useNavigation, useUser } from "@/store/selectors";
 import { createPortal } from 'react-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { PurchaseButton } from "@/components/purchase-button";
 import Image from "next/image";
 import { useFeatureUnlock } from "@/hooks/useFeatureUnlock";
 import { UnlockDialog } from "@/components/unlock-dialog";
@@ -257,6 +250,11 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   };
 
   const handleUnlockSuccess = (itemId: string) => {
+    // Check if we need to skip redirection
+    if (itemId.includes(':skipRedirect')) {
+      return;
+    }
+    
     // If we're on ankiclinic, navigate to the newly unlocked section
     const item = NAVIGATION_ITEMS.find(item => item.id === itemId);
     if (item && currentPage === 'ankiclinic') {

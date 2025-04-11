@@ -10,6 +10,7 @@ import Leaderboard from "@/components/leaderboard/Leaderboard";
 import AnimatedProfileIcon from '@/components/ui/AnimatedProfileIcon';
 import { useUser } from '@/store/selectors';
 import { useGame } from "@/store/selectors";
+import { useAllCalendarActivities } from "@/hooks/useCalendarActivities";
 
 /* --- Types ----- */
 interface ResourcesMenuProps {
@@ -68,6 +69,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const { userRooms, totalPatients, patientsPerDay, streakDays } = useGame();
   // Get user state from Zustand store
   const { coins: totalCoins } = useUser();
+  // Get calendar activities for chat context
+  const { activities, loading: activitiesLoading } = useAllCalendarActivities();
 
   if (!reportData) {
     return (
@@ -106,6 +109,7 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         <div className="flex flex-col items-center mb-1 w-full">
           <AnimatedProfileIcon 
             photoName={profile?.profilePhoto || 'doctor.png'}
+            activities={activities}
           />
         </div>
 

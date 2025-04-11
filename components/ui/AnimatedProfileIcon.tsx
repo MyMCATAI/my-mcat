@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { SparkleEffect } from '@/components/effects/SparkleEffect';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CUSTOM_PARTICLES } from '@/config/particleEffects';
+import dynamic from 'next/dynamic';
+import ChatBubbleDialog from '@/components/ui/ChatBubbleDialog';
+import { FEATURE_UNLOCK } from '@/components/navigation/HoverSidebar';
+import { useFeatureUnlock } from '@/hooks/useFeatureUnlock';
+import { UnlockDialog } from '@/components/unlock-dialog';
+import { useUser } from '@/store/selectors';
+
+// Dynamically import ChatContainer to avoid loading it until needed
+const DynamicChatContainer = dynamic(() => import('@/components/chatgpt/ChatContainer'), {
+  loading: () => <div className="p-4 text-center">Loading chat...</div>,
+  ssr: false
+});
 
 interface AnimatedProfileIconProps {
   photoName: string;
   size?: number;
   onClick?: () => void;
+  activities?: any[]; // Use the proper type from your actual implementation
 }
 
 interface BubblePosition {
@@ -23,10 +35,11 @@ const SPEECH_BUBBLES = ['...', '?', '!', '^_^'];
 const AnimatedProfileIcon: React.FC<AnimatedProfileIconProps> = ({ 
   photoName, 
   size = 192,
-  onClick 
+  onClick,
+  activities = []
 }) => {
-  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const [bubbleContent, setBubbleContent] = useState('');
+  const [showChatContainer, setShowChatContainer] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [bubblePosition, setBubblePosition] = useState<BubblePosition & { rect: DOMRect | null }>({ 
     x: 0, 
     y: 0, 
@@ -36,85 +49,71 @@ const AnimatedProfileIcon: React.FC<AnimatedProfileIconProps> = ({
   const iconRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
+  // Feature unlock hook to check if user has access to chat
+  const { isFeatureUnlocked } = useFeatureUnlock();
+  
+  // Get user coins for unlock dialog
+  const { coins } = useUser();
+
   const getRandomPosition = useCallback(() => {
     if (!iconRef.current) return { x: 0, y: 0, angle: 0, rect: null };
     
     const rect = iconRef.current.getBoundingClientRect();
-    const angle = Math.random() * 360;
+    // For chat container, we'll position it at a fixed angle from the icon
+    const angle = 45; // Position at top-right
     const angleInRad = angle * (Math.PI / 180);
     
-    const baseRadius = size / 1.5;
-    const radius = baseRadius + (Math.random() * 10 - 5);
+    const baseRadius = size * 1.2; // Increase radius for better positioning
     
     return {
-      x: Math.cos(angleInRad) * radius,
-      y: Math.sin(angleInRad) * radius,
+      x: Math.cos(angleInRad) * baseRadius,
+      y: Math.sin(angleInRad) * baseRadius - baseRadius, // Adjust Y to position above
       angle,
       rect
     };
   }, [size]);
 
-  const getBubbleStyles = (angle: number) => {
-    // Normalize angle to 0-360 range
-    const normalizedAngle = ((angle % 360) + 360) % 360;
-    
-    let stemStyles;
-    if (normalizedAngle <= 45 || normalizedAngle > 315) {
-      // Right side of icon
-      stemStyles = {
-        left: '0',
-        top: '50%',
-        transform: `translate(-50%, -50%) rotate(${normalizedAngle + 90}deg)`
-      };
-    } else if (normalizedAngle <= 135) {
-      // Bottom of icon
-      stemStyles = {
-        left: '50%',
-        top: '0',
-        transform: `translate(-50%, -50%) rotate(${normalizedAngle + 90}deg)`
-      };
-    } else if (normalizedAngle <= 225) {
-      // Left side of icon
-      stemStyles = {
-        left: '100%',
-        top: '50%',
-        transform: `translate(0%, -50%) rotate(${normalizedAngle + 90}deg)`
-      };
-    } else {
-      // Top of icon
-      stemStyles = {
-        left: '50%',
-        bottom: '0',
-        transform: `translate(-50%, 50%) rotate(${normalizedAngle + 90}deg)`
-      };
-    }
-
-    return { stemStyles };
-  };
-
   const handleClick = () => {
     if (onClick) onClick();
     
-    const newContent = SPEECH_BUBBLES[Math.floor(Math.random() * SPEECH_BUBBLES.length)];
-    const newPosition = getRandomPosition();
+    // Check if Kalypso AI is unlocked
+    if (!isFeatureUnlocked(FEATURE_UNLOCK.KALYPSO_AI)) {
+      // Show unlock dialog instead of chat
+      setUnlockDialogOpen(true);
+      return;
+    }
     
-    setBubbleContent(newContent);
-    setBubblePosition(newPosition);
-    setShowSpeechBubble(true);
-
+    // Toggle chat container if feature is unlocked
+    setShowChatContainer(prev => !prev);
+    
+    // If we're showing the container, calculate its position
+    if (!showChatContainer) {
+      const newPosition = getRandomPosition();
+      setBubblePosition(newPosition);
+    }
+    
+    // Clear any existing timeouts
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setShowSpeechBubble(false);
       timeoutRef.current = undefined;
-    }, 3000);
+    }
+  };
+
+  const handleCloseChatBubble = () => {
+    setShowChatContainer(false);
+  };
+
+  // Handle successful feature unlock
+  const handleUnlockSuccess = () => {
+    // After successful unlock, show the chat container
+    setShowChatContainer(true);
+    const newPosition = getRandomPosition();
+    setBubblePosition(newPosition);
   };
 
   const particleConfig = CUSTOM_PARTICLES[photoName] || { particles: [], dispersion: 'burst' };
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -154,45 +153,31 @@ const AnimatedProfileIcon: React.FC<AnimatedProfileIconProps> = ({
         </div>
       </SparkleEffect>
 
-      <AnimatePresence>
-        {showSpeechBubble && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ 
-              scale: 1, 
-              opacity: 1,
-            }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.3,
-              scale: {
-                type: "spring",
-                damping: 7,
-                stiffness: 200,
-                duration: 0.5
-              }
-            }}
-            className="fixed bg-white px-6 py-3 rounded-[20px] shadow-lg text-gray-800 font-medium z-[9999] text-lg"
-            style={{ 
-              left: bubblePosition.rect ? `${bubblePosition.rect.left + size/2 + bubblePosition.x}px` : '0',
-              top: bubblePosition.rect ? `${bubblePosition.rect.top + size/2 + bubblePosition.y}px` : '0',
-              transform: 'translate(-50%, -50%)',
-              minWidth: '60px',
-              textAlign: 'center'
-            }}
-          >
-            {bubbleContent}
-            <div 
-              className="absolute w-4 h-8 bg-white"
-              style={{
-                ...getBubbleStyles(bubblePosition.angle).stemStyles,
-                clipPath: 'polygon(50% 100%, 0 -1px, 100% -1px)',
-                filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.1))',
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Use the ChatBubbleDialog component */}
+      <ChatBubbleDialog
+        isOpen={showChatContainer}
+        onClose={handleCloseChatBubble}
+        position={bubblePosition}
+        activities={activities}
+        size={size}
+      />
+
+      {/* Unlock dialog when feature is locked */}
+      <UnlockDialog 
+        isOpen={unlockDialogOpen}
+        onOpenChange={setUnlockDialogOpen}
+        item={{
+          id: FEATURE_UNLOCK.KALYPSO_AI,
+          name: "Kalypso AI",
+          tab: "KalypsoAI",
+          photo: "/kalypso/kalypsocalendar.png",
+          unlockCost: 5,
+          description: "Your personal AI assistant for MCAT preparation. Get personalized study guidance, a custom study plan generator, and answers to your questions."
+        }}
+        userCoins={coins}
+        onSuccess={handleUnlockSuccess}
+        skipRedirect={true}
+      />
     </div>
   );
 };
