@@ -25,6 +25,7 @@ interface UnlockDialogProps {
   item: NavigationItem | null;
   userCoins: number;
   onSuccess?: (itemId: string) => void;
+  skipRedirect?: boolean;
 }
 
 export const UnlockDialog = ({
@@ -32,7 +33,8 @@ export const UnlockDialog = ({
   onOpenChange,
   item,
   userCoins,
-  onSuccess
+  onSuccess,
+  skipRedirect = false
 }: UnlockDialogProps) => {
   // Feature unlock hook
   const { isUnlocking, unlockFeature } = useFeatureUnlock();
@@ -101,7 +103,9 @@ export const UnlockDialog = ({
           
           // Call onSuccess callback if provided
           if (onSuccess) {
-            onSuccess(item.id);
+            // If skipRedirect is true, we want to preserve the current page context
+            // by marking the item as having the skipRedirect flag
+            onSuccess(skipRedirect ? `${item.id}:skipRedirect` : item.id);
           }
         }, 1500);
       } else {
