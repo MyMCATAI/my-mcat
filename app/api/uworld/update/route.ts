@@ -3,19 +3,19 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { FetchedActivity } from "@/types";
-import { categoryMapping } from "@/constants/categoryMappings";
+import { reverseUWorldMapping } from "@/constants/uworld";
 
 // Helper function for Thompson sampling
 function sampleBeta(alpha: number, beta: number): number {
   const mean = alpha / (alpha + beta);
   const variance = (alpha * beta) / (Math.pow(alpha + beta, 2) * (alpha + beta + 1));
   const stdDev = Math.sqrt(variance);
-  
+
   // Box-Muller transform for normal distribution
   const u1 = Math.random();
   const u2 = Math.random();
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  
+
   // Transform to match Beta distribution parameters
   return Math.max(0, Math.min(1, mean + z * stdDev));
 }
@@ -39,16 +39,16 @@ export async function POST(req: Request) {
     const numTasks = Math.floor(hours);
 
     // Filter activities that need task generation
-    const activitiesNeedingTasks = todayUWorldActivity.filter((activity: FetchedActivity) => 
-      !activity.tasks || 
+    const activitiesNeedingTasks = todayUWorldActivity.filter((activity: FetchedActivity) =>
+      !activity.tasks ||
       (activity.tasks.length === 1)
     );
 
     // If no activities need tasks, return early
     if (activitiesNeedingTasks.length === 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "No UWorld activities need task generation",
-        tasks: [] 
+        tasks: []
       }, { status: 200 });
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       .map(category => {
         const profile = category.knowledgeProfiles[0];
         let sample = 1;
-        
+
         if (profile) {
           const alpha = profile.correctAnswers + 1; // Laplace smoothing
           const beta = (profile.totalAttempts - profile.correctAnswers) + 1;
@@ -92,10 +92,17 @@ export async function POST(req: Request) {
 
     // Create UWorld tasks based on the sampled categories
     const tasks = [
-      ...sampledCategories.map((category) => ({
-        text: `12 Q UWorld - ${categoryMapping[category.contentCategory] || category.contentCategory}`,
-        completed: false
-      })),
+      ...sampledCategories.map((category) => {
+        const uworldTopics = reverseUWorldMapping[category.contentCategory] || [];
+        const selectedTopic = uworldTopics.length > 0
+          ? uworldTopics[Math.floor(Math.random() * uworldTopics.length)]
+          : category.contentCategory;
+
+        return {
+          text: `12 Q UWorld - ${selectedTopic}`,
+          completed: false
+        };
+      }),
       {
         text: "Review UWorld",
         completed: false
@@ -112,9 +119,9 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "UWorld tasks updated successfully",
-      tasks: tasks 
+      tasks: tasks
     }, { status: 200 });
 
   } catch (error) {

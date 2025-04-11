@@ -19,7 +19,8 @@ import { Tutor, tutors as initialTutors, tutorExpertise, getTutorDescription } f
 import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
-import UWorldPopup from '@/components/home/UWorldPopup';
+import UWorldPopup from '@/components/uworld/UWorldPopup';
+import { UWorldTask } from '@/components/uworld/types';
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";  
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
@@ -31,6 +32,9 @@ import { cn } from "@/lib/utils";
 interface Task {
   text: string;
   completed: boolean;
+  correctAnswers?: number;
+  incorrectAnswers?: number;
+  subject?: string;
 }
 
 interface Activity {
@@ -712,25 +716,16 @@ const SideBar: React.FC<SideBarProps> = ({
     const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
     if (!uWorldActivity?.tasks) return [];
     
-    // Number of tasks should match the hours allocated
-    const numTasks = Math.floor(uWorldActivity.hours);
-    
-    // If tasks are already generated, return them
-    if (uWorldActivity.tasks.some(task => task.text !== "New tasks will be generated based on your test results")) {
-      return uWorldActivity.tasks
-        .filter(task => task.text !== "Review UWorld" && task.text.includes(" - ")) // Filter out review task and ensure proper format
-        .map(task => ({
-          ...task,
-          subject: task.text.split(' - ')[1]?.trim() || "Unknown"
-        }));
-    }
-    
-    // Return placeholder tasks based on duration
-    return Array(numTasks).fill({
-      text: "New tasks will be generated based on your test results",
-      completed: false,
-      subject: "Pending"
-    });
+    // Return tasks that have proper format (subject - task)
+    return uWorldActivity.tasks
+      .filter(task => task.text.includes(" - ")) // Ensure proper format
+      .map(task => ({
+        ...task, // This will now preserve correctAnswers and incorrectAnswers if they exist
+        subject: task.text.split(' - ')[1]?.trim() || "Unknown",
+        // Only set defaults if the fields don't exist
+        correctAnswers: task.correctAnswers ?? 0,
+        incorrectAnswers: task.incorrectAnswers ?? 0
+      }));
   }
 
   async function getATSTasks() {
@@ -817,35 +812,31 @@ const SideBar: React.FC<SideBarProps> = ({
     fetchATSTasks();
   }, [todayActivities]);
 
-  const handleUWorldScoreSubmit = async (scores: number[], newTasks?: Task[]) => {
-    console.log("UWorld scores:", scores);
-    
-    if (newTasks) {
+  const handleUWorldScoreSubmit = async (tasks: UWorldTask[]) => {
+    try {
       // Find the UWorld activity
       const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
       if (uWorldActivity) {
-        try {
-          // Update the activity with new tasks
-          await fetch(`/api/calendar-activity`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: uWorldActivity.id,
-              tasks: newTasks,
-            }),
-          });
+        // Update the activity with new tasks
+        await fetch(`/api/calendar-activity`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: uWorldActivity.id,
+            tasks,
+          }),
+        });
 
-          // Update local state
-          setTodayActivities(prev => prev.map(activity => 
-            activity.id === uWorldActivity.id 
-              ? { ...activity, tasks: newTasks }
-              : activity
-          ));
-        } catch (error) {
-          console.error("Error updating UWorld tasks:", error);
-          toast.error("Failed to update UWorld tasks");
-        }
+        // Update local state
+        setTodayActivities(prev => prev.map(activity => 
+          activity.id === uWorldActivity.id 
+            ? { ...activity, tasks }
+            : activity
+        ));
       }
+    } catch (error) {
+      console.error("Error updating UWorld tasks:", error);
+      toast.error("Failed to update UWorld tasks");
     }
   };
 
@@ -912,6 +903,7 @@ const SideBar: React.FC<SideBarProps> = ({
         onScoreSubmit={handleUWorldScoreSubmit}
         tasks={uWorldTasks}
         hours={todayActivities.find(activity => activity.activityTitle === "UWorld")?.hours || 1}
+        scheduledDate={todayActivities.find(activity => activity.activityTitle === "UWorld")?.scheduledDate || new Date().toISOString()}
       />
     </div>
   );
