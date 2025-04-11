@@ -37,6 +37,7 @@ const UWorldPopup = ({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const pastScheduledDate = startOfDay(new Date(scheduledDate)) < startOfDay(new Date());
 
@@ -51,6 +52,22 @@ const UWorldPopup = ({
     setCurrentTasks(initialTasks);
     setHasUnsavedChanges(false);
   }, [initialTasks]);
+
+  // Check localStorage and show tutorial if needed
+  useEffect(() => {
+    if (isOpen) {
+      const hasSeenTutorial = localStorage.getItem('UWorldUploaded') === 'true';
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+      }
+    }
+  }, [isOpen]);
+
+  // Handle tutorial completion
+  const handleTutorialClose = () => {
+    setShowTutorial(false);
+    localStorage.setItem('UWorldUploaded', 'true');
+  };
 
   /* ---- Event Handlers ----- */
   const handleCorrectChange = (index: number, value: string) => {
@@ -82,8 +99,27 @@ const UWorldPopup = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Create DataPulses from the tasks first
+      const dataPulseResponse = await fetch('/api/uworld/data-pulse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tasks: currentTasks })
+      });
+
+      if (!dataPulseResponse.ok) {
+        throw new Error('Failed to create DataPulses');
+      }
+
+      const result = await dataPulseResponse.json();
+      console.log('Created DataPulses:', result);
+
+      // Then save the tasks
       await onScoreSubmit(currentTasks);
       setHasUnsavedChanges(false);
+      setShowSaveDialog(false);
+      onClose();
       toast.success('Changes saved successfully');
     } catch (error) {
       console.error('Error saving scores:', error);
@@ -267,6 +303,12 @@ const UWorldPopup = ({
               </div>
               <div className="flex items-center gap-4">
                 <button
+                  onClick={() => setShowTutorial(true)}
+                  className="px-4 py-2 bg-black text-white rounded-lg transition-all shadow-sm hover:shadow-md hover:opacity-80"
+                >
+                  Tutorial
+                </button>
+                <button
                   onClick={handleSave}
                   disabled={isSaving}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-all shadow-sm hover:shadow-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
@@ -276,6 +318,34 @@ const UWorldPopup = ({
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Tutorial Video Dialog */}
+      <Dialog open={showTutorial} onOpenChange={handleTutorialClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-black">
+              UWorld Guide
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-video">
+            <video
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/UWorldGuide.mp4"
+              className="w-full h-full rounded-lg"
+              controls
+              autoPlay
+              onEnded={handleTutorialClose}
+            />
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleTutorialClose}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-all shadow-sm hover:shadow-md hover:bg-blue-600"
+            >
+              Got it!
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -289,7 +359,7 @@ const UWorldPopup = ({
       <SaveChangesDialog
         isOpen={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}
-        onSave={handleSaveAndClose}
+        onSave={handleSave}
         onDiscard={handleDiscardAndClose}
       />
     </>

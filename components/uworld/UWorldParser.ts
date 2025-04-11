@@ -37,7 +37,7 @@ const parseTaskLine = (line: string): UWorldTask | null => {
     }
 
     // Match the format: Subject Name   44/187   18 (41%)   26 (59%)   0 (0%)   -
-    const pattern = /([A-Za-z, &]+)\s+(\d+)\/(\d+)\s+(\d+)\s+\(\d+%\)\s+(\d+)\s+\(\d+%\)\s+\d+\s+\(\d+%\)(?:\s+(?:-|\d+(?:st|nd|rd|th)))?/;
+    const pattern = /([A-Za-z, &]+)\s+\d+\/\d+\s+(\d+)\s+\(\d+%\)\s+(\d+)\s+\(\d+%\)\s+\d+\s+\(\d+%\)(?:\s+(?:-|\d+(?:st|nd|rd|th)))?/;
     const match = line.trim().match(pattern);
 
     if (!match) {
@@ -45,8 +45,12 @@ const parseTaskLine = (line: string): UWorldTask | null => {
         return null;
     }
 
-    const [, subject, used, total, correct, incorrect] = match;
+    // Extract components - now only using subject, correct, and incorrect
+    const [, subject, correct, incorrect] = match;
     const cleanSubject = cleanSubjectName(subject);
+    const correctNum = parseInt(correct);
+    const incorrectNum = parseInt(incorrect);
+    const total = correctNum + incorrectNum; // Calculate total from correct + incorrect
 
     // Skip if subject is in mainUWorldSubjects
     if (mainUWorldSubjects.includes(cleanSubject)) {
@@ -56,17 +60,17 @@ const parseTaskLine = (line: string): UWorldTask | null => {
 
     console.log('Extracted components:', {
         subject: cleanSubject,
-        total: parseInt(total),
-        correct: parseInt(correct),
-        incorrect: parseInt(incorrect)
+        total,
+        correct: correctNum,
+        incorrect: incorrectNum
     });
 
     return {
         text: `${total} Q UWorld - ${cleanSubject}`,
         subject: cleanSubject,
         completed: true,
-        correctAnswers: parseInt(correct),
-        incorrectAnswers: parseInt(incorrect)
+        correctAnswers: correctNum,
+        incorrectAnswers: incorrectNum
     };
 };
 
