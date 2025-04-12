@@ -58,10 +58,10 @@ const PromptSuggestions = ({ onSendMessage, className, messageCount, currentThem
       right: '0',
       zIndex: 50, // Higher z-index to appear above other elements
       padding: '12px',
-      backdropFilter: 'blur(5px)',
+      backdropFilter: 'blur(2px)',
       borderRadius: '12px',
       margin: '0 16px',
-      backgroundColor: 'rgba(0, 0, 0, 0.1)'
+      backgroundColor: 'transparent'
     }}>
       {SUGGESTIONS.map((suggestion, index) => (
         <button
@@ -69,9 +69,9 @@ const PromptSuggestions = ({ onSendMessage, className, messageCount, currentThem
           onClick={() => onSendMessage(suggestion.prompt)}
           className={cn(
             "px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-            "border border-[--theme-border-color] bg-[--theme-card-color] text-[--theme-text-color]",
-            "hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]",
-            "flex items-center gap-2 shadow-md hover:shadow-lg",
+            "border border-[--theme-border-color] bg-transparent text-[--theme-text-color]",
+            "hover:bg-[--theme-hover-color]/30 hover:text-[--theme-hover-text]",
+            "flex items-center gap-2 shadow-sm hover:shadow-md backdrop-blur-[1px]",
             "focus:outline-none focus:ring-2 focus:ring-[--theme-hover-color] focus:ring-opacity-50"
           )}
         >
