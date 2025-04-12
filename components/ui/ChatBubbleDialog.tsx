@@ -109,7 +109,7 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
                 damping: 20,
                 stiffness: 300
               }}
-              className="fixed bg-white rounded-[20px] shadow-xl z-[999999]"
+              className="fixed bg-[--theme-mainbox-color] rounded-[20px] shadow-xl z-[999999]"
               style={{ 
                 ...getChatPosition(),
                 transform: 'translate(-50%, -50%)',
@@ -202,7 +202,7 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
                   border-radius: 6px !important;
                 }
                 
-                /* Fix input positioning */
+                /* Fix input positioning and ensure theme compatibility */
                 .rcb-chat-input {
                   position: absolute !important;
                   bottom: 0 !important;
@@ -210,7 +210,32 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
                   right: 0 !important;
                   width: 100% !important;
                   z-index: 20 !important;
-                  background-color: rgba(231, 250, 251, 0.95) !important;
+                  background-color: var(--theme-leaguecard-color, rgba(231, 250, 251, 0.95)) !important;
+                  border-top: 1px solid var(--theme-border-color, rgba(200, 200, 200, 0.2)) !important;
+                }
+                
+                /* Ensure input text is visible on all themes */
+                .rcb-chat-input-textarea {
+                  color: var(--theme-text-color, #333) !important;
+                  background-color: var(--theme-mainbox-color, white) !important;
+                  border: 1px solid var(--theme-border-color, #e0e0e0) !important;
+                  border-radius: 8px !important;
+                }
+                
+                /* Add a placeholder color */
+                .rcb-chat-input-textarea::placeholder {
+                  color: var(--theme-text-color, #333) !important;
+                  opacity: 0.5 !important;
+                }
+                
+                /* Fix send button and its hover state */
+                .rcb-chat-input-submit-button {
+                  background-color: var(--theme-doctorsoffice-accent, #4CB5E6) !important;
+                  color: white !important;
+                }
+                
+                .rcb-chat-input-submit-button:hover {
+                  background-color: var(--theme-hover-color, #2a9cd2) !important;
                 }
                 
                 /* Fix prompt suggestions */
@@ -220,13 +245,14 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
                   left: 8px !important;
                   right: 8px !important;
                   z-index: 15 !important;
-                  background-color: rgba(241, 241, 241, 0.9) !important;
-                  backdrop-filter: blur(5px) !important;
+                  background-color: transparent !important;
+                  backdrop-filter: blur(1px) !important;
                   border-radius: 12px !important;
                   padding: 8px !important;
                   display: flex !important;
                   justify-content: center !important;
                   gap: 8px !important;
+                  border: none !important;
                 }
                 
                 /* Minimize prompt buttons to show only emojis */
@@ -239,6 +265,9 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
                   justify-content: center !important;
                   border-radius: 50% !important;
                   overflow: hidden !important;
+                  background-color: transparent !important;
+                  backdrop-filter: blur(0.5px) !important;
+                  border: 1px solid var(--theme-border-color, rgba(200, 200, 200, 0.3)) !important;
                 }
                 
                 /* Show only the emoji/icon and hide text */
@@ -276,7 +305,7 @@ const ChatBubbleDialog: React.FC<ChatBubbleDialogProps> = ({
               
               {/* Speech bubble pointer */}
               <div 
-                className="absolute w-4 h-8 bg-white"
+                className="absolute w-4 h-8 bg-[--theme-mainbox-color]"
                 style={{
                   left: pointerStyles.left,
                   top: pointerStyles.top,
