@@ -253,7 +253,7 @@ const ChatContainer = ({ className, chatbotRef, activities, containerProps }: Ch
           console.error("[Welcome] Error generating welcome message:", error);
           
           // Use a fallback message in case of error
-          const fallbackMessage = `Hello ${userInfo?.firstName || 'there'}! Welcome to MyMCAT.ai. How can I help you today?`;
+          const fallbackMessage = `Hello ${userInfo?.firstName || 'there'}! Welcome to Premedley! Just so you know, we're having a study session this Wednesday at 7!`;
           setWelcomeMessage(fallbackMessage);
           setIsWelcomeMessageTemporary(false);
           
@@ -712,7 +712,7 @@ const ChatContainer = ({ className, chatbotRef, activities, containerProps }: Ch
       }
       
       // Fallback message
-      return `Hello ${userInfo?.firstName || 'there'}! Welcome to MyMCAT.ai. How can I help you today?`;
+      return `Hello ${userInfo?.firstName || 'there'}! Welcome to Premedley! It's been a while. Just so you know, we're having a study session this Wednesday at 7!`;
     }
   );
 

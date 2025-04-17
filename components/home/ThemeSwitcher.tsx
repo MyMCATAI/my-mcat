@@ -14,6 +14,16 @@ const ThemeSwitcher = () => {
     <div className='flex space-x-2'>
       <button 
         className={`w-6 h-6 rounded-full text-white flex items-center justify-center
+          ${theme === 'cleanWhite' ? 'ring-1 ring-teal-400' : 'opacity-75 hover:opacity-100'}`}
+        onClick={() => handleThemeChange("cleanWhite")}
+        aria-label="cleanWhite"
+        title="cleanWhite"
+      >
+        <span className="sr-only">Clean White</span>
+        ⚕️
+      </button>
+      <button 
+        className={`w-6 h-6 rounded-full text-white flex items-center justify-center
           ${theme === 'cyberSpace' ? 'ring-1 ring-blue-400' : 'opacity-75 hover:opacity-100'}`}
         onClick={() => handleThemeChange("cyberSpace")}
         aria-label="cyberSpace"

@@ -53,6 +53,9 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
   useEffect(() => {
     const updateBackgroundImage = () => {
       switch (theme) {
+        case 'cleanWhite':
+          setBackgroundImage('url(/cleanWhitebackground.png)');
+          break;
         case 'sakuraTrees':
           setBackgroundImage('url(/sakuratreesbackground.png)');
           break;

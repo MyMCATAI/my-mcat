@@ -216,7 +216,7 @@ export const checkAndGenerateWelcomeMessage = async ({
       }
       
       // Return a fallback message if no cache
-      return "Hi there! I'm Kalypso. Welcome to MyMCAT.ai, the MCAT tutoring platform that adapts to you!";
+      return "Welcome to Premedley!";
     }
   }
   

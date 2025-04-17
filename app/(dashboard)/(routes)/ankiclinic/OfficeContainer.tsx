@@ -422,7 +422,14 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       document.querySelector('.theme-sakuraTrees') ||
       document.querySelector('.theme-cyberSpace') ||
       document.querySelector('.theme-mykonosBlue') ||
+      document.querySelector('.theme-cleanWhite') ||
       document.documentElement;
+    
+    // Special handling for cleanWhite theme
+    if (document.querySelector('.theme-cleanWhite')) {
+      return '#2ab2b0'; // Return teal color for cleanWhite theme
+    }
+    
     const computedStyle = getComputedStyle(themeElement!);
     const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();
     return accentColor || '#001226';

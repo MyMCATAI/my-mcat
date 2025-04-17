@@ -6,6 +6,7 @@ import type { ThemeType } from '@/store/slices/uiSlice'
 
 /* --- Constants ----- */
 const scrollbarColors = {
+  cleanWhite: '#2ab2b0',
   cyberSpace: '#3b82f6',
   sakuraTrees: '#b973af',
   sunsetCity: '#ff6347',
@@ -18,14 +19,14 @@ export default function ThemeInitializer() {
   // Initialize theme from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as ThemeType | null
-    if (savedTheme && ['cyberSpace', 'sakuraTrees', 'sunsetCity', 'mykonosBlue'].includes(savedTheme)) {
+    if (savedTheme && ['cleanWhite', 'cyberSpace', 'sakuraTrees', 'sunsetCity', 'mykonosBlue'].includes(savedTheme)) {
       setTheme(savedTheme)
     }
   }, [setTheme])
 
   // Apply theme classes and CSS variables
   useEffect(() => {
-    document.body.classList.remove('theme-cyberSpace', 'theme-sakuraTrees', 'theme-sunsetCity', 'theme-mykonosBlue')
+    document.body.classList.remove('theme-cleanWhite', 'theme-cyberSpace', 'theme-sakuraTrees', 'theme-sunsetCity', 'theme-mykonosBlue')
     document.body.classList.add(`theme-${theme}`)
     document.documentElement.style.setProperty('--theme-scrollbar-color', scrollbarColors[theme])
   }, [theme])

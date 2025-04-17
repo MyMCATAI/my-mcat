@@ -359,6 +359,7 @@ body.theme-sunsetCity * {
   /* Subtle pink */
   --theme-leaguecard-color: #fbf0f8e6;
   --theme-leaguecard-accent: rgba(244, 198, 229, 0.7);
+  /* Softer tomato with transparency */
   --theme-navbutton-color: #9a2641;
   /* Pale violet red */
   --svg-invert: 0;
@@ -1159,4 +1160,80 @@ html::-webkit-scrollbar {
 .theme-mykonosBlue-suggestions button {
   border-color: rgba(76, 181, 230, 0.4);
   box-shadow: 0 0 6px 1px rgba(76, 181, 230, 0.3);
+}
+
+/* Clean White theme for Premedley */
+.theme-cleanWhite {
+  --theme-box-shadow: 0 0 6px 2px rgba(42, 178, 176, 0.15), inset 0 2px 8px rgba(42, 178, 176, 0.1);
+  --theme-interface-image: none;
+  --theme-mainbox-color: #ffffff;
+  --theme-gradient-start: #ffffff;
+  --theme-gradient-end: #ffffff;
+  --theme-gradient-startstreak: rgba(42, 178, 176, 0.1);
+  --theme-gradient-endstreak: rgba(42, 178, 176, 0.2);
+  --theme-text-color: #000000;
+  --theme-svg-color: #2ab2b0;
+  --theme-hover-color: #2ab2b0;
+  --theme-botchatbox-color: #affffe;
+  --theme-userchatbox-color: #007AFF;
+  --theme-hover-text: #ffffff;
+  --theme-border-color: rgba(42, 178, 176, 0.3);
+  --theme-leaguecard-color: #ffffff;
+  --theme-leaguecard-accent: rgba(42, 178, 176, 0.15);
+  --theme-navbutton-color: #2ab2b0;
+  --svg-invert: 0;
+  --theme-reddit-color: #f9f9f9;
+  --theme-doctorsoffice-accent: #f5fafa;
+  --theme-flashcard-color: #ffffff;
+  --theme-flashcard-text-color: #000000;
+  --theme-adaptive-tutoring-color: #ffffff;
+  --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(42, 178, 176, 0.2);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(42, 178, 176, 0.3);
+  --theme-emphasis-color: rgba(42, 178, 176, 0.7);
+  --theme-button-color: #ffffff;
+  --theme-button-boxShadow: 0 0 2px 1px rgba(42, 178, 176, 0.3);
+  --theme-button-boxShadow-hover: 0 0 8px 2px rgba(42, 178, 176, 0.5);
+}
+
+.theme-cleanWhite .gradientbg {
+  background: #2ab2b0;
+  background: linear-gradient(0deg, rgba(179, 255, 253, 0.9) 0%, rgba(175, 237, 237, 0.8) 100%);
+}
+
+/* Clean White theme SVG styles */
+.theme-cleanWhite .theme-svg {
+  filter: invert(0%);
+}
+
+.theme-cleanWhite .theme-box:hover .theme-svg {
+  filter: invert(100%) !important;
+}
+
+/* Ensure the default state is correct for Clean White */
+.theme-cleanWhite .theme-svg {
+  filter: invert(0%) !important;
+}
+
+/* Add Clean White theme to scrollbar styles */
+.theme-cleanWhite .themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #2ab2b0;
+}
+
+/* Theme-specific styling for prompt suggestions */
+.theme-cleanWhite-suggestions button {
+  border-color: rgba(42, 178, 176, 0.4);
+  box-shadow: 0 0 6px 1px rgba(42, 178, 176, 0.3);
+}
+
+/* Clean White theme text override */
+.theme-cleanWhite .text-white {
+  color: #000000 !important;
+}
+
+.theme-cleanWhite .bot-message {
+  color: #ffffff !important;
+}
+
+.theme-cleanWhite .user-message {
+  color: #ffffff !important;
 }

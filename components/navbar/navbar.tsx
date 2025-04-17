@@ -117,7 +117,9 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
           <div className="flex items-center space-x-4">
             <Link href="/home" className="flex items-center">
               <div className="flex flex-col justify-center h-16">
-                <span className="text-xl text-white font-krungthep">mymcat.ai</span>
+                <span className={`text-xl font-krungthep ${theme === 'cleanWhite' ? 'text-black' : 'text-white'}`}>
+                  <span className="font-bold">PREMED</span><span className="text-gray-400">LEY</span>
+                </span>
               </div>
             </Link>
             <div className="w-48">
@@ -146,7 +148,9 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
             >
               <div className="flex items-center ml-[30px]">
                 <div className="flex flex-col justify-center">
-                  <p className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
+                  <p className="text-xs whitespace-nowrap" style={{ 
+                    color: theme === 'cleanWhite' ? 'black' : 'var(--theme-text-color)' 
+                  }}>
                     designed by <br />a certified baller
                   </p>
                 </div>
@@ -156,7 +160,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
                       size={30} 
                       className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
                       style={{
-                        color: 'var(--theme-text-color)',
+                        color: theme === 'cleanWhite' ? 'black' : 'var(--theme-text-color)',
                       }}
                     />
                   </Link>
@@ -171,7 +175,9 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
           <div className="flex items-center space-x-2 sm:space-x-4 pl-16">
             <Link href="/home" className="flex items-center">
               <div className="flex flex-col">
-                <span className="text-xl text-white font-krungthep mb-1">mymcat.ai</span>
+                <span className={`text-xl font-krungthep mb-1 ${theme === 'cleanWhite' ? 'text-black' : 'text-white'}`}>
+                  <span className="font-bold">PREMED</span><span className="text-gray-400">LEY</span>
+                </span>
               </div>
             </Link>
             <div className="w-32 sm:w-48">
@@ -194,7 +200,9 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
                 width: "100%"
               }}
             >
-              <p className="ms-12 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
+              <p className="ms-12 text-xs whitespace-nowrap" style={{ 
+                color: theme === 'cleanWhite' ? '#2ab2b0' : 'var(--theme-text-color)' 
+              }}>
                 designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
               </p>
               <div className="mx-2">
@@ -203,7 +211,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
                     size={30} 
                     className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
                     style={{
-                      color: 'var(--theme-text-color)',
+                      color: theme === 'cleanWhite' ? '#2ab2b0' : 'var(--theme-text-color)',
                     }}
                   />
                 </Link>

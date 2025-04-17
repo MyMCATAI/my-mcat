@@ -321,8 +321,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     botBubbleStyle: {
       fontSize: "0.875rem",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: 'black',
-      backgroundColor: '#e8e8ea'
+      color: 'white',
+      backgroundColor: '#2ab2b0'
     },
     userBubbleStyle: {
       fontSize: "0.875rem",

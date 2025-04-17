@@ -7,18 +7,13 @@ import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import type { FetchedActivity } from "@/types"
 
-const TASKS = [
-  {
-    id: 'plan-exam',
-    title: 'Plan your exam and study schedule',
-    route: '/examcalendar',
-  },
-  {
-    id: 'join-discord',
-    title: 'Join our Discord',
-    route: 'https://discord.gg/jcWVAxKS',
-    isExternal: true,
-  },
+const TASKS: {
+  id: string;
+  title: string;
+  route: string;
+  isExternal?: boolean;
+}[] = [
+  // Tasks removed to disable "Get Started with" panel
 ]
 
 interface UserContextPanelProps {

@@ -9,7 +9,7 @@ export interface WindowSize {
   isDesktop: boolean
 }
 
-export type ThemeType = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
+export type ThemeType = 'cleanWhite' | 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
 
 //******************************************* UI Slice ****************************************************//
 interface UIState {

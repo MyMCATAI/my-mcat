@@ -200,17 +200,22 @@ const MusicPlayer = ({ theme }: MusicPlayerProps) => {
       <button 
         onClick={handleTogglePlay}
         className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        style={{ color: theme === 'cleanWhite' ? '#2ab2b0' : 'inherit' }}
       >
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
       <button 
         onClick={handleNextSong}
         className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        style={{ color: theme === 'cleanWhite' ? '#2ab2b0' : 'inherit' }}
       >
         <FaForward />
       </button>
       <div className="relative group flex items-center">
-        <FaVolumeUp className="cursor-pointer mr-2" />
+        <FaVolumeUp 
+          className="cursor-pointer mr-2" 
+          style={{ color: theme === 'cleanWhite' ? '#2ab2b0' : 'inherit' }}
+        />
         <input
           type="range"
           min="0"
