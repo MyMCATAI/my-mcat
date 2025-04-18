@@ -390,8 +390,8 @@ export const useUserStore = create<UserState & UserActions>()(
         console.log('[UserStore DEBUG] Received userInfo:', {
           hasOnboardingInfo: !!userInfo.onboardingInfo,
           hasSeenIntroVideo: userInfo.onboardingInfo?.hasSeenIntroVideo,
-          userId: userInfo.userId,
-          subscriptionType: userInfo.subscriptionType
+          subscriptionType: userInfo.subscriptionType,
+          userInfo: userInfo
         });
         
         const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;

@@ -26,7 +26,6 @@ const userInfoPostSchema = z.object({
 
 const userInfoPutSchema = z.object({
   bio: z.string().trim().max(500).optional(),
-  unlockGame: z.string().max(100).optional(),
   amount: z.number().int().optional(),
   incrementScore: z.boolean().optional(),
   decrementScore: z.boolean().optional(),
@@ -85,7 +84,7 @@ export async function GET(req: Request) {
 
     // Filter PII from the response
     const safeUserInfo = {
-      userId: userInfo.userId,
+      // userId: userInfo.userId,
       firstName: userInfo.firstName,
       bio: userInfo.bio,
       score: userInfo.score,
@@ -94,6 +93,7 @@ export async function GET(req: Request) {
       subscriptionType: userInfo.subscriptionType,
       diagnosticScores: userInfo.diagnosticScores,
       onboardingInfo: userInfo.onboardingInfo,
+      unlocks: userInfo.unlocks,
       patientRecord: userInfo.patientRecord ? {
         patientsTreated: userInfo.patientRecord.patientsTreated
       } : null,
@@ -270,7 +270,7 @@ export async function PUT(req: Request) {
       });
     }
     
-    const { bio, unlockGame, amount, incrementScore, decrementScore, notificationPreference, onboardingInfo } = result.data;
+    const { bio, amount, incrementScore, decrementScore, notificationPreference, onboardingInfo } = result.data;
 
     // Handle onboardingInfo update
     if (onboardingInfo) {
@@ -315,39 +315,6 @@ export async function PUT(req: Request) {
 
       const updatedInfo = await incrementUserScore(amount);
       return NextResponse.json({ score: updatedInfo.score });
-    }
-
-    if (unlockGame) {
-      const userInfo = await prismadb.userInfo.findUnique({
-        where: { userId }
-      });
-
-      if (!userInfo) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      // Parse existing unlocks array
-      const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
-
-      // Check if already unlocked
-      if (currentUnlocks.includes('game')) {
-        return NextResponse.json({
-          message: "Already unlocked",
-          unlocks: currentUnlocks,
-          score: userInfo.score
-        });
-      }
-
-      // Add new unlock and decrement score
-      const newUnlocks = [...currentUnlocks, 'game'];
-      const updatedInfo = await prismadb.userInfo.update({
-        where: { userId },
-        data: {
-          unlocks: newUnlocks
-        }
-      });
-
-      return NextResponse.json(updatedInfo);
     }
 
     // Handle increment/decrement score
