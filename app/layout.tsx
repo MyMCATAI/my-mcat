@@ -11,6 +11,13 @@ import { metadata } from './metadata'
 import RouteTracker from '@/components/RouteTracker'
 import { Toaster } from 'react-hot-toast';
 import { toastConfig } from '@/lib/toast';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the SessionTimeoutManager with no SSR to avoid hydration issues
+const SessionTimeoutManager = dynamic(
+  () => import('@/components/auth/SessionTimeoutManager'),
+  { ssr: false }
+);
 
 import './globals.css'
 
@@ -24,10 +31,21 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider afterSignOutUrl={"/"}>
+    <ClerkProvider 
+      afterSignOutUrl="/"
+      appearance={{
+        baseTheme: undefined,
+        variables: { colorPrimary: '#4F46E5' },
+        elements: {
+          formButtonPrimary: 
+            'bg-primary hover:bg-primary/90 text-white',
+          card: 'shadow-md rounded-xl border border-gray-200',
+        }
+      }}
+    >
       <html lang="en">
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
         </head>
         <body className={robotoSlab.className}>
           <div id="app-root" className="relative">
@@ -37,6 +55,7 @@ export default function RootLayout({
             <FullscreenPrompt />
             <StoreInitializer />
             <RouteTracker />
+            <SessionTimeoutManager />
             <div className="relative z-50">
               {children}
             </div>

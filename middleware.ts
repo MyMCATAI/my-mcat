@@ -42,12 +42,6 @@ const publicRoutes = [
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
-const isAdminRoute = createRouteMatcher(["/admin(.*)"])
-
-const allowedAdminUserIds = [
-  "user_2jCZfJZbTtFdqyqwcjaMNTOz1Lm",
-  "user_2krxKeoPq12i3Nm8AD77AkIwC3H"
-];
 
 export default clerkMiddleware((auth, request) => {
   const userAgent = request.headers.get('user-agent') || ''
@@ -79,13 +73,6 @@ export default clerkMiddleware((auth, request) => {
       return NextResponse.redirect(signInUrl);
     }
     auth().protect();
-  }
-
-  if (isAdminRoute(request)) {
-    const userId = auth().userId;
-    if (!userId || !allowedAdminUserIds.includes(userId)) {
-      return NextResponse.redirect(new URL("/home", request.url));
-    }
   }
 
   return NextResponse.next();

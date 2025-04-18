@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
-import { allowedAdminUserIds } from '@/lib/utils';
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +8,6 @@ export async function GET(req: Request) {
     const { userId } = auth();
     
     if (!userId) {
-      console.log("Unauthorized: No userId found");
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -91,107 +89,3 @@ export async function GET(req: Request) {
     });
   }
 }
-
-export async function POST(req: Request) {
-  try {
-    const { userId } = auth();
-
-    if (!userId || !allowedAdminUserIds.includes(userId)) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const body = await req.json();
-    console.log("Received body:", JSON.stringify(body, null, 2));
-
-    const { title, citation, text, description, difficulty, questions } = body;
-
-    // Create the passage
-    const passage = await prisma.passage.create({
-      data: {
-        title,
-        citation,
-        text,
-        description,
-        difficulty: parseFloat(difficulty),
-        questions: {
-          create: questions.map((question: any) => ({
-            questionContent: question.questionContent,
-            questionOptions: JSON.stringify(question.questionOptions),
-            questionAnswerNotes: question.questionAnswerNotes,
-            context: question.context,
-            difficulty: parseFloat(question.difficulty),
-            contentCategory: question.contentCategory,
-            categoryId: question.categoryId,
-            questionID: question.questionID,
-          })),
-        },
-      },
-    });
-
-    return new NextResponse(JSON.stringify(passage), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error saving passage:", error);
-    return new NextResponse(
-      JSON.stringify({
-        error: "Failed to save passage",
-        details:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-}
-
-export async function PUT(req: NextRequest) {
-  try {
-    const { userId } = auth();
-    if (!userId || !allowedAdminUserIds.includes(userId)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await req.json();
-    console.log("Received body:", JSON.stringify(body, null, 2));
-
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing passage ID" },
-        { status: 400 }
-      );
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
-    }
-
-    // Parse difficulty if it's provided
-    if (updateData.difficulty) {
-      updateData.difficulty = parseFloat(updateData.difficulty);
-    }
-
-    const updatedPassage = await prisma.passage.update({
-      where: { id },
-      data: updateData,
-    });
-
-    console.log("Updated passage:", JSON.stringify(updatedPassage, null, 2));
-    return NextResponse.json(updatedPassage);
-  } catch (error) {
-    console.error("Error updating passage:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
-}
-
