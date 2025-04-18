@@ -385,13 +385,8 @@ const TestComponent: React.FC<TestComponentProps> = ({
         ...prevContext,
         context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
       }));
-
-      // Play sound on successful submission
-      audio.playSound('correct');
     } catch (error) {
       console.error("Error saving user response:", error);
-      audio.playSound('warning');
-      // Could add error handling UI here if needed
     }
   };
 
