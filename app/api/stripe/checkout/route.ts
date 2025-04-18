@@ -6,14 +6,25 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { sendReferralEmail, sendWelcomeEmail } from "@/lib/server-utils";
 import { ProductType, isValidProductType } from "@/types";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+// Define allowed origins - environment variable or hard-coded secure domains
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : [`${process.env.NEXT_PUBLIC_APP_URL}`, 'https://mymcat.ai'];
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
+// Helper to get CORS headers based on the request origin
+function getCorsHeaders(request: Request) {
+  const origin = request.headers.get('origin') || '';
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+  
+  return {
+    "Access-Control-Allow-Origin": isAllowedOrigin ? origin : allowedOrigins[0],
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
+
+export async function OPTIONS(request: Request) {
+  return NextResponse.json({}, { headers: getCorsHeaders(request) });
 }
 
 export async function POST(request: Request) {
@@ -46,7 +57,7 @@ export async function POST(request: Request) {
           JSON.stringify({ 
             error: "You've already had a subscription and are not eligible for a trial" 
           }), 
-          { status: 400 }
+          { status: 400, headers: getCorsHeaders(request) }
         );
       }
       
@@ -68,7 +79,7 @@ export async function POST(request: Request) {
               JSON.stringify({ 
                 error: "You've already had a trial subscription" 
               }), 
-              { status: 400 }
+              { status: 400, headers: getCorsHeaders(request) }
             );
           }
         } catch (error) {
@@ -190,7 +201,7 @@ export async function POST(request: Request) {
           message: "User setup completed with referral bonus",
           url: `${process.env.NEXT_PUBLIC_APP_URL}/home`,
         },
-        { headers: corsHeaders }
+        { headers: getCorsHeaders(request) }
       );
     }
 
@@ -283,10 +294,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { url: stripeSession.url },
-      { headers: corsHeaders }
+      { headers: getCorsHeaders(request) }
     );
   } catch (error) {
     console.error("Checkout error:", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse("Internal Error", { 
+      status: 500, 
+      headers: getCorsHeaders(request) 
+    });
   }
 }

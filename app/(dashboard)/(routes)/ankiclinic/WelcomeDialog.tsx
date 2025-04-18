@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FaDiscord } from "react-icons/fa";
@@ -17,6 +18,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   const { unlockGame } = useUserInfo();
 
   const unlock = async () => {
+    console.log('Let\'s Play! button clicked');
     try {
       await unlockGame();
       onUnlocked()
@@ -42,7 +44,10 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
               src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiClinicVideo(1).mp4"
               controls
               className="w-full h-auto"
+              onCanPlay={() => console.log('Video event: onCanPlay')}
+              onError={(e) => console.error('Video event: onError', e)}
             >
+              <track kind="captions" />
               Your browser does not support the video tag.
             </video>
           </div>

@@ -1,43 +1,83 @@
-import Stripe from "stripe"
+import type Stripe from "stripe"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { ProductType, isValidProductType, getCoinAmountForProduct, ProductName } from "@/types"
+import { ProductType, isValidProductType, getCoinAmountForProduct, type ProductName } from "@/types"
 import prismadb from "@/lib/prismadb"
 import { stripe } from "@/lib/stripe"
+import { applyRateLimit } from "@/lib/rate-limiter"
+
+// Maintain a cache of processed webhook IDs to prevent replay attacks
+const processedEvents = new Set<string>();
+// Set maximum age for webhook events (10 minutes in milliseconds)
+const MAX_EVENT_AGE = 10 * 60 * 1000;
 
 export async function POST(req: Request) {
+  // Apply rate limiting
+  const rateLimitResponse = await applyRateLimit(req, 'auth');
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const body = await req.text()
   const headerPayload = await headers();
   const signature = headerPayload.get("Stripe-Signature") as string
 
-  console.log('Webhook received:', {
-    eventType: JSON.parse(body).type,
-    metadata: JSON.parse(body).data?.object?.metadata,
-    customerId: JSON.parse(body).data?.object?.customer,
-    subscriptionId: JSON.parse(body).data?.object?.subscription
-  });
+  if (!signature) {
+    console.error("No Stripe signature found in headers");
+    return new NextResponse("Webhook Error: No signature provided", { status: 400 });
+  }
 
-  let event: Stripe.Event
+  let event: Stripe.Event;
 
   try {
+    // Verify webhook signature if secret is available
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new Error("Missing Stripe webhook secret");
+    }
+    
+    // Strictly verify the webhook signature
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    )
-    console.log('Event constructed successfully:', event.type);
-  } catch (error: any) {
-    console.error("Webhook signature verification failed:", error.message);
-    // In production, we'll still process the event even if signature fails
-    // This is because some webhook forwarders might modify the signature
-    try {
-      event = JSON.parse(body) as Stripe.Event;
-      console.log('Proceeding with parsed event despite signature failure');
-    } catch (parseError) {
-      console.error("Failed to parse webhook body:", parseError);
-      return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 })
+      webhookSecret
+    );
+    
+    // Validate event timestamp to prevent replay attacks
+    const eventTimestamp = event.created * 1000; // Convert to milliseconds
+    const currentTime = Date.now();
+    
+    if (currentTime - eventTimestamp > MAX_EVENT_AGE) {
+      console.error("Webhook event too old:", { eventAge: currentTime - eventTimestamp });
+      return new NextResponse("Webhook Error: Event too old", { status: 400 });
     }
+    
+    // Check if we've already processed this event (prevent duplicate processing)
+    if (processedEvents.has(event.id)) {
+      console.log("Webhook event already processed:", event.id);
+      return new NextResponse("Event already processed", { status: 200 });
+    }
+    
+    // Add this event to our processed set (limit set size to prevent memory issues)
+    processedEvents.add(event.id);
+    if (processedEvents.size > 1000) {
+      // Remove oldest entries when we hit 1000 events
+      const iterator = processedEvents.values();
+      for (let i = 0; i < 200; i++) {
+        processedEvents.delete(iterator.next().value);
+      }
+    }
+    
+    // Log basic event info
+    console.log('Webhook received and verified:', {
+      eventType: event.type,
+      eventId: event.id
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("Webhook signature verification failed:", errorMessage);
+    return new NextResponse(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
   async function upsertUserSubscription(data: any) {
@@ -161,12 +201,13 @@ export async function POST(req: Request) {
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted':
     case 'customer.subscription.paused':
-    case 'customer.subscription.resumed':
+    case 'customer.subscription.resumed': {
       const subscriptionEvent = event.data.object as Stripe.Subscription;
       await handleSubscriptionEvent(subscriptionEvent);
       break;
+    }
     
-    case "checkout.session.completed":
+    case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
       const productType = session.metadata?.productType;
@@ -241,13 +282,15 @@ export async function POST(req: Request) {
         }
       }
       break;
+    }
 
-    case "payment_intent.succeeded":
+    case "payment_intent.succeeded": {
       break;
+    }
 
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
 
-  return new NextResponse(null, { status: 200 })
+  return new NextResponse(null, { status: 200 });
 }
