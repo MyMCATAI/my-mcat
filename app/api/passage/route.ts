@@ -4,7 +4,6 @@ import prisma from "@/lib/prismadb";
 
 export async function GET(req: Request) {
   try {
-    console.log("GET request received");
     const { userId } = auth();
     
     if (!userId) {
@@ -41,20 +40,17 @@ export async function GET(req: Request) {
       });
 
       if (!passage) {
-        console.log("Passage not found, returning 404");
         return new NextResponse(JSON.stringify({ error: "Passage not found" }), { 
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         });
       }
 
-      console.log("Returning single passage");
       return new NextResponse(JSON.stringify(passage), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     } else {
-      console.log("Fetching multiple passages");
       // Existing code for fetching multiple passages
       const skip = (page - 1) * pageSize;
 
@@ -69,8 +65,6 @@ export async function GET(req: Request) {
       });
 
       const totalPassages = await prisma.passage.count();
-
-      console.log(`Fetched ${passages.length} passages. Total: ${totalPassages}`);
 
       return new NextResponse(JSON.stringify({
         passages,

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { FaDiscord } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
-import { useUserInfo } from '@/hooks/useUserInfo';
+import { useFeatureUnlock } from '@/hooks/useFeatureUnlock';
 
 interface WelcomeDialogProps {
   isOpen: boolean;
@@ -15,13 +15,15 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   isOpen, 
   onUnlocked
 }) => {
-  const { unlockGame } = useUserInfo();
+  const { unlockFeature, isUnlocking } = useFeatureUnlock();
 
   const unlock = async () => {
     console.log('Let\'s Play! button clicked');
     try {
-      await unlockGame();
-      onUnlocked()
+      const success = await unlockFeature('game', 5, 'Anki Clinic');
+      if (success) {
+        onUnlocked();
+      }
     } catch (error) {
       console.error('Error unlocking clinic:', error);
     }
@@ -56,9 +58,10 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
             <div className="mb-4">
               <Button 
                 onClick={unlock}
+                disabled={isUnlocking}
                 className="w-full py-6 text-lg font-semibold bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-opacity-75"
               >
-                {"Let's Play!"}
+                {isUnlocking ? 'Unlocking...' : "Let's Play!"}
               </Button>
             </div>
             <div className="flex gap-2">

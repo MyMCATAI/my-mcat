@@ -25,9 +25,7 @@ export const useFeatureUnlock = (): UseFeatureUnlockResult => {
   
   // Check if a feature is unlocked
   const isFeatureUnlocked = useCallback((featureId: FeatureId) => {
-    // AnkiClinic is always unlocked
-    if (featureId === FEATURE_UNLOCK.ANKICLINIC || featureId === 'ankiclinic') return true;
-    
+    // AnkiClinic check removed - general check below handles it
     return Array.isArray(userUnlocks) && userUnlocks.includes(featureId);
   }, [userUnlocks]);
   

@@ -25,7 +25,6 @@ interface UseUserInfoReturn {
     friendEmail: string;
   }) => Promise<void>;
   checkHasReferrals: () => Promise<boolean>;
-  unlockGame: () => Promise<void>;
   createNewUser: (data: { firstName: string; bio?: string }) => Promise<UserInfo>;
   isSubscribed: boolean;
   hasSeenIntroVideo: boolean;
@@ -41,6 +40,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
     refreshUserInfo,
     setHasSeenIntroVideo
   } = useUser();
+
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -310,32 +310,6 @@ export const useUserInfo = (): UseUserInfoReturn => {
     }
   }, []);
 
-  const unlockGame = useCallback(async () => {
-    try {
-      const response = await fetch('/api/user-info', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          unlockGame: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to unlock game');
-      }
-
-      const data = await response.json();
-      debouncedFetchUserInfo();
-
-      toast.success('Welcome to the Anki Clinic!');
-    } catch (err) {
-      toast.error('Failed to unlock the Anki Clinic');
-      throw err;
-    }
-  }, [debouncedFetchUserInfo]);
-
   const createNewUser = useCallback(async (data: { firstName: string; bio?: string }) => {
     try {
       const response = await fetch("/api/user-info", {
@@ -372,9 +346,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
     fetchReferrals,
     createReferral,
     checkHasReferrals,
-    unlockGame,
     createNewUser,
-    // isSubscribed: !!userInfo?.hasPaid || isNewUserTrial, // Made platform free for all on March 30
     isSubscribed: true,
     hasSeenIntroVideo,
     setHasSeenIntroVideo
