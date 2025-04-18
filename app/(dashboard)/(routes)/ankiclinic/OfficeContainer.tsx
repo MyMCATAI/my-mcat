@@ -805,9 +805,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       
       {/* UI Elements */}
       <div className="absolute inset-0 z-30 pointer-events-none">
-        <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-20' : 'bottom-6'} left-0 w-full text-center text-xl font-bold text-[--theme-text-color]`}>
-          {userInfo?.firstName && `${userInfo.firstName} Medical Center`}
-        </div>
+        {/* Remove the Medical Center text */}
         
         {/* Zoom controls - moved to bottom right */}
         <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-28' : 'bottom-4'} ${isMobile ? 'right-4' : 'right-4'} flex ${isMobile ? 'flex-row' : 'flex-col'} gap-2`}>

@@ -19,7 +19,7 @@ import { useWindowSize } from "@/store/selectors";
 import ClinicHeader from "./components/ClinicHeader";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
-import ResourcesMenu from './ResourcesMenu';
+import SideBar from "../home/SideBar";
 import { useUser } from "@/store/selectors";
 
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
@@ -85,6 +85,7 @@ const DoctorsOfficePage = () => {
   const isClosingDialogRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasCalculatedRef = useRef(false);
+  const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({ sendMessage: () => {} });
   
   // Use a ref instead of state to track ambient sound initialization
   // This prevents re-renders when the ambient sound is initialized
@@ -157,6 +158,14 @@ const DoctorsOfficePage = () => {
       return [];
     }
   }, [userInfo?.clinicRooms]);
+
+  // Simple chatbot context for SideBar
+  const chatbotContext = useMemo(() => ({
+    section: 'ankiclinic',
+    level: userLevel,
+    userName: userInfo?.firstName || 'User',
+    isSubscribed: isSubscribed
+  }), [userLevel, userInfo?.firstName, isSubscribed]);
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
 
@@ -876,28 +885,42 @@ const DoctorsOfficePage = () => {
                     </svg>
                   </button>
                   
-                  <ResourcesMenu
-                    reportData={reportData}
+                  <SideBar
+                    activities={activities}
+                    currentPage="ankiclinic"
+                    chatbotContext={chatbotContext}
+                    chatbotRef={chatbotRef}
+                    handleSetTab={handleTabChange}
+                    onActivitiesUpdate={fetchActivities}
+                    isSubscribed={isSubscribed}
+                    showTasks={true}
                   />
                 </div>
               </div>
             </>
           ) : (
             <>
-              {/* Desktop layout: side-by-side components */}
-              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50">
-                <ResourcesMenu
-                  reportData={reportData}
-                />
-              </div>
-              
-              <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
+              {/* Desktop layout: side-by-side components with sidebar on right */}
+              <div className="w-3/4 font-krungthep relative z-20 rounded-l-lg">
                 <OfficeContainer
                   ref={officeContainerRef}
                   onNewGame={handleSetPopulateRooms}
                   visibleImages={visibleImages}
                   imageGroups={imageGroups}
                   updateVisibleImages={updateVisibleImages}
+                />
+              </div>
+              
+              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50 rounded-r-lg">
+                <SideBar
+                  activities={activities}
+                  currentPage="ankiclinic"
+                  chatbotContext={chatbotContext}
+                  chatbotRef={chatbotRef}
+                  handleSetTab={handleTabChange}
+                  onActivitiesUpdate={fetchActivities}
+                  isSubscribed={isSubscribed}
+                  showTasks={true}
                 />
               </div>
             </>
@@ -908,32 +931,14 @@ const DoctorsOfficePage = () => {
             <>
               {/* Mobile buttons wrapper - fixed at bottom */}
               <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
-                {/* Left side - Tutorial button */}
-                <div>
-                  <a 
-                    href="/ankiclinic-tutorial" 
-                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // This functionality is now handled in the ClinicHeader component
-                      const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
-                      if (headerButton) {
-                        (headerButton as HTMLElement).click();
-                      }
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </a>
-                </div>
+                {/* Left side - space for symmetry (remove tutorial button) */}
+                <div className="w-10"></div>
                 
                 {/* Center - New Game button */}
                 <div>
-
-                    <NewGameButton
-                      onGameStart={handleGameStart}
-                    />
+                  <NewGameButton
+                    onGameStart={handleGameStart}
+                  />
                 </div>
                 
                 {/* Right side - Sidebar toggle and Marketplace */}
@@ -967,7 +972,7 @@ const DoctorsOfficePage = () => {
           />
           
           {/* Feature unlock banner */}
-          <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
+          <div className="absolute top-20 right-4 left-4 z-40 md:left-4 md:right-1/4">
             <FeatureUnlockBanner />
           </div>
         </div>
@@ -1011,38 +1016,6 @@ const DoctorsOfficePage = () => {
         buttonContent={<div />}
       />}
 
-      {/* Desktop only - Tutorial button */}
-      {!isMobile && (
-        <div className="absolute bottom-4 left-[calc(25%+16px)] z-50">
-          <a 
-            href="/ankiclinic-tutorial" 
-            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              // This functionality is now handled in the ClinicHeader component
-              const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
-              if (headerButton) {
-                (headerButton as HTMLElement).click();
-              }
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            Tutorial
-          </a>
-        </div>
-      )}
-
-      {/* Desktop only - New Game button */}
-      {!isMobile  && (
-        <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
-          <NewGameButton
-            onGameStart={handleGameStart}
-          />
-        </div>
-      )}
-
       {/* Add ShoppingDialog - always mounted */}
       <ShoppingDialog
         ref={marketplaceDialogRef}
@@ -1054,6 +1027,15 @@ const DoctorsOfficePage = () => {
         onOpenChange={setIsMarketplaceOpen}
         clinicRooms={userInfo?.clinicRooms || "[]"}
       />
+
+      {/* Add back the desktop New Game button section */}
+      {!isMobile && (
+        <div className="absolute top-6 left-4 flex gap-2 z-50">
+          <NewGameButton
+            onGameStart={handleGameStart}
+          />
+        </div>
+      )}
     </div>
   );
 };
