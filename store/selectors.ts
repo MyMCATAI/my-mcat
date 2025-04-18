@@ -247,6 +247,13 @@ export const useGame = () => {
   const setStreakDays = useGameStore((state) => state.setStreakDays)
   const setTotalPatients = useGameStore((state) => state.setTotalPatients)
   
+  // Add our new subject filtering selectors
+  const availableSubjects = useGameStore((state) => state.availableSubjects)
+  const selectedSubjects = useGameStore((state) => state.selectedSubjects)
+  const setSelectedSubjects = useGameStore((state) => state.setSelectedSubjects)
+  const toggleSubject = useGameStore((state) => state.toggleSubject)
+  const resetSubjects = useGameStore((state) => state.resetSubjects)
+  
   return {
     // Game progress
     userRooms,
@@ -286,6 +293,13 @@ export const useGame = () => {
     updateUserLevel,
     setStreakDays,
     setTotalPatients,
+    
+    // New subject filtering values
+    availableSubjects,
+    selectedSubjects,
+    setSelectedSubjects,
+    toggleSubject,
+    resetSubjects,
   }
 }
 
