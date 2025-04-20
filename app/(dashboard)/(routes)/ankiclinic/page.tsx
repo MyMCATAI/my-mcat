@@ -25,7 +25,7 @@ import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 
 // Important UI components with loading fallbacks
-const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
+const NewGameWithFilter = dynamic(() => import('./components/NewGameWithFilter'), {
   ssr: false,
   loading: () => (
     <button className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center opacity-70">
@@ -930,10 +930,9 @@ const DoctorsOfficePage = () => {
                 
                 {/* Center - New Game button */}
                 <div>
-
-                    <NewGameButton
-                      onGameStart={handleGameStart}
-                    />
+                  <NewGameWithFilter
+                    onGameStart={handleGameStart}
+                  />
                 </div>
                 
                 {/* Right side - Sidebar toggle and Marketplace */}
@@ -1037,7 +1036,7 @@ const DoctorsOfficePage = () => {
       {/* Desktop only - New Game button */}
       {!isMobile  && (
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
-          <NewGameButton
+          <NewGameWithFilter
             onGameStart={handleGameStart}
           />
         </div>

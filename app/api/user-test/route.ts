@@ -97,45 +97,30 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    let body = {};
-    try {
-      body = await req.json();
-    } catch {
-      console.log("Error parsing userTest post body");      
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Create a data object with only the required userId
-    const data: { userId: string; testId?: string; passageId?: string } = {
-      userId,
-    };
+    // Parse the request body to get subjects if provided
+    const body = await req.json();
+    const subjects = body.subjects || [];
 
-    // If testId is provided, fetch the test to get its passageId
-    if (body && typeof body === 'object' && 'testId' in body && typeof body.testId === 'string') {
-      data.testId = body.testId;
-      
-      const test = await prisma.test.findUnique({
-        where: { id: body.testId },
-        select: { passageId: true }
-      });
-      
-      if (test?.passageId) {
-        data.passageId = test.passageId;
-      }
-    } else if (body && typeof body === 'object' && 'passageId' in body && typeof body.passageId === 'string') {
-      data.passageId = body.passageId;
-    }
-
+    // Create a new user test with the selected subjects
     const userTest = await prisma.userTest.create({
-      data,
+      data: {
+        userId,
+        // Store subjects as JSON string
+        metadata: JSON.stringify({
+          subjects,
+          createdAt: new Date().toISOString()
+        }),
+        // Add other fields as needed
+      },
     });
 
-    return NextResponse.json(userTest, { status: 201 });
+    return NextResponse.json({ id: userTest.id });
   } catch (error) {
     console.error("Error creating user test:", error);
     return NextResponse.json(

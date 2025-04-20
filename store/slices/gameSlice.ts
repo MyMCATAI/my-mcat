@@ -30,6 +30,10 @@ interface GameState {
   // Clinic data state (moved from useClinicData)
   reportData: any | null;
   isClinicDataLoading: boolean;
+
+  // Subject filtering
+  selectedSubjects: string[];
+  availableSubjects: {name: string; icon: string; color: string}[];
 }
 
 interface GameActions {
@@ -55,6 +59,11 @@ interface GameActions {
   fetchClinicData: () => Promise<void>;
   resetClinicData: () => void;
   performDailyCalculations: () => Promise<void>;
+
+  // Subject filtering actions
+  setSelectedSubjects: (subjects: string[]) => void;
+  toggleSubject: (subject: string) => void;
+  resetSubjects: () => void;
 }
 
 export type GameSlice = GameState & GameActions;
@@ -86,6 +95,31 @@ export const useGameStore = create<GameSlice>()(
       // Clinic data state
       reportData: null,
       isClinicDataLoading: false,
+      
+      // Default subjects with metadata
+      availableSubjects: [
+        { name: "Chemistry", icon: "atoms", color: "#E6B800" },
+        { name: "Biology", icon: "evolution", color: "#4CAF50" },
+        { name: "Biochemistry", icon: "dna_n_biotechnology", color: "#2196F3" },
+        { name: "Psychology", icon: "cognition", color: "#9C27B0" },
+        { name: "Physics", icon: "force", color: "#800000" },
+        { name: "Sociology", icon: "soconcom", color: "#FF5722" },
+      ],
+      
+      // Initialize from localStorage or use all subjects
+      selectedSubjects: (() => {
+        if (typeof window !== 'undefined') {
+          const saved = localStorage.getItem('ankiClinicSubjects');
+          if (saved) {
+            try {
+              return JSON.parse(saved);
+            } catch (e) {
+              console.error('Failed to parse saved subjects', e);
+            }
+          }
+        }
+        return ["Chemistry", "Biology", "Biochemistry", "Psychology", "Physics", "Sociology"];
+      })(),
       
       // Game Actions
       endGame: () => {
@@ -275,6 +309,41 @@ export const useGameStore = create<GameSlice>()(
           toast.error('Failed to perform daily calculations');
           set({ isClinicDataLoading: false });
           throw error;
+        }
+      },
+
+      // Subject filtering actions
+      setSelectedSubjects: (subjects) => {
+        set({ selectedSubjects: subjects });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ankiClinicSubjects', JSON.stringify(subjects));
+        }
+      },
+      
+      toggleSubject: (subject) => {
+        const currentSubjects = [...get().selectedSubjects];
+        const index = currentSubjects.indexOf(subject);
+        
+        if (index >= 0) {
+          // Only remove if we have more than one subject selected
+          if (currentSubjects.length > 1) {
+            currentSubjects.splice(index, 1);
+          }
+        } else {
+          currentSubjects.push(subject);
+        }
+        
+        set({ selectedSubjects: currentSubjects });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ankiClinicSubjects', JSON.stringify(currentSubjects));
+        }
+      },
+      
+      resetSubjects: () => {
+        const allSubjects = get().availableSubjects.map(s => s.name);
+        set({ selectedSubjects: allSubjects });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ankiClinicSubjects', JSON.stringify(allSubjects));
         }
       }
     }),
