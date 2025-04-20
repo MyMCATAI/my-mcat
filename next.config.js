@@ -44,7 +44,7 @@ module.exports = withMDX({
               "default-src 'self' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev https://*.stripe.com https://*.plausible.io https://*.vercel-scripts.com;",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com https://plausible.io https://va.vercel-scripts.com https://tally.so blob: https://clerk.mymcat.ai;",
               "worker-src 'self' blob: https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev;",
-              "connect-src 'self' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com https://plausible.io https://va.vercel-scripts.com https://cdn.jsdelivr.net;",
+              "connect-src 'self' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com https://plausible.io https://va.vercel-scripts.com https://cdn.jsdelivr.net https://clerk.mymcat.ai;",
               "style-src 'self' 'unsafe-inline' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev https://cdn.jsdelivr.net;",
               "img-src 'self' http://localhost:* https://img.youtube.com https://my-mcat.s3.us-east-2.amazonaws.com https://oaidalleapiprodscus.blob.core.windows.net https://b.thumbs.redditmedia.com https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev data: blob:;",
               "font-src 'self' https://*.clerk.io https://*.clerk.com https://*.clerk.accounts.dev data:;",
