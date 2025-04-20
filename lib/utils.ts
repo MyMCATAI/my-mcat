@@ -24,11 +24,6 @@ export async function checkProStatus(): Promise<boolean> {
   }
 }
 
-export const allowedAdminUserIds = [
-  "user_2jCZfJZbTtFdqyqwcjaMNTOz1Lm",
-  "user_2krxKeoPq12i3Nm8AD77AkIwC3H"
-];
-
 interface TranscriptSegment {
   timestamp: number; // in seconds
   text: string;
