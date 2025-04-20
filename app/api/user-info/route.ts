@@ -3,13 +3,35 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
-import { getUserInfo, updateNotificationPreference } from "@/lib/user-info";
+import { getUserInfo, updateNotificationPreference, NotificationPreference } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
 import prismadb from "@/lib/prismadb";
 import { DEFAULT_BIO } from "@/constants";
 import { getUserEmail, getUserIdByEmail } from "@/lib/server-utils";
+import { z } from 'zod';
+import { handleApiError } from '@/lib/error-handler';
 
+const ROUTE_NAME = 'USER_INFO';
 const REFERRAL_REWARD = 10;
+
+// Input validation schemas
+const emailSchema = z.object({
+  email: z.string().email().optional(),
+});
+
+const userInfoPostSchema = z.object({
+  firstName: z.string().trim().max(100).optional(),
+  bio: z.string().trim().max(500).optional(),
+});
+
+const userInfoPutSchema = z.object({
+  bio: z.string().trim().max(500).optional(),
+  amount: z.number().int().optional(),
+  incrementScore: z.boolean().optional(),
+  decrementScore: z.boolean().optional(),
+  notificationPreference: z.enum(['all', 'important', 'none']).optional(),
+  onboardingInfo: z.record(z.any()).optional(),
+});
 
 export async function GET(req: Request) {
   try {
@@ -21,11 +43,25 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const email = url.searchParams.get("email");
 
+    // Validate email if present
+    if (email) {
+      const result = emailSchema.safeParse({ email });
+      if (!result.success) {
+        const validationError = new Error('Invalid email format');
+        validationError.name = 'ZodError';
+        return handleApiError(validationError, ROUTE_NAME, {
+          statusCode: 400,
+          additionalInfo: { validationErrors: result.error.format() }
+        });
+      }
+    }
+
     let targetUserId = userId;
     if (email) {
       const emailUserId = await getUserIdByEmail(email);
       if (!emailUserId) {
-        return new NextResponse("User not found", { status: 404 });
+        const notFoundError = new Error('User not found');
+        return handleApiError(notFoundError, ROUTE_NAME, { statusCode: 404 });
       }
       targetUserId = emailUserId;
     }
@@ -40,18 +76,35 @@ export async function GET(req: Request) {
     });
 
     if (!userInfo) {
-      return new NextResponse("User info not found", { status: 404 });
+      const notFoundError = new Error('User info not found');
+      return handleApiError(notFoundError, ROUTE_NAME, { statusCode: 404 });
     }
 
     const userEmail = await getUserEmail(targetUserId);
 
-    return NextResponse.json({
-      ...userInfo,
+    // Filter PII from the response
+    const safeUserInfo = {
+      // userId: userInfo.userId,
+      firstName: userInfo.firstName,
+      bio: userInfo.bio,
+      score: userInfo.score,
+      clinicRooms: userInfo.clinicRooms,
+      hasPaid: userInfo.hasPaid,
+      subscriptionType: userInfo.subscriptionType,
+      diagnosticScores: userInfo.diagnosticScores,
+      onboardingInfo: userInfo.onboardingInfo,
+      unlocks: userInfo.unlocks,
+      patientRecord: userInfo.patientRecord ? {
+        patientsTreated: userInfo.patientRecord.patientsTreated
+      } : null,
       email: userEmail,
-    });
+    };
+
+    return NextResponse.json(safeUserInfo);
   } catch (error) {
-    console.error('[USER_INFO_GET]', error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleApiError(error, ROUTE_NAME, {
+      additionalInfo: { method: 'GET' }
+    });
   }
 }
 
@@ -64,7 +117,19 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { firstName, bio } = body;
+    
+    // Validate request body
+    const result = userInfoPostSchema.safeParse(body);
+    if (!result.success) {
+      const validationError = new Error('Invalid input data');
+      validationError.name = 'ZodError';
+      return handleApiError(validationError, ROUTE_NAME, {
+        statusCode: 400,
+        additionalInfo: { validationErrors: result.error.format() }
+      });
+    }
+    
+    const { firstName, bio } = result.data;
 
     // Check if user already exists and delete if found
     const existingUser = await prismadb.userInfo.findUnique({
@@ -78,7 +143,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Create the new user info
+    // Create the new user info with sanitized inputs
     const userInfo = await prismadb.userInfo.create({
       data: {
         userId,
@@ -172,13 +237,15 @@ export async function POST(req: Request) {
         }
       }
     } catch (error) {
+      // Log but don't expose this error to client
       console.error("Error handling referral updates:", error);
     }
 
     return NextResponse.json({ ...userInfo, referralRedeemed });
   } catch (error) {
-    console.error("[USER_INFO_POST]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, ROUTE_NAME, {
+      additionalInfo: { method: 'POST' }
+    });
   }
 }
 
@@ -191,10 +258,23 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { bio, unlockGame, amount, incrementScore, decrementScore, notificationPreference, onboardingInfo } = body;
+    
+    // Validate request body
+    const result = userInfoPutSchema.safeParse(body);
+    if (!result.success) {
+      const validationError = new Error('Invalid input data');
+      validationError.name = 'ZodError';
+      return handleApiError(validationError, ROUTE_NAME, {
+        statusCode: 400,
+        additionalInfo: { validationErrors: result.error.format() }
+      });
+    }
+    
+    const { bio, amount, incrementScore, decrementScore, notificationPreference, onboardingInfo } = result.data;
 
     // Handle onboardingInfo update
     if (onboardingInfo) {
+      // Additional validation for onboardingInfo fields could be added here
       const updatedInfo = await prismadb.userInfo.update({
         where: { userId },
         data: { 
@@ -237,39 +317,6 @@ export async function PUT(req: Request) {
       return NextResponse.json({ score: updatedInfo.score });
     }
 
-    if (unlockGame) {
-      const userInfo = await prismadb.userInfo.findUnique({
-        where: { userId }
-      });
-
-      if (!userInfo) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      // Parse existing unlocks array
-      const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
-
-      // Check if already unlocked
-      if (currentUnlocks.includes('game')) {
-        return NextResponse.json({
-          message: "Already unlocked",
-          unlocks: currentUnlocks,
-          score: userInfo.score
-        });
-      }
-
-      // Add new unlock and decrement score
-      const newUnlocks = [...currentUnlocks, 'game'];
-      const updatedInfo = await prismadb.userInfo.update({
-        where: { userId },
-        data: {
-          unlocks: newUnlocks
-        }
-      });
-
-      return NextResponse.json(updatedInfo);
-    }
-
     // Handle increment/decrement score
     if (incrementScore !== undefined || decrementScore !== undefined) {
       let scoreChange = 1; // Default increment
@@ -295,7 +342,8 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ error: "No valid update parameters provided" }, { status: 400 });
   } catch (error) {
-    console.error('[USER_INFO_PUT]', error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return handleApiError(error, ROUTE_NAME, {
+      additionalInfo: { method: 'PUT' }
+    });
   }
 }

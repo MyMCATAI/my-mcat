@@ -43,8 +43,6 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const { user } = useClerkUser();
   const { profile, profileLoading, refreshUserInfo } = useUser();
   
-  console.log('[Debug] ProfileButton render - profileLoading:', profileLoading, 'profile:', profile, 'forceShowProfile:', forceShowProfile);
-
   // Handle clicks outside menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FaDiscord } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
-import { useUserInfo } from '@/hooks/useUserInfo';
+import { useFeatureUnlock } from '@/hooks/useFeatureUnlock';
 
 interface WelcomeDialogProps {
   isOpen: boolean;
@@ -14,12 +15,15 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   isOpen, 
   onUnlocked
 }) => {
-  const { unlockGame } = useUserInfo();
+  const { unlockFeature, isUnlocking } = useFeatureUnlock();
 
   const unlock = async () => {
+    console.log('Let\'s Play! button clicked');
     try {
-      await unlockGame();
-      onUnlocked()
+      const success = await unlockFeature('game', 5, 'Anki Clinic');
+      if (success) {
+        onUnlocked();
+      }
     } catch (error) {
       console.error('Error unlocking clinic:', error);
     }
@@ -42,7 +46,10 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
               src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiClinicVideo(1).mp4"
               controls
               className="w-full h-auto"
+              onCanPlay={() => console.log('Video event: onCanPlay')}
+              onError={(e) => console.error('Video event: onError', e)}
             >
+              <track kind="captions" />
               Your browser does not support the video tag.
             </video>
           </div>
@@ -51,9 +58,10 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
             <div className="mb-4">
               <Button 
                 onClick={unlock}
+                disabled={isUnlocking}
                 className="w-full py-6 text-lg font-semibold bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-opacity-75"
               >
-                {"Let's Play!"}
+                {isUnlocking ? 'Unlocking...' : "Let's Play!"}
               </Button>
             </div>
             <div className="flex gap-2">
