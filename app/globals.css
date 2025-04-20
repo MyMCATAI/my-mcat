@@ -1169,8 +1169,8 @@ html::-webkit-scrollbar {
   --theme-mainbox-color: #ffffff;
   --theme-gradient-start: #ffffff;
   --theme-gradient-end: #ffffff;
-  --theme-gradient-startstreak: rgba(42, 178, 176, 0.1);
-  --theme-gradient-endstreak: rgba(42, 178, 176, 0.2);
+  --theme-gradient-startstreak: rgba(42, 178, 176, 0.8);
+  --theme-gradient-endstreak: rgba(42, 178, 176, 0.8);
   --theme-text-color: #000000;
   --theme-svg-color: #2ab2b0;
   --theme-hover-color: #2ab2b0;

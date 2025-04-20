@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,6 +56,9 @@ interface SideBarProps {
   onActivitiesUpdate: () => void;
   isSubscribed: boolean;
   showTasks?: boolean;
+  sidebarRef?: React.MutableRefObject<{
+    activateChatTab: () => void;
+  } | null>;
 }
 
 type TabContent = 
@@ -75,7 +78,8 @@ const SideBar: React.FC<SideBarProps> = ({
   handleSetTab,
   onActivitiesUpdate,
   isSubscribed,
-  showTasks = true
+  showTasks = true,
+  sidebarRef
 }) => {
   const { userInfo } = useUserInfo();
   const audio = useAudio();
@@ -99,7 +103,7 @@ const SideBar: React.FC<SideBarProps> = ({
       case "Tests":
         return "tab2"; // Default to Tasks tab
       case "KalypsoAI":
-        return "tab2"; // Tasks tab for KalypsoAI
+        return "tab1"; // Default to Chatbot tab for KalypsoAI
       default:
         return "tab2"; // Default to Tasks tab
     }
@@ -110,6 +114,42 @@ const SideBar: React.FC<SideBarProps> = ({
   useEffect(() => {
     setActiveTab(getInitialActiveTab());
   }, [currentPage]);
+
+  // Add function to activate the chat tab
+  const activateChatTab = useCallback(() => {
+    // Force the tab to be "tab1" (chatbot tab) regardless of other conditions
+    setActiveTab("tab1");
+    
+    // Play sound effect at a reduced volume (50% of original)
+    if (audio.audioContext && audio.sfxGainNode) {
+      const originalVolume = audio.sfxGainNode.gain.value;
+      const currentTime = audio.audioContext.currentTime;
+      // Set to 50% of the current volume
+      audio.sfxGainNode.gain.setValueAtTime(originalVolume * 0.5, currentTime);
+      
+      // Play the sound
+      audio.playSound('chatbot-open');
+      
+      // Schedule a return to the original volume after a short delay
+      setTimeout(() => {
+        if (audio.audioContext && audio.sfxGainNode) {
+          audio.sfxGainNode.gain.setValueAtTime(originalVolume, audio.audioContext.currentTime);
+        }
+      }, 1000);
+    } else {
+      // Fallback
+      audio.playSound('chatbot-open');
+    }
+  }, [audio]);
+
+  // Expose methods via ref
+  useEffect(() => {
+    if (sidebarRef) {
+      sidebarRef.current = {
+        activateChatTab
+      };
+    }
+  }, [sidebarRef, activateChatTab]);
 
   const [tutors, setTutors] = useState<Tutor[]>(initialTutors);
 

@@ -274,7 +274,7 @@ function PricingCard({
           gradientTo: 'to-blue-600',
           textColor: 'text-blue-400',
           shadow: 'shadow-[0_0_50px_rgba(59,130,246,0.1)] hover:shadow-[0_0_50px_rgba(59,130,246,0.2)]',
-          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10'
+          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10 backdrop-blur-sm'
         };
       case 'amber':
         return {
@@ -283,7 +283,7 @@ function PricingCard({
           gradientTo: 'to-yellow-400',
           textColor: 'text-amber-400',
           shadow: 'shadow-[0_0_50px_rgba(251,191,36,0.1)] hover:shadow-[0_0_50px_rgba(251,191,36,0.2)]',
-          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10'
+          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10 backdrop-blur-sm'
         };
       case 'purple':
         return {
@@ -292,7 +292,7 @@ function PricingCard({
           gradientTo: 'to-pink-500',
           textColor: 'text-purple-400',
           shadow: 'shadow-[0_0_50px_rgba(168,85,247,0.1)] hover:shadow-[0_0_50px_rgba(168,85,247,0.2)]',
-          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10'
+          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10 backdrop-blur-sm'
         };
       default:
         return {
@@ -301,7 +301,7 @@ function PricingCard({
           gradientTo: 'to-purple-500',
           textColor: 'text-blue-400',
           shadow: '',
-          bg: 'bg-black/20'
+          bg: 'bg-gradient-to-br from-black/30 via-black/20 to-black/10 backdrop-blur-sm'
         };
     }
   };
@@ -318,7 +318,7 @@ function PricingCard({
       
       <div 
         className={`rounded-3xl ${gradient.bg} backdrop-blur-xl overflow-hidden h-full
-          ${gradient.border} transition-colors duration-300 ${gradient.shadow}`}
+          ${gradient.border} transition-colors duration-300 ${gradient.shadow} bg-opacity-90`}
       >
         {/* Title Banner */}
         <div className={`bg-gradient-to-r ${gradient.gradientFrom}/20 via-transparent ${gradient.gradientTo}/20 p-6 text-center border-b ${accentColor === 'amber' ? 'border-amber-400/20' : accentColor === 'purple' ? 'border-purple-400/20' : 'border-blue-400/20'}`}>
@@ -333,10 +333,10 @@ function PricingCard({
         <div className="p-8 flex flex-col h-[calc(100%-120px)]">
           {/* Price */}
           <div className="mb-8 text-center">
-            <div className="text-4xl font-bold text-white mb-2">
+            <div className="text-4xl font-bold !text-white mb-2">
               ${price.toLocaleString()}
             </div>
-            <p className="text-white/60 text-sm">For {hours} hours of tutoring</p>
+            <p className="!text-white/60 text-sm">For {hours} hours of tutoring</p>
           </div>
           
           {/* Features */}
@@ -349,8 +349,8 @@ function PricingCard({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-white font-medium">{feature.title}</h4>
-                  <p className="text-white/60 text-sm">{feature.description}</p>
+                  <h4 className="!text-white font-medium">{feature.title}</h4>
+                  <p className="!text-white/60 text-sm">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -361,7 +361,7 @@ function PricingCard({
             onClick={onSelect}
             className={`w-full py-3 rounded-xl font-medium text-center transition-all duration-300 mt-auto
               ${isSelected 
-                ? `bg-gradient-to-r ${gradient.gradientFrom} ${gradient.gradientTo} ${accentColor === 'amber' ? 'text-black' : 'text-white'} transform hover:scale-[1.02]`
+                ? `bg-gradient-to-r ${gradient.gradientFrom} ${gradient.gradientTo} ${accentColor === 'amber' ? 'text-white' : 'text-white'} transform hover:scale-[1.02]`
                 : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'}`}
           >
             {isSelected ? 'Selected' : 'Select Package'}

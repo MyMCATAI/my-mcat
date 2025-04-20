@@ -48,6 +48,7 @@ interface AdaptiveTutoringProps {
     sendMessage: (message: string) => void;
   }>;
   onActivityChange: (type: string, location: string, metadata?: any) => Promise<void>;
+  className?: string;
 }
 
 type PlatformType = "spotify" | "apple" | "mymcat";
@@ -69,6 +70,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   setChatbotContext,
   chatbotRef,
   onActivityChange,
+  className,
 }) => {
   const { toast } = useToast();
   const audio = useAudio();
@@ -740,7 +742,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   return (
-    <div className="relative p-2 h-full flex flex-col overflow-visible">
+    <div className={`relative p-2 h-full flex flex-col overflow-visible ${className || ''}`}>
       {showConfetti && (
         <ReactConfetti
           width={window.innerWidth}

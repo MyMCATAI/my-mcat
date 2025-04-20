@@ -12,6 +12,9 @@ import { useGame } from "@/store/selectors";
 import { useAudio } from "@/store/selectors";
 import { useWindowSize } from '@/store/selectors';
 import { zoomLevels } from './constants';
+import CarsPromptSprite from './components/CarsPromptSprite';
+import ATSPromptSprite from './components/ATSPromptSprite';
+import CommunityPromptSprite from './components/CommunityPromptSprite';
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -21,6 +24,15 @@ const tileHeight = 64;
 const gridWidth = 10;
 const gridHeight = 10;
 
+// At the beginning of the file, add this augmentation to declare window properties
+declare global {
+  interface Window {
+    carsRoomId?: string;
+    availableTests?: Array<{id: string}>;
+    atsRoomId?: string;
+    communityRoomId?: string;
+  }
+}
 
 // Helper functions for isometric calculations
 function screenX(worldX: number, worldY: number): number {
@@ -105,18 +117,21 @@ const RoomSprite = React.memo(({
 // Add display name for debugging
 RoomSprite.displayName = 'RoomSprite';
 
-// Also memoize AnimatedSpriteWalking
+// Update AnimatedSpriteWalking component
 const AnimatedSpriteWalking = React.memo(({ 
   position, 
   direction, 
-  scale 
+  scale,
+  onKalypsoClick
 }: {
   position: { x: number; y: number };
   direction: Direction;
   scale: number;
+  onKalypsoClick?: () => void;
 }) => {
   const [frame, setFrame] = useState(0);
   const [baseTexture, setBaseTexture] = useState<BaseTexture | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
 
   const directions = useMemo(() => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], []);
   const columns = 8;
@@ -156,14 +171,41 @@ const AnimatedSpriteWalking = React.memo(({
   const posY = screenY(position.x, position.y) - fixedHeight / 2 - tileHeight / 4;
 
   return (
-    <Sprite
-      texture={texture}
-      x={posX}
-      y={posY}
-      width={fixedWidth}
-      height={fixedHeight}
-      zIndex={8}
-    />
+    <>
+      {/* Optional: Add a highlight effect when hovering */}
+      {isHovering && (
+        <Graphics
+          draw={(g) => {
+            g.clear();
+            g.beginFill(0xFFFFFF, 0.3);
+            g.drawCircle(
+              posX + fixedWidth / 2,
+              posY + fixedHeight / 2,
+              Math.max(fixedWidth, fixedHeight) * 0.6
+            );
+            g.endFill();
+          }}
+          zIndex={7}
+        />
+      )}
+      <Sprite
+        texture={texture}
+        x={posX}
+        y={posY}
+        width={fixedWidth}
+        height={fixedHeight}
+        zIndex={8}
+        eventMode="dynamic"
+        cursor="pointer"
+        onclick={onKalypsoClick}
+        onmouseover={() => setIsHovering(true)}
+        onmouseout={() => setIsHovering(false)}
+        ontouchstart={() => setIsHovering(true)}
+        ontouchend={() => setIsHovering(false)}
+        alpha={isHovering ? 1.2 : 1} // Slightly brighten when hovering
+        scale={isHovering ? { x: 1.1, y: 1.1 } : { x: 1, y: 1 }} // Slightly enlarge when hovering
+      />
+    </>
   );
 });
 
@@ -182,6 +224,8 @@ interface OfficeContainerProps {
   visibleImages: Set<string>;
   imageGroups: ImageGroup[];
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
+  toggleAdaptiveTutoring?: () => void;
+  onKalypsoClick?: () => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -210,7 +254,9 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   onNewGame,
   visibleImages,
   imageGroups,
-  updateVisibleImages
+  updateVisibleImages,
+  toggleAdaptiveTutoring,
+  onKalypsoClick
 }, ref) => {
   // Check for browser environment
   const isBrowser = typeof window !== 'undefined';
@@ -527,6 +573,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLevel, updateVisibleImages]);
 
+  // Modify the populateRooms function to handle four rooms
   const populateRooms = useCallback(() => {
     // Get available rooms for current level (excluding tutorial room)
     const availableRooms = levelConfigurations[currentLevel].rooms
@@ -535,15 +582,39 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
         roomToSubjectMap[room.id][0] // Must have a subject
       );
     
-    // Randomly select 4 rooms
-    const selectedRooms = availableRooms
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
+    // Shuffle rooms
+    const shuffledRooms = [...availableRooms].sort(() => Math.random() - 0.5);
     
-    // Set active rooms and return the selected rooms for the toast
-    setActiveRooms(new Set(selectedRooms.map(room => room.id)));
-    return selectedRooms;
-  }, [currentLevel]);
+    // Get first room for flashcards
+    const flashcardRoom = shuffledRooms[0];
+    
+    // Get second room for CARS (or use first if only one available)
+    const carsRoom = shuffledRooms.length > 1 ? shuffledRooms[1] : shuffledRooms[0];
+    
+    // Get third room for ATS (or use a different room if possible)
+    const atsRoom = shuffledRooms.length > 2 
+      ? shuffledRooms[2] 
+      : (shuffledRooms.length > 1 ? shuffledRooms[0] : shuffledRooms[0]);
+    
+    // Get fourth room for Community (or reuse another room if needed)
+    const communityRoom = shuffledRooms.length > 3
+      ? shuffledRooms[3]
+      : (shuffledRooms.length > 2 ? shuffledRooms[2] : shuffledRooms[0]);
+    
+    // Create a set with the flashcard room
+    const selectedRooms = new Set([flashcardRoom.id]);
+    
+    // Store the room IDs in the window object
+    if (typeof window !== 'undefined') {
+      window.carsRoomId = carsRoom.id;
+      window.atsRoomId = atsRoom.id;
+      window.communityRoomId = communityRoom.id;
+    }
+    
+    // Set active rooms and return the selected flashcard room for the toast
+    setActiveRooms(selectedRooms);
+    return [flashcardRoom];
+  }, [currentLevel, setActiveRooms]);
 
   // Pass the stable function reference to parent
   useEffect(() => {
@@ -590,14 +661,26 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     };
   }, [windowSize, offset, scale, levelVerticalAdjustment]);
 
-  // Add handlers for mouse and touch interactions
+  // Add state to track if we're clicking on a sprite
+  const [isClickingSprite, setIsClickingSprite] = useState(false);
+
+  // Modify handleMouseDown to check for sprite clicks
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Check if we're clicking on a sprite (Pixi canvas element)
+    const target = e.target as HTMLElement;
+    const isPixiInteractive = target.tagName.toLowerCase() === 'canvas';
+    
+    if (isPixiInteractive) {
+      setIsClickingSprite(true);
+      return;
+    }
+
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || isClickingSprite) return;
     
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
@@ -611,10 +694,11 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     }));
     
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isDragging, dragStart]);
+  }, [isDragging, isClickingSprite, dragStart]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setIsClickingSprite(false);
   }, []);
 
   // Handle mouse wheel for zooming
@@ -637,30 +721,25 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     });
   }, []);
 
-  // Touch handlers for mobile
+  // Modify touch handlers similarly
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Check if the target is an interactive Pixi.js element (like our room sprites)
     const target = e.target as HTMLElement;
-    const isPixiInteractive = target.closest('canvas') && 
-      !target.closest('.drag-container'); // Assuming we'll add this class to the container div
+    const isPixiInteractive = target.tagName.toLowerCase() === 'canvas';
     
     if (isPixiInteractive) {
-      // Let Pixi.js handle the event for interactive elements
+      setIsClickingSprite(true);
       return;
     }
     
     if (e.touches.length === 1) {
-      // Single touch - for panning
       setIsDragging(true);
       setDragStart({ 
         x: e.touches[0].clientX, 
         y: e.touches[0].clientY 
       });
     } else if (e.touches.length === 2) {
-      // Double touch - for pinch zoom
       setIsZooming(true);
       
-      // Calculate initial distance between two touch points
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const distance = Math.hypot(
@@ -673,12 +752,12 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isClickingSprite) return;
+
     if (e.touches.length === 1 && isDragging) {
-      // Handle panning
       const dx = e.touches[0].clientX - dragStart.x;
       const dy = e.touches[0].clientY - dragStart.y;
       
-      // Pan sensitivity - adjust as needed
       const sensitivity = 1.0;
       
       setUserPan(prev => ({
@@ -691,20 +770,16 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
         y: e.touches[0].clientY 
       });
     } else if (e.touches.length === 2 && isZooming && lastTouchDistance.current) {
-      // Handle pinch zoom
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
-      // Calculate new distance
       const distance = Math.hypot(
         touch2.clientX - touch1.clientX,
         touch2.clientY - touch1.clientY
       );
       
-      // Calculate zoom delta based on distance change
       const zoomDelta = (distance - lastTouchDistance.current) * 0.01;
       
-      // Limit zoom range
       const minZoom = 0.5;
       const maxZoom = 3.0;
       
@@ -715,11 +790,12 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       
       lastTouchDistance.current = distance;
     }
-  }, [isDragging, isZooming, dragStart]);
+  }, [isDragging, isZooming, isClickingSprite, dragStart]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (e.touches.length < 1) {
       setIsDragging(false);
+      setIsClickingSprite(false);
     }
     
     if (e.touches.length < 2) {
@@ -727,6 +803,28 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       lastTouchDistance.current = null;
     }
   }, []);
+
+  // Update the getCarsIconPath function to use a CARS-specific image
+  const getCarsIconPath = () => "/game-components/questionPopupCARs.png"; // Custom CARS popup icon
+
+  // Add function to get ATS icon path
+  const getATSIconPath = () => "/game-components/questionPopupATS.png";
+  
+  // Add function to get Community icon path
+  const getCommunityIconPath = () => "/game-components/questionPopupCommunity.png";
+
+  // Inside the component function, get audio once
+  const audio = useAudio();
+  
+  // Function to handle community icon click
+  const handleCommunityClick = useCallback(() => {
+    // Use the audio object from the outer scope
+    audio.playSound('flashcard-door-open');
+    setTimeout(() => {
+      // Open Discord invite link in a new tab
+      window.open('https://discord.com/invite/DcHWnEu8Xb', '_blank');
+    }, 500);
+  }, [audio]);
 
   return (
     <div ref={ref} className="relative w-full h-full">
@@ -780,22 +878,85 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
             >
               <IsometricGrid />
               {currentLevelConfig.rooms.map((img) => (
-                <RoomSprite 
-                  key={img.id} 
-                  img={img}
-                  setFlashcardRoomId={setFlashcardRoomId}
-                  activeRooms={activeRooms}
-                  setActiveRooms={setActiveRooms}
-                  isFlashcardsOpen={isFlashcardsOpen}
-                  setIsFlashcardsOpen={setIsFlashcardsOpen}
-                />
+                <React.Fragment key={img.id}>
+                  <RoomSprite 
+                    img={img}
+                    setFlashcardRoomId={setFlashcardRoomId}
+                    activeRooms={activeRooms}
+                    setActiveRooms={setActiveRooms}
+                    isFlashcardsOpen={isFlashcardsOpen}
+                    setIsFlashcardsOpen={setIsFlashcardsOpen}
+                  />
+                  
+                  {/* Add CARS sprite regardless of whether the room is already used for flashcards */}
+                  {typeof window !== 'undefined' && 
+                   window.carsRoomId === img.id && (
+                    <CarsPromptSprite
+                      src={getCarsIconPath()}
+                      // Position it differently from the flashcard sprite
+                      x={screenX(img.x, img.y) - img.width / 4 + img.width / 2 + 30}
+                      y={screenY(img.x, img.y) - img.height / 2 + img.height / 5 - 10}
+                      scaleConstant={4}
+                      zIndex={img.zIndex + 101}
+                      onClick={() => {
+                        // Use the audio object from the outer scope
+                        audio.playSound('flashcard-door-open');
+                        setTimeout(() => {
+                          const testId = window.availableTests?.[0]?.id || '';
+                          window.location.href = testId 
+                            ? `/test/testquestions?id=${testId}`
+                            : '/home?tab=testingsuit';
+                        }, 500);
+                      }}
+                    />
+                  )}
+
+                  {/* Add ATS Sprite if this is the selected ATS room */}
+                  {typeof window !== 'undefined' && 
+                    window.atsRoomId === img.id && (
+                      <ATSPromptSprite
+                        src={getATSIconPath()}
+                        // Position it differently from other sprites
+                        x={screenX(img.x, img.y) - img.width / 4 + img.width / 2 - 30} // Offset to the left
+                        y={screenY(img.x, img.y) - img.height / 2 + img.height / 5 - 10} // Offset upward
+                        scaleConstant={3}
+                        zIndex={img.zIndex + 102} // Higher than CARS sprite
+                        onClick={() => {
+                          // Use the audio object from the outer scope
+                          audio.playSound('flashcard-door-open');
+                          setTimeout(() => {
+                            // Instead of navigating to a different route, use the toggle function
+                            if (toggleAdaptiveTutoring) {
+                              toggleAdaptiveTutoring();
+                            }
+                          }, 500);
+                        }}
+                      />
+                    )}
+                    
+                  {/* Add Community Sprite to a randomly selected room */}
+                  {typeof window !== 'undefined' && 
+                   currentLevel >= 3 && 
+                   window.communityRoomId === img.id && (
+                    <CommunityPromptSprite
+                      src={getCommunityIconPath()}
+                      // Position it in a unique spot
+                      x={screenX(img.x, img.y) - img.width / 4 + img.width / 2}
+                      y={screenY(img.x, img.y) - img.height / 2 + img.height / 5 + 40} // Below other sprites
+                      scaleConstant={3}
+                      zIndex={img.zIndex + 103} // Highest z-index
+                      onClick={handleCommunityClick}
+                    />
+                  )}
+                </React.Fragment>
               ))}
               {Object.values(spritePositions).map(sprite => (
                 <AnimatedSpriteWalking
                   key={sprite.id}
                   position={{ x: sprite.x, y: sprite.y }}
                   direction={sprite.direction}
-                  scale={1} 
+                  scale={1}
+                  onKalypsoClick={onKalypsoClick}
                 />
               ))}
             </Container>

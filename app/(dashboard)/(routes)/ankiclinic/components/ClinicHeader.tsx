@@ -19,6 +19,9 @@ interface ClinicHeaderProps {
   imageGroups: ImageGroup[];
   visibleImages: Set<string>;
   toggleGroup: (groupName: string) => Promise<void>;
+  // Add new props for AdaptiveTutoring
+  showAdaptiveTutoring?: boolean;
+  toggleAdaptiveTutoring?: () => void;
 }
 
 const ClinicHeader = ({
@@ -28,7 +31,10 @@ const ClinicHeader = ({
   userLevel,
   imageGroups,
   visibleImages,
-  toggleGroup
+  toggleGroup,
+  // Add new props with default values
+  showAdaptiveTutoring = false,
+  toggleAdaptiveTutoring = () => {}
 }: ClinicHeaderProps) => {
 /* ---- State ----- */
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
@@ -161,6 +167,16 @@ const ClinicHeader = ({
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Add AdaptiveTutoring toggle button */}
+      <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 z-50">
+        <button 
+          onClick={toggleAdaptiveTutoring}
+          className="px-3 py-2 sm:px-4 md:px-6 sm:py-2 md:py-3 bg-[--theme-gradient-startstreak] text-white rounded-lg text-xs sm:text-sm md:text-base hover:bg-opacity-90 transition-colors"
+        >
+          {showAdaptiveTutoring ? "Return to Clinic" : "Adaptive Tutoring"}
+        </button>
       </div>
 
       {/* Tutorial Dialog */}

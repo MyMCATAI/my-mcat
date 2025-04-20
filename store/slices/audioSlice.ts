@@ -16,8 +16,8 @@ interface VolumeCoefficients {
 const DEFAULT_VOLUMES: VolumeCoefficients = {
   master: 0.7,
   music: 0.7,
-  sfx: 0.8,  // Increased from 0.5 to 0.8 for better audibility
-  loop: 0.5,
+  sfx: 0.4,  // Decreased from 0.8 to 0.4 for quieter sound effects
+  loop: 0.3, // Decreased from 0.5 to 0.3 for quieter ambient/walking sounds
   voice: 0.9  // Voice should be loud and clear
 };
 
@@ -308,7 +308,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         musicGainNode.connect(masterGainNode);
         
         const sfxGainNode = audioContext.createGain();
-        sfxGainNode.gain.value = DEFAULT_VOLUMES.sfx; // Full volume for SFX
+        sfxGainNode.gain.value = DEFAULT_VOLUMES.sfx; // Reduced volume for SFX
         sfxGainNode.connect(masterGainNode);
         
         const loopGainNode = audioContext.createGain();

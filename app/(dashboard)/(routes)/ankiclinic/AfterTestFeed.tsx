@@ -847,8 +847,18 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="flex justify-center mt-4"
+          className="flex justify-center mt-4 gap-4"
         >
+          <Button
+            onClick={() => router.push('/pricing')}
+            className="bg-red-600 text-white hover:bg-red-700 transition-all duration-300 px-8 py-3 text-lg rounded-xl shadow-lg"
+            disabled={!isDataLoaded}
+          >
+            <div className="flex items-center gap-2">
+              Meet With A Tutor
+            </div>
+          </Button>
+          
           <Button
             onClick={handleGoToReviewFeed}
             className="bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-opacity-90 transition-all duration-300 px-8 py-3 text-lg rounded-xl shadow-lg border border-[--theme-border-color]"

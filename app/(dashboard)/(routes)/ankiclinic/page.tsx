@@ -21,6 +21,7 @@ import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
 import SideBar from "../home/SideBar";
 import { useUser } from "@/store/selectors";
+import AdaptiveTutoring from "../home/AdaptiveTutoring";
 
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 
@@ -87,6 +88,9 @@ const DoctorsOfficePage = () => {
   const hasCalculatedRef = useRef(false);
   const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({ sendMessage: () => {} });
   
+  // Add ref for the sidebar
+  const sidebarRef = useRef<{ activateChatTab: () => void } | null>(null);
+  
   // Use a ref instead of state to track ambient sound initialization
   // This prevents re-renders when the ambient sound is initialized
   const ambientSoundInitializedRef = useRef(false);
@@ -133,6 +137,7 @@ const DoctorsOfficePage = () => {
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
+  const [showAdaptiveTutoring, setShowAdaptiveTutoring] = useState(false);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -168,6 +173,86 @@ const DoctorsOfficePage = () => {
   }), [userLevel, userInfo?.firstName, isSubscribed]);
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
+
+  // Define AdaptiveTutoring related hooks/callbacks here at the top level
+  // to ensure consistent hook ordering
+  const toggleChatBot = useCallback(() => {
+    setIsSidebarOpen(!isSidebarOpen);
+  }, [isSidebarOpen]);
+
+  const setChatbotContext = useCallback((context: { contentTitle: string; context: string }) => {
+    // Update the chatbot context if needed
+  }, []);
+
+  const onActivityChange = useCallback(async (type: string, location: string, metadata?: any) => {
+    // Track user activity similar to how it's done in Home page
+    try {
+      await startActivity({
+        type,
+        location,
+        metadata
+      });
+    } catch (error) {
+      console.error("Error tracking activity:", error);
+    }
+  }, [startActivity]);
+
+  // Add toggle for AdaptiveTutoring
+  const toggleAdaptiveTutoring = useCallback(() => {
+    setShowAdaptiveTutoring(prev => !prev);
+  }, []);
+
+  // Add this function to provide a custom volume level for specific sounds
+  const playSoundWithVolume = useCallback((soundName: string, volumeLevel: number = 1) => {
+    // Create a temporary gain node for this specific sound
+    if (audio.audioContext && audio.sfxGainNode) {
+      const originalVolume = audio.sfxGainNode.gain.value;
+      // Save the current value
+      const currentTime = audio.audioContext.currentTime;
+      // Set to the lower volume for this specific sound
+      audio.sfxGainNode.gain.setValueAtTime(originalVolume * volumeLevel, currentTime);
+      
+      // Play the sound
+      audio.playSound(soundName);
+      
+      // Schedule a return to the original volume after a short delay
+      setTimeout(() => {
+        if (audio.audioContext && audio.sfxGainNode) {
+          audio.sfxGainNode.gain.setValueAtTime(originalVolume, audio.audioContext.currentTime);
+        }
+      }, 1000); // Return to normal volume after 1 second
+    } else {
+      // Fallback if no audio context
+      audio.playSound(soundName);
+    }
+  }, [audio]);
+
+  // Add a handler for Kalypso click
+  const handleKalypsoClick = useCallback(() => {
+    // Play a sound effect at reduced volume (50% of normal)
+    playSoundWithVolume('chatbot-open', 0.5);
+    // Open the sidebar
+    setIsSidebarOpen(true);
+    // Don't change the page context, it causes unnecessary rerenders
+    
+    // Activate the chat tab directly via ref
+    setTimeout(() => {
+      if (sidebarRef.current) {
+        sidebarRef.current.activateChatTab();
+      }
+    }, 100);
+  }, [audio, playSoundWithVolume]);
+
+  // Add functions required for SideBar
+  const handleSetTab = useCallback((tab: string) => {
+    // Implement tab switching logic if needed
+  }, []);
+
+  const onActivitiesUpdate = useCallback(() => {
+    // Implement activities update logic if needed
+    // This could re-fetch activities
+    fetchActivities();
+  }, []);
 
   const fetchUserResponses = useCallback(async (testId: string) => {
     try {
@@ -236,6 +321,22 @@ const DoctorsOfficePage = () => {
     }
   }, []);
 
+  // Update the initializeAmbientSound function to use a reduced volume
+  const initializeAmbientSound = useCallback(() => {
+    // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
+    if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
+      // Set the flag before playing to prevent race conditions
+      ambientSoundInitializedRef.current = true;
+      // Apply a reduced volume to the loop
+      if (audio.audioContext && audio.loopGainNode) {
+        const originalVolume = audio.loopGainNode.gain.value;
+        // Further reduce the volume for this specific ambient sound
+        audio.loopGainNode.gain.value = originalVolume * 0.7; // Reduce by 30%
+      }
+      audio.playLoop(AMBIENT_SOUND);
+    }
+  }, [audio, isFlashcardsOpen]);
+
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
   // Simplified effect for welcome dialog
@@ -245,7 +346,35 @@ const DoctorsOfficePage = () => {
     }
   }, [userInfo, isClinicUnlocked]);
 
-  // Improved audio management effect - using audio store state to prevent duplicate loops
+  // Add the fetchAvailableCarsTests function and useEffect here
+  const fetchAvailableCarsTests = async () => {
+    try {
+      const response = await fetch("/api/test?ordered=true&page=1&pageSize=5&CARSonly=true");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch CARS tests");
+      }
+      
+      const data = await response.json();
+      
+      // Store the tests in the window object for access by CARS sprites
+      if (typeof window !== 'undefined' && data.tests && data.tests.length > 0) {
+        window.availableTests = data.tests;
+      } else {
+        console.warn("No CARS tests available");
+      }
+    } catch (error) {
+      console.error("Error fetching CARS tests:", error);
+      toast.error("Failed to load CARS tests. Try refreshing.");
+    }
+  };
+
+  // Effect to fetch CARS tests on mount
+  useEffect(() => {
+    fetchAvailableCarsTests();
+  }, []);
+
+  // Use in the effect that manages audio
   useEffect(() => {
     if (!isBrowser) return;
     
@@ -254,15 +383,6 @@ const DoctorsOfficePage = () => {
     
     // Only initialize ambient sound once when component mounts
     let timeoutId: NodeJS.Timeout | undefined;
-    
-    const initializeAmbientSound = () => {
-      // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
-      if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
-        // Set the flag before playing to prevent race conditions
-        ambientSoundInitializedRef.current = true;
-        audio.playLoop(AMBIENT_SOUND);
-      }
-    };
     
     // Handle flashcard state changes
     if (isFlashcardsOpen) {
@@ -283,7 +403,7 @@ const DoctorsOfficePage = () => {
         }, 1000);
       } else if (ambientSoundInitializedRef.current) {
         // Only restart if we've initialized before but no loop is playing
-        audio.playLoop(AMBIENT_SOUND);
+        initializeAmbientSound();
       }
     }
     
@@ -306,7 +426,7 @@ const DoctorsOfficePage = () => {
         }
       }
     };
-  }, [isBrowser, isFlashcardsOpen, audio]);
+  }, [isBrowser, isFlashcardsOpen, audio, initializeAmbientSound]);
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {
@@ -624,9 +744,10 @@ const DoctorsOfficePage = () => {
     afterTestFeedRef.current?.setWrongCards([])
   };
 
+  // Replace the startup sound playback with the quieter version
   const handleGameStart = async (userTestId: string) => {
-    // Play startup sound
-    audio.playSound('flashcard-startup');
+    // Play startup sound at reduced volume (40% of normal)
+    playSoundWithVolume('flashcard-startup', 0.4);
     
     // Start new testing activity
     await startActivity({
@@ -839,13 +960,25 @@ const DoctorsOfficePage = () => {
             <>
               {/* Main content container - full width on mobile */}
               <div className="w-full h-full relative">
-                <OfficeContainer
-                  ref={officeContainerRef}
-                  onNewGame={handleSetPopulateRooms}
-                  visibleImages={visibleImages}
-                  imageGroups={imageGroups}
-                  updateVisibleImages={updateVisibleImages}
-                />
+                {showAdaptiveTutoring ? (
+                  <AdaptiveTutoring
+                    toggleChatBot={toggleChatBot}
+                    setChatbotContext={setChatbotContext}
+                    chatbotRef={chatbotRef}
+                    onActivityChange={onActivityChange}
+                    className="bg-white dark:bg-gray-900 rounded-lg h-full w-full"
+                  />
+                ) : (
+                  <OfficeContainer
+                    ref={officeContainerRef}
+                    onNewGame={(fn) => setPopulateRoomsFn(() => fn)}
+                    visibleImages={visibleImages}
+                    imageGroups={imageGroups}
+                    updateVisibleImages={setVisibleImages}
+                    toggleAdaptiveTutoring={toggleAdaptiveTutoring}
+                    onKalypsoClick={handleKalypsoClick}
+                  />
+                )}
               </div>
               
               {/* Mobile sidebar - completely separate from main content flow */}
@@ -894,6 +1027,7 @@ const DoctorsOfficePage = () => {
                     onActivitiesUpdate={fetchActivities}
                     isSubscribed={isSubscribed}
                     showTasks={true}
+                    sidebarRef={sidebarRef}
                   />
                 </div>
               </div>
@@ -902,13 +1036,25 @@ const DoctorsOfficePage = () => {
             <>
               {/* Desktop layout: side-by-side components with sidebar on right */}
               <div className="w-3/4 font-krungthep relative z-20 rounded-l-lg">
-                <OfficeContainer
-                  ref={officeContainerRef}
-                  onNewGame={handleSetPopulateRooms}
-                  visibleImages={visibleImages}
-                  imageGroups={imageGroups}
-                  updateVisibleImages={updateVisibleImages}
-                />
+                {showAdaptiveTutoring ? (
+                  <AdaptiveTutoring
+                    toggleChatBot={toggleChatBot}
+                    setChatbotContext={setChatbotContext}
+                    chatbotRef={chatbotRef}
+                    onActivityChange={onActivityChange}
+                    className="bg-white dark:bg-gray-900 rounded-lg h-full w-full"
+                  />
+                ) : (
+                  <OfficeContainer
+                    ref={officeContainerRef}
+                    onNewGame={(fn) => setPopulateRoomsFn(() => fn)}
+                    visibleImages={visibleImages}
+                    imageGroups={imageGroups}
+                    updateVisibleImages={setVisibleImages}
+                    toggleAdaptiveTutoring={toggleAdaptiveTutoring}
+                    onKalypsoClick={handleKalypsoClick}
+                  />
+                )}
               </div>
               
               <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50 rounded-r-lg">
@@ -921,6 +1067,7 @@ const DoctorsOfficePage = () => {
                   onActivitiesUpdate={fetchActivities}
                   isSubscribed={isSubscribed}
                   showTasks={true}
+                  sidebarRef={sidebarRef}
                 />
               </div>
             </>
@@ -969,6 +1116,8 @@ const DoctorsOfficePage = () => {
             imageGroups={imageGroups}
             visibleImages={visibleImages}
             toggleGroup={toggleGroup}
+            showAdaptiveTutoring={showAdaptiveTutoring}
+            toggleAdaptiveTutoring={toggleAdaptiveTutoring}
           />
           
           {/* Feature unlock banner */}
