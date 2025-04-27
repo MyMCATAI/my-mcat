@@ -93,10 +93,10 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light text-white">
+        <h2 className="text-3xl font-light text-gray-900">
           {`Welcome, ${firstName}! 👋`}
         </h2>
-        <p className="text-lg text-blue-200/80">
+        <p className="text-lg text-gray-600">
           {"Let's get to know you better to personalize your MCAT journey"}
         </p>
       </div>
@@ -107,7 +107,7 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <h2 className="text-2xl font-light text-white">
+          <h2 className="text-2xl font-light text-gray-800">
             Tell us about your college journey
           </h2>
           
@@ -120,14 +120,14 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
                 onChange={(e) => setCollegeQuery(e.target.value)}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 placeholder="Start typing your college name..."
                 required={!isNonTraditional && !isCanadian}
                 disabled={loading}
               />
               {isSearching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <svg className="animate-spin h-5 w-5 text-white/60" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-gray-500" viewBox="0 0 24 24">
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -150,21 +150,18 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute z-10 w-full mt-2 bg-[#001226]/95 backdrop-blur-[2px] 
-                             border border-white/10 rounded-xl shadow-lg max-h-60 overflow-auto 
-                             scrollbar-thin scrollbar-thumb-white/20"
+                  className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto scrollbar-thin scrollbar-thumb-gray-300"
                 >
                   {suggestions.map((college, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => handleSuggestionSelect(college)}
-                      className="w-full px-4 py-3 text-left hover:bg-white/5 
-                               transition-colors border-b border-white/5 last:border-b-0"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-b border-gray-200 last:border-b-0"
                       disabled={loading}
                     >
-                      <div className="text-white/90 text-sm font-medium">{college.name}</div>
-                      <div className="text-white/60 text-xs mt-0.5">
+                      <div className="text-gray-800 text-sm font-medium">{college.name}</div>
+                      <div className="text-gray-600 text-xs mt-0.5">
                         {college.city}, {college.state}
                       </div>
                     </button>
@@ -175,26 +172,26 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
           )}
 
           <div className="flex gap-6">
-            <label className="flex items-center space-x-3 text-white cursor-pointer group">
+            <label className="flex items-center space-x-3 text-gray-700 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={isNonTraditional}
                 onChange={(e) => setIsNonTraditional(e.target.checked)}
-                className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 bg-gray-100"
                 disabled={loading}
               />
-              <span className="group-hover:text-blue-400 transition-colors">Non-traditional</span>
+              <span className="group-hover:text-blue-600 transition-colors">Non-traditional</span>
             </label>
 
-            <label className="flex items-center space-x-3 text-white cursor-pointer group">
+            <label className="flex items-center space-x-3 text-gray-700 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={isCanadian}
                 onChange={(e) => setIsCanadian(e.target.checked)}
-                className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 bg-gray-100"
                 disabled={loading}
               />
-              <span className="group-hover:text-blue-400 transition-colors">Canadian</span>
+              <span className="group-hover:text-blue-600 transition-colors">Canadian</span>
             </label>
           </div>
         </motion.div>
@@ -205,13 +202,10 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
           transition={{ delay: 0.6 }}
           type="submit"
           disabled={loading || (!collegeQuery.trim() && !isNonTraditional && !isCanadian)}
-          className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
-                     px-6 py-3 rounded-xl transition-all duration-300 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/50
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"

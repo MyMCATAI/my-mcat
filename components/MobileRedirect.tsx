@@ -12,7 +12,6 @@ export default function MobileRedirect() {
     if (isMobileButNotIpad() && 
         pathname !== '/' && 
         pathname !== '/intro' && 
-        pathname !== '/onboarding' &&
         pathname !== '/preferences' &&
         pathname !== '/ankiclinic' &&
         !pathname?.startsWith('/sign-in') &&
@@ -27,7 +26,6 @@ export default function MobileRedirect() {
   if (isMobileButNotIpad() && 
       pathname !== '/' && 
       pathname !== '/intro' && 
-      pathname !== '/onboarding' &&
       pathname !== '/preferences' &&
       !pathname?.startsWith('/sign-in') &&
       !pathname?.startsWith('/sign-up') &&
