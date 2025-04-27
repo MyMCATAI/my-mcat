@@ -86,10 +86,10 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light text-white">
+        <h2 className="text-3xl font-light text-gray-900">
           Set Your MCAT Goals
         </h2>
-        <p className="text-lg text-blue-200/80">
+        <p className="text-lg text-gray-600">
           Let&apos;s aim high and make it happen!
         </p>
       </div>
@@ -99,8 +99,8 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
           <div className="space-y-4">
             <label htmlFor="targetScore" className={`block text-sm ${
               targetScore && !isValidScore(targetScore)
-                ? 'text-red-400'
-                : 'text-blue-200/80'
+                ? 'text-red-600'
+                : 'text-gray-600'
             }`}>
               What&apos;s your target MCAT score? (472 - 528)
             </label>
@@ -109,9 +109,9 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
               id="targetScore"
               value={targetScore}
               onChange={(e) => setTargetScore(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
-                         rounded-xl text-white focus:outline-none focus:ring-2 
-                         focus:ring-blue-500/50 transition-all"
+              className="w-full px-4 py-3 bg-gray-100 border border-gray-300 
+                         rounded-xl text-gray-900 focus:outline-none focus:ring-2 
+                         focus:ring-blue-500 transition-all"
               placeholder="Enter your target score"
               required
               disabled={loading}
@@ -119,7 +119,7 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
           </div>
 
           <div className="space-y-4">
-            <label htmlFor="targetSchool" className="block text-sm text-blue-200/80">
+            <label htmlFor="targetSchool" className="block text-sm text-gray-600">
               Which medical school is your top choice?
             </label>
             <div className="relative">
@@ -130,16 +130,16 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
                 onChange={(e) => setMedSchoolQuery(e.target.value)}
                 onFocus={() => setIsMedSchoolInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsMedSchoolInputFocused(false), 200)}
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
-                           rounded-xl text-white focus:outline-none focus:ring-2 
-                           focus:ring-blue-500/50 transition-all"
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-300 
+                           rounded-xl text-gray-900 focus:outline-none focus:ring-2 
+                           focus:ring-blue-500 transition-all"
                 placeholder="Enter medical school name..."
                 required
                 disabled={loading}
               />
               {isSearching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <svg className="animate-spin h-5 w-5 text-white/60" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-gray-500" viewBox="0 0 24 24">
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -158,7 +158,7 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
                 </div>
               )}
               {!isSearching && !selectedSchool && medSchoolQuery.length > 0 && medSchoolSuggestions.length === 0 && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-sm">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-600 text-sm">
                   No schools found
                 </div>
               )}
@@ -167,9 +167,7 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute z-10 w-full mt-2 bg-[#001226]/95 backdrop-blur-[2px] 
-                             border border-white/10 rounded-xl shadow-lg max-h-60 overflow-auto 
-                             scrollbar-thin scrollbar-thumb-white/20"
+                  className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto scrollbar-thin scrollbar-thumb-gray-300"
                 >
                   {medSchoolSuggestions.map((school, index) => (
                     <button
@@ -180,12 +178,12 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
                         setMedSchoolQuery(school.name);
                         setIsMedSchoolInputFocused(false);
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-white/5 
-                               transition-colors border-b border-white/5 last:border-b-0"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-100 
+                               transition-colors border-b border-gray-200 last:border-b-0"
                       disabled={loading}
                     >
-                      <div className="text-white/90 text-sm font-medium">{school.name}</div>
-                      <div className="text-white/60 text-xs mt-0.5">{school.state}</div>
+                      <div className="text-gray-800 text-sm font-medium">{school.name}</div>
+                      <div className="text-gray-600 text-xs mt-0.5">{school.state}</div>
                     </button>
                   ))}
                 </motion.div>
@@ -198,36 +196,33 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-6 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm 
-                         shadow-xl space-y-4 relative overflow-hidden"
+              className="p-6 border border-gray-200 rounded-xl bg-gray-50 
+                         shadow-md space-y-4 relative overflow-hidden"
             >
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 to-purple-700/10 pointer-events-none" />
-              
-              <h3 className="text-xl font-light text-white relative">
+              <h3 className="text-xl font-semibold text-gray-900 relative">
                 {selectedSchool.name}
               </h3>
               
               <div className="grid grid-cols-2 gap-4 relative">
-                <div className="bg-white/5 backdrop-blur-md p-4 rounded-lg border border-white/10">
-                  <div className="text-sm text-blue-200/80 mb-1">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">
                     Average MCAT
                   </div>
-                  <div className="text-white text-2xl font-light">
+                  <div className="text-gray-900 text-2xl font-light">
                     {selectedSchool.averageMCAT}
                   </div>
                 </div>
-                <div className="bg-white/5 backdrop-blur-md p-4 rounded-lg border border-white/10">
-                  <div className="text-sm text-blue-200/80 mb-1">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">
                     Average GPA
                   </div>
-                  <div className="text-white text-2xl font-light">
+                  <div className="text-gray-900 text-2xl font-light">
                     {selectedSchool.averageGPA}
                   </div>
                 </div>
               </div>
               
-              <p className="text-gray-300/90 text-sm leading-relaxed relative">
+              <p className="text-gray-700 text-sm leading-relaxed relative">
                 {selectedSchool.description}
               </p>
             </motion.div>
@@ -240,9 +235,9 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
           transition={{ delay: 0.6 }}
           type="submit"
           disabled={loading || !selectedSchool || !targetScore || !isValidScore(targetScore)}
-          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white hover:bg-white/20
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white 
                      px-6 py-3 rounded-xl transition-all duration-300 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (

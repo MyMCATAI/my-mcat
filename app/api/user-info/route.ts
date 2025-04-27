@@ -151,7 +151,7 @@ export async function POST(req: Request) {
         firstName: firstName || "",
         apiCount: 0,
         score: 30,
-        clinicRooms: JSON.stringify(["INTERN LEVEL"]),
+        clinicRooms: JSON.stringify([]),
         hasPaid: false,
         subscriptionType: "",
         diagnosticScores: {

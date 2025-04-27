@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { PurchaseButton } from "@/components/purchase-button";
 import ShoppingDialog, { ImageGroup } from "../ShoppingDialog";
 import dynamic from 'next/dynamic';
+import { FaArrowUp } from 'react-icons/fa';
 
 // Dynamically import TutorialVidDialog
 const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialog'), {
@@ -96,7 +97,7 @@ const ClinicHeader = ({
         <div className="relative group">
           <button className={`flex items-center justify-center px-2 py-2 sm:px-4 md:px-6 py-2 md:py-3
             ${(!userLevel || userLevel === "PATIENT LEVEL") 
-              ? "bg-green-500 animate-pulse" 
+              ? "bg-green-500 animate-pulse"
               : "bg-[--theme-doctorsoffice-accent]"
             }
             border-[--theme-border-color] 
@@ -108,11 +109,19 @@ const ClinicHeader = ({
             group-hover:bg-[--theme-hover-color]`}>
             <span>{userLevel || "PATIENT LEVEL"}</span>
           </button>
+          {/* Conditional Arrow Icon */}
+          {userLevel === "PATIENT LEVEL" && (
+            <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 animate-bounce">
+              <FaArrowUp className="text-red-500 text-2xl" />
+            </div>
+          )}
           <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
             <div className="flex flex-col">
               <a
                 href="#"
-                className="w-full px-3 py-2 sm:px-4 md:px-6 sm:py-2 md:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                className={`w-full px-3 py-2 sm:px-4 md:px-6 sm:py-2 md:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-300 ${
+                  userLevel === "PATIENT LEVEL" ? "animate-pulse bg-yellow-200" : ""
+                }`}
                 onClick={(e) => {
                   e.preventDefault();
                   setIsMarketplaceOpen(!isMarketplaceOpen);
