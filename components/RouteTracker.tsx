@@ -278,18 +278,10 @@ const RouteTracker = () => {
     // Skip if still loading or redirect in progress
     if (!isLoaded || loadingState.profile || isRedirecting.current) return;
     
-    // Decide where to redirect based on onboarding status
+    // Always redirect to ankiclinic after login from root
     if (isSignedIn) {
-      if (effectiveOnboardingComplete) {
-        debugLog('ROOT_PATH', 'Redirecting to /home - onboarding complete');
-        const fallback = performRedirect('/home', 'Login with onboarding complete');
-        setJustLoggedIn(false); // Reset flag
-        return () => { if (fallback) clearTimeout(fallback); };
-      }
-      
-      // Handle non-complete onboarding case
-      debugLog('ROOT_PATH', 'Redirecting to /onboarding - onboarding incomplete');
-      const fallback = performRedirect('/onboarding', 'Login with onboarding incomplete');
+      debugLog('ROOT_PATH', 'Redirecting to /ankiclinic after login from root');
+      const fallback = performRedirect('/ankiclinic', 'Login from root');
       setJustLoggedIn(false); // Reset flag
       return () => { if (fallback) clearTimeout(fallback); };
     }
@@ -298,11 +290,9 @@ const RouteTracker = () => {
     isSignedIn, 
     isLoaded, 
     justLoggedIn, 
-    effectiveOnboardingComplete, 
     loadingState.profile, 
     performRedirect,
-    debugLog,
-    userInfo
+    debugLog
   ]);
 
   // Handle redirection for users with no userInfo
@@ -313,49 +303,56 @@ const RouteTracker = () => {
       isRedirecting.current || 
       isExemptPath || 
       !isSignedIn || 
-      loadingState.profile || 
-      pathname?.startsWith('/onboarding')
+      loadingState.profile
     ) {
       return;
     }
     
-    // If user is signed in but has no userInfo, redirect to onboarding immediately
+    // If user is signed in but has no userInfo, redirect to ankiclinic,
+    // UNLESS they are already on /ankiclinic.
     if (!userInfo) {
-      debugLog('USERINFO', 'No userInfo - redirecting to onboarding');
-      const fallback = performRedirect('/onboarding', 'No userInfo');
-      
-      // Clean up fallback timeout if component unmounts
-      return () => {
-        if (fallback) clearTimeout(fallback);
-      };
+      // ADD CHECK: Only redirect if not already on the target page
+      if (pathname !== '/ankiclinic') { 
+        debugLog('USERINFO', 'No userInfo and not on /ankiclinic - redirecting');
+        const fallback = performRedirect('/ankiclinic', 'No userInfo');
+        
+        // Clean up fallback timeout if component unmounts
+        return () => {
+          if (fallback) clearTimeout(fallback);
+        };
+      } else {
+        // Already on /ankiclinic, just wait for userInfo to load
+        debugLog('USERINFO', 'No userInfo, but already on /ankiclinic - waiting for load');
+      }
     }
   }, [
+    // Ensure all dependencies are correct, including pathname
     isSignedIn, 
     userInfo, 
     loadingState.profile, 
-    pathname, 
+    pathname, // Ensure pathname is in the dependency array
     isLoaded, 
     isExemptPath, 
     performRedirect,
     debugLog
   ]);
 
-  // Handle redirects based on onboarding status
+  // Handle redirects based on onboarding status (Simplified)
   useEffect(() => {
     // Skip if any of these conditions are true
     if (
-      pathname === '/onboarding' || 
       isExemptPath || 
       loadingState.redirect || 
       loadingState.profile
+      // Removed check for pathname === '/onboarding'
     ) {
       return;
     }
     
-    // Redirect to onboarding if needed
-    if (isSignedIn && !effectiveOnboardingComplete) {
-      debugLog('ONBOARDING_CHECK', 'Redirecting to onboarding - incomplete');
-      const fallback = performRedirect('/onboarding', 'Onboarding not complete');
+    // Redirect to ankiclinic if onboarding is incomplete AND user is not already there
+    if (isSignedIn && !effectiveOnboardingComplete && pathname !== '/ankiclinic') {
+      debugLog('ONBOARDING_CHECK', 'Redirecting to ankiclinic - incomplete');
+      const fallback = performRedirect('/ankiclinic', 'Onboarding not complete');
       
       // Clean up fallback timeout if component unmounts
       return () => {
@@ -363,16 +360,8 @@ const RouteTracker = () => {
       };
     }
     
-    // Redirect from onboarding page if already complete
-    if (isSignedIn && effectiveOnboardingComplete && pathname === '/onboarding') {
-      debugLog('ONBOARDING_CHECK', 'Redirecting to home - already complete');
-      const fallback = performRedirect('/home', 'Onboarding already complete');
-      
-      // Clean up fallback timeout if component unmounts
-      return () => {
-        if (fallback) clearTimeout(fallback);
-      };
-    }
+    // Removed the block that redirected *away* from /onboarding if already complete
+    
   }, [
     isSignedIn, 
     loadingState.profile, 
@@ -395,10 +384,8 @@ const RouteTracker = () => {
       !effectiveOnboardingComplete ||
       loadingState.redirect ||
       loadingState.studyPlan ||
-      isExemptPath ||
-      pathname === '/onboarding' || 
+      isExemptPath || 
       pathname === '/redirect' ||
-      pathname?.startsWith('/onboarding') ||
       pathname?.startsWith('/pricing')
     ) {
       return;
@@ -431,7 +418,8 @@ const RouteTracker = () => {
       }
 
       // Only log study plan status but don't force redirect
-      const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect', '/ankiclinic'];
+      // Removed /onboarding from exempt paths here
+      const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/redirect', '/ankiclinic'];
       const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => pathname?.startsWith(path));
       
       if (isSubscribed && shouldCheckStudyPlan) {

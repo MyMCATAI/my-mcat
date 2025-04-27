@@ -1160,3 +1160,17 @@ html::-webkit-scrollbar {
   border-color: rgba(76, 181, 230, 0.4);
   box-shadow: 0 0 6px 1px rgba(76, 181, 230, 0.3);
 }
+
+/* Custom Animations */
+@keyframes pulse-fast {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

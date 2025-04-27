@@ -65,10 +65,10 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light text-white">
+        <h2 className="text-3xl font-light text-gray-900">
           Your Academic Background
         </h2>
-        <p className="text-lg text-blue-200/80">
+        <p className="text-lg text-gray-600">
           Let&apos;s understand where you are in your MCAT journey
         </p>
       </div>
@@ -76,7 +76,7 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-8">
         <div className="space-y-6">
           <div className="space-y-4">
-            <label htmlFor="gpa" className="block text-sm text-blue-200/80">
+            <label htmlFor="gpa" className="block text-sm text-gray-600">
               What&apos;s your current GPA? (0.0 - 4.0)
             </label>
             <input
@@ -87,9 +87,9 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
               max="4"
               value={gpa}
               onChange={(e) => setGpa(validateGpa(e.target.value))}
-              className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
-                         rounded-xl text-white focus:outline-none focus:ring-2 
-                         focus:ring-blue-500/50 transition-all"
+              className="w-full px-4 py-3 bg-gray-100 border border-gray-300 
+                         rounded-xl text-gray-900 focus:outline-none focus:ring-2 
+                         focus:ring-blue-500 transition-all"
               placeholder="Enter your GPA"
               required
               disabled={loading}
@@ -97,16 +97,16 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
           </div>
 
           <div className="space-y-4">
-            <label className="flex items-center space-x-3 text-white cursor-pointer group">
+            <label className="flex items-center space-x-3 text-gray-700 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={hasNotTakenMCAT}
                 onChange={(e) => setHasNotTakenMCAT(e.target.checked)}
-                className="w-5 h-5 rounded border-white/20 text-blue-500 
-                           focus:ring-blue-500/50 bg-transparent"
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 
+                           focus:ring-blue-500 bg-gray-100"
                 disabled={loading}
               />
-              <span className="group-hover:text-blue-400 transition-colors">
+              <span className="group-hover:text-blue-600 transition-colors">
                 I haven&apos;t taken the MCAT yet
               </span>
             </label>
@@ -115,10 +115,10 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
           {!hasNotTakenMCAT && (
             <>
               <div className="space-y-4">
-                <label htmlFor="mcatScore" className={`block text-sm ${
+                <label htmlFor="mcatScore" className={`block text-sm ${ 
                   currentMcatScore && !isValidMcatScore(currentMcatScore) 
-                    ? 'text-red-400' 
-                    : 'text-blue-200/80'
+                    ? 'text-red-600' 
+                    : 'text-gray-600'
                 }`}>
                   What was your most recent MCAT score? (472 - 528)
                 </label>
@@ -127,9 +127,9 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
                   id="mcatScore"
                   value={currentMcatScore}
                   onChange={(e) => handleMcatScoreChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
-                             rounded-xl text-white focus:outline-none focus:ring-2 
-                             focus:ring-blue-500/50 transition-all"
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 
+                             rounded-xl text-gray-900 focus:outline-none focus:ring-2 
+                             focus:ring-blue-500 transition-all"
                   placeholder="Enter your MCAT score"
                   required={!hasNotTakenMCAT}
                   disabled={loading}
@@ -137,7 +137,7 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
               </div>
 
               <div className="space-y-4">
-                <label className="block text-sm text-blue-200/80">
+                <label className="block text-sm text-gray-600">
                   Which MCAT attempt was this?
                 </label>
                 <Select
@@ -145,17 +145,17 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
                   onValueChange={setMcatAttemptNumber}
                   disabled={loading}
                 >
-                  <SelectTrigger className="w-full bg-white/5 backdrop-blur-sm border border-white/10 
-                             rounded-xl text-white focus:outline-none focus:ring-2 
-                             focus:ring-blue-500/50 transition-all">
+                  <SelectTrigger className="w-full bg-gray-100 border border-gray-300 
+                             rounded-xl text-gray-900 focus:outline-none focus:ring-2 
+                             focus:ring-blue-500 transition-all">
                     <SelectValue placeholder="Select attempt number" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900/95 border border-white/10 text-white">
-                    <SelectItem value="1" className="focus:bg-white/10 focus:text-white">First attempt</SelectItem>
-                    <SelectItem value="2" className="focus:bg-white/10 focus:text-white">Second attempt</SelectItem>
-                    <SelectItem value="3" className="focus:bg-white/10 focus:text-white">Third attempt</SelectItem>
-                    <SelectItem value="4" className="focus:bg-white/10 focus:text-white">Fourth attempt</SelectItem>
-                    <SelectItem value="5+" className="focus:bg-white/10 focus:text-white">Fifth or more attempt</SelectItem>
+                  <SelectContent className="bg-white border border-gray-300 text-gray-900">
+                    <SelectItem value="1" className="focus:bg-gray-100 focus:text-gray-900">First attempt</SelectItem>
+                    <SelectItem value="2" className="focus:bg-gray-100 focus:text-gray-900">Second attempt</SelectItem>
+                    <SelectItem value="3" className="focus:bg-gray-100 focus:text-gray-900">Third attempt</SelectItem>
+                    <SelectItem value="4" className="focus:bg-gray-100 focus:text-gray-900">Fourth attempt</SelectItem>
+                    <SelectItem value="5+" className="focus:bg-gray-100 focus:text-gray-900">Fifth or more attempt</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -172,9 +172,9 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
             !gpa || 
             (!hasNotTakenMCAT && (!currentMcatScore || !isValidMcatScore(currentMcatScore)))
           }
-          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white hover:bg-white/20
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white 
                      px-6 py-3 rounded-xl transition-all duration-300 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (

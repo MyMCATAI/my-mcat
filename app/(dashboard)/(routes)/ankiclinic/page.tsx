@@ -21,8 +21,8 @@ import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
 import ResourcesMenu from './ResourcesMenu';
 import { useUser } from "@/store/selectors";
-
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
+import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -92,7 +92,7 @@ const DoctorsOfficePage = () => {
   
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const { isSubscribed, userInfo, incrementScore, decrementScore, refetch, updateScore } = useUserInfo();
-  const { refreshUserInfo } = useUser();
+  const { refreshUserInfo, onboardingComplete } = useUser();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -813,7 +813,10 @@ const DoctorsOfficePage = () => {
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
       
-      {showWelcomeDialogue && 
+      {/* Conditionally render the OnboardingModal if onboarding is not complete */}
+      { !onboardingComplete && <OnboardingModal /> }
+      
+      {showWelcomeDialogue && onboardingComplete &&
         <WelcomeDialog 
           isOpen={showWelcomeDialogue}
           onUnlocked={()=>setShowWelcomeDialogue(false)}
@@ -930,7 +933,6 @@ const DoctorsOfficePage = () => {
                 
                 {/* Center - New Game button */}
                 <div>
-
                     <NewGameButton
                       onGameStart={handleGameStart}
                     />
@@ -967,9 +969,12 @@ const DoctorsOfficePage = () => {
           />
           
           {/* Feature unlock banner */}
-          <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
-            <FeatureUnlockBanner />
-          </div>
+
+          {userLevel !== "PATIENT LEVEL" && totalPatients > 0 && (
+            <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
+              <FeatureUnlockBanner />
+            </div>
+          )}
         </div>
       </Suspense>
 
@@ -1035,7 +1040,7 @@ const DoctorsOfficePage = () => {
       )}
 
       {/* Desktop only - New Game button */}
-      {!isMobile  && (
+      {!isMobile && userLevel !== "PATIENT LEVEL" && (
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
           <NewGameButton
             onGameStart={handleGameStart}

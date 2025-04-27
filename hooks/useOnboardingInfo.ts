@@ -1,24 +1,22 @@
 import { useState, useEffect } from 'react';
 import { OnboardingInfo } from '@/types';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 import { isMobileButNotIpad } from '@/lib/utils';
 import { useUser } from '@/store/selectors';
 
-type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
+type OnboardingStep = 1 | 2 | 3 | 4 | 5;
 
 export const ONBOARDING_STEPS = {
   NAME: 1,          // Step 1: Get user's name
   COLLEGE: 2,       // Step 2: Collect college information
   ACADEMICS: 3,     // Step 3: Get academic details
   GOALS: 4,         // Step 4: Set target score and medical school
-  COINS: 5,         // Step 5: Introduce coins system and referral
-  KALYPSO_DIALOGUE: 6, // Step 6: Kalypso chat - FINAL STEP
+  COINS: 5,         // Step 5: Introduce coins system and referral - FINAL STEP
 } as const;
 
 // Helper function to ensure type safety when setting the step
 function isValidStep(step: number): step is OnboardingStep {
-  return step >= 1 && step <= 6;
+  return step >= 1 && step <= 5;
 }
 
 // Type for tracking request state
@@ -38,7 +36,6 @@ const initialRequestState: RequestState = {
 export function useOnboardingInfo() {
   const [onboardingInfo, setOnboardingInfo] = useState<OnboardingInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(ONBOARDING_STEPS.NAME);
-  const router = useRouter();
   const { setOnboardingComplete, onboardingComplete, userInfo, refreshUserInfo } = useUser();
   
   // Request states for all operations
@@ -48,7 +45,7 @@ export function useOnboardingInfo() {
   const [collegeSubmitState, setCollegeSubmitState] = useState<RequestState>({...initialRequestState});
   const [academicsSubmitState, setAcademicsSubmitState] = useState<RequestState>({...initialRequestState});
   const [goalsSubmitState, setGoalsSubmitState] = useState<RequestState>({...initialRequestState});
-  const [kalypsoCompleteState, setKalypsoCompleteState] = useState<RequestState>({...initialRequestState});
+  const [coinsSubmitState, setCoinsSubmitState] = useState<RequestState>({...initialRequestState});
 
   // Reset a request state
   const resetRequestState = (stateSetter: React.Dispatch<React.SetStateAction<RequestState>>) => {
@@ -88,7 +85,7 @@ export function useOnboardingInfo() {
     };
 
     initializeFromStore();
-  }, [userInfo, router, onboardingComplete, setOnboardingComplete]);
+  }, [userInfo, onboardingComplete, setOnboardingComplete]);
 
   // Update onboarding info in the database
   const updateOnboardingInfo = async (updates: Partial<OnboardingInfo>) => {
@@ -129,7 +126,6 @@ export function useOnboardingInfo() {
 
   const handleNameSubmit = async (firstName: string) => {
     try {
-      // Set loading state
       setNameSubmitState({ loading: true, error: null, success: false });
       
       // Force create a new user info record
@@ -142,21 +138,27 @@ export function useOnboardingInfo() {
       if (!response.ok) throw new Error("Failed to create user info");
 
       const data = await response.json();
+      
+      // After successfully creating the record via POST, refresh the Zustand store
+      console.log("[useOnboardingInfo] User info created, refreshing Zustand store...");
+      await refreshUserInfo();
+      console.log("[useOnboardingInfo] Zustand store refreshed.");
 
       // Store referral redemption status
       localStorage.setItem('mymcat_show_redeem_referral_modal', data.referralRedeemed ? 'true' : 'false');
 
-      // Update onboarding info with fresh data
+      // Update onboarding info with fresh data (like currentStep)
+      // This PUT call will now update the record that refreshUserInfo just fetched
       await updateOnboardingInfo({
-        firstName,
+        // firstName is already set by the POST, but including doesn't hurt
+        firstName, 
         currentStep: ONBOARDING_STEPS.COLLEGE as OnboardingStep,
       });
       
-      // Set success state
       setNameSubmitState({ loading: false, error: null, success: true });
     } catch (error) {
       toast.error("Failed to save your information");
-      // Set error state
+      console.error("[useOnboardingInfo] Error in handleNameSubmit:", error);
       setNameSubmitState({ 
         loading: false, 
         error: error instanceof Error ? error : new Error('Unknown error saving name'),
@@ -228,7 +230,7 @@ export function useOnboardingInfo() {
       // Set loading state
       setGoalsSubmitState({ loading: true, error: null, success: false });
       
-      // Update database and move to next step
+      // Update database and move to next step (COINS)
       await updateOnboardingInfo({
         ...data,
         currentStep: ONBOARDING_STEPS.COINS as OnboardingStep,
@@ -247,27 +249,36 @@ export function useOnboardingInfo() {
     }
   };
 
-  const handleKalypsoComplete = async () => {
+  const finalizeOnboarding = async () => {
+    setCoinsSubmitState(prev => ({ ...prev, loading: true })); 
+    console.log('finalizeOnboarding');
     try {
+      setOnboardingComplete(true); 
 
-      // Mark onboarding as complete in the local state right away
-      setOnboardingComplete(true);
-      
-      // Update database in the background - no need to await
       updateOnboardingInfo({
-        onboardingComplete: true, 
+        onboardingComplete: true,
+        // No need to update currentStep here, it should already be COINS
       }).catch((error) => {
-        console.error("Failed to update onboarding status:", error);
-        // Silently handle error - user is already navigating to the platform
+        // If DB update fails, log it but don't block the user or change UI state
+        console.error("Failed to update final onboarding status in DB:", error);
       });
-      
-      // Always redirect to AnkiClinic after onboarding completion regardless of device
-      router.push('/ankiclinic');
+
+      // Set success state for the coins step (which includes finalization)
+      // Do this after initiating the final DB update
+      setCoinsSubmitState({ loading: false, error: null, success: true });
       
     } catch (error) {
-      // This should rarely happen since we're primarily focused on navigation
-      toast.error("Failed to complete your profile setup");
-      console.error("Navigation error:", error);
+      // Handle errors during the state update itself
+      toast.error("Failed to complete profile setup");
+      console.error("Error finalizing onboarding state update:", error);
+      // Set error state for coins step
+      setCoinsSubmitState({ 
+        loading: false, 
+        error: error instanceof Error ? error : new Error('Unknown error finalizing onboarding'),
+        success: false 
+      });
+      // Revert Zustand state if the primary action failed
+      setOnboardingComplete(false); 
     }
   };
 
@@ -279,7 +290,7 @@ export function useOnboardingInfo() {
            collegeSubmitState.loading || 
            academicsSubmitState.loading || 
            goalsSubmitState.loading || 
-           kalypsoCompleteState.loading;
+           coinsSubmitState.loading;
   };
 
   return {
@@ -290,7 +301,7 @@ export function useOnboardingInfo() {
     handleCollegeSubmit,
     handleAcademicsSubmit,
     handleGoalsSubmit,
-    handleKalypsoComplete,
+    finalizeOnboarding,
     ONBOARDING_STEPS,
     // Request states
     isLoading: isLoading(),
@@ -300,7 +311,7 @@ export function useOnboardingInfo() {
     collegeSubmitState,
     academicsSubmitState,
     goalsSubmitState,
-    kalypsoCompleteState,
+    coinsSubmitState,
     // Utility
     resetRequestState
   };

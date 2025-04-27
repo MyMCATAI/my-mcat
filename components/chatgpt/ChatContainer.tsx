@@ -10,7 +10,6 @@ import TestCalendar from '@/components/calendar/TestCalendar';
 import type { CalendarEvent } from "@/types/calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
-import UserContextPanel from "./UserContextPanel";
 import { 
   generateKnowledgeSummary, 
   generateUserContext, 
@@ -762,10 +761,7 @@ const ChatContainer = ({ className, chatbotRef, activities, containerProps }: Ch
           themes={themes}
           flow={flow}
         />
-        
-        {/* User Context Panel for onboarding tasks */}
-        <UserContextPanel activities={activities} />
-        
+                
         {/* Prompt Suggestions */}
         <PromptSuggestions 
           onSendMessage={handleSuggestionClick}
