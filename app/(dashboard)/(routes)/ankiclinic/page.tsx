@@ -7,7 +7,6 @@ import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import { imageGroups } from "./constants/imageGroups";
 import dynamic from 'next/dynamic';
-import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useAudio } from "@/store/selectors";
 import type { UserResponse } from "@prisma/client";
@@ -17,12 +16,10 @@ import { getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 import { useWindowSize } from "@/store/selectors";
 import ClinicHeader from "./components/ClinicHeader";
-import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
-import ResourcesMenu from './ResourcesMenu';
-import { useUser } from "@/store/selectors";
-
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
+import SideBar from '../home/SideBar';
+import HoverSidebar from "@/components/navigation/HoverSidebar";
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -48,10 +45,6 @@ const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
 });
 
 const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
-  ssr: false
-});
-
-const RedeemReferralModal = dynamic(() => import('@/components/social/friend-request/RedeemReferralModal'), {
   ssr: false
 });
 
@@ -85,14 +78,13 @@ const DoctorsOfficePage = () => {
   const isClosingDialogRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasCalculatedRef = useRef(false);
+  const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({ sendMessage: () => {} });
   
   // Use a ref instead of state to track ambient sound initialization
   // This prevents re-renders when the ambient sound is initialized
   const ambientSoundInitializedRef = useRef(false);
   
   /* ------------------------------------------- Hooks -------------------------------------------- */
-  const { isSubscribed, userInfo, incrementScore, decrementScore, refetch, updateScore } = useUserInfo();
-  const { refreshUserInfo } = useUser();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -123,12 +115,11 @@ const DoctorsOfficePage = () => {
   });
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   const [isCalculating, setIsCalculating] = useState(false);
-  const [showReferralModal, setShowReferralModal] = useState(false);
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const [chatbotContext, setChatbotContext] = useState<any>(null);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -136,27 +127,7 @@ const DoctorsOfficePage = () => {
   /* ----------------------------------------- Computation ----------------------------------------- */
 
   // Memoize expensive computations
-  const isClinicUnlocked = useMemo(() => {
-    if (!userInfo?.unlocks) return false;
-    
-    const unlocks = typeof userInfo.unlocks === 'string' 
-      ? JSON.parse(userInfo.unlocks) 
-      : userInfo.unlocks;
-      
-    return unlocks?.includes('game');
-  }, [userInfo?.unlocks]);
-
-  // Parse clinicRooms string into array
-  const parsedClinicRooms = useMemo(() => {
-    if (!userInfo?.clinicRooms || userInfo.clinicRooms === "undefined") return [];
-    
-    try {
-      return JSON.parse(userInfo.clinicRooms);
-    } catch (error) {
-      console.error('Error parsing clinicRooms:', error);
-      return [];
-    }
-  }, [userInfo?.clinicRooms]);
+  const isClinicUnlocked = true; // Simplified for now, always unlocked
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
 
@@ -229,14 +200,7 @@ const DoctorsOfficePage = () => {
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
-  // Simplified effect for welcome dialog
-  useEffect(() => {
-    if (userInfo && !isClinicUnlocked) {
-      setShowWelcomeDialogue(true);
-    }
-  }, [userInfo, isClinicUnlocked]);
-
-  // Improved audio management effect - using audio store state to prevent duplicate loops
+  // Simplified effect for audio management - using audio store state to prevent duplicate loops
   useEffect(() => {
     if (!isBrowser) return;
     
@@ -251,6 +215,10 @@ const DoctorsOfficePage = () => {
       if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
         // Set the flag before playing to prevent race conditions
         ambientSoundInitializedRef.current = true;
+        
+        // Set volume to lower level before playing
+        const originalVolume = audio.volume;
+        audio.setVolume(0.3); // Reduce volume to 30%
         audio.playLoop(AMBIENT_SOUND);
       }
     };
@@ -274,6 +242,8 @@ const DoctorsOfficePage = () => {
         }, 1000);
       } else if (ambientSoundInitializedRef.current) {
         // Only restart if we've initialized before but no loop is playing
+        // Set volume to lower level before playing
+        audio.setVolume(0.3); // Reduce volume to 30%
         audio.playLoop(AMBIENT_SOUND);
       }
     }
@@ -425,146 +395,23 @@ const DoctorsOfficePage = () => {
     };
   }, []); // Empty dependency array ensures it only runs once
 
-  const performDailyCalculations = async () => {
-    if (isCalculating) {
-      return;
-    }
-    setIsCalculating(true);
-
-    try {
-      const response = await fetch("/api/daily-calculations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      
-      if (data.error || data.alreadyUpdatedToday) {
-        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-amber-600 dark:text-amber-400">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>{"You've already treated your patients for today. Total patients treated:"} <span className="font-medium text-amber-600 dark:text-amber-400">{data.totalPatientsTreated}</span></p>
-              <p className="text-emerald-600 dark:text-emerald-400">{"Come back tomorrow to treat more patients!"}</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
-        return;
-      }
-
-      await incrementScore();
-      // Update total patients in the store
-      setTotalPatients(data.totalPatientsTreated);
-
-      if (data.newPatientsTreated > 0) {
-        const { greeting, message } = getSuccessMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-emerald-600 dark:text-emerald-400">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <ul className="space-y-1 mt-2">
-                <li className="flex items-center gap-2">
-                  <span className="font-medium">New patients treated:</span> 
-                  <span className="text-emerald-600 dark:text-emerald-400">{data.newPatientsTreated}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-medium">Total patients:</span> 
-                  <span className="text-emerald-600 dark:text-emerald-400">{data.totalPatientsTreated}</span>
-                </li>
-              </ul>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
-      } else {
-        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>No new patients to treat today. Try completing more flashcards!</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
-      }
-    } catch (error) {
-      console.error('🚨 Error in daily calculations:', error);
-      toast.error(
-        "Failed to perform daily calculations. Please try again later."
-      );
-    } finally {
-      setIsCalculating(false);
-    }
-  };
-
-  // Effect to run daily calculations after data is loaded
-  useEffect(() => {
-    if (!mcqState.isLoading && userInfo && !hasCalculatedRef.current) {
-      performDailyCalculations();
-      hasCalculatedRef.current = true;
-    }
-  }, [mcqState.isLoading, userInfo]);
-
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
       router.push(`/home?tab=${tab}`);
     }
-    // No need to update activeTab state
   };
 
   const handleCompleteAllRoom = () => {
-    handleSetCompleteAllRoom(true);
+    setCompleteAllRoom(true);
   };
 
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find((g) => g.name === groupName);
     if (!group) return;
 
-    // Buying logic
-    if (userInfo?.score && userInfo.score < group.cost) {
-      toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
-      return;
-    }
-
     try {
-      const response = await fetch("/api/clinic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: groupName, cost: group.cost }),
-      });
-
-      if (!response.ok) throw new Error();
-      const { rooms: updatedRooms } = await response.json();
-      
-      // Update the store with the new room
+      // Simplify to just handle toggling the room
       unlockRoom(groupName);
-      
-      // Refresh user info to update coins and rooms in UI
-      await refreshUserInfo();
       
       // Update visible images
       setVisibleImages((prev) => {
@@ -576,9 +423,7 @@ const DoctorsOfficePage = () => {
       toast.success(`Added ${groupName} to your clinic!`);
     } catch (error) {
       console.error("Error updating clinic rooms:", error);
-      toast.error(
-        (error as Error).message || "Failed to update clinic rooms"
-      );
+      toast.error("Failed to update clinic rooms");
     }
   };
 
@@ -595,6 +440,10 @@ const DoctorsOfficePage = () => {
       toast.error("Failed to fetch activities. Please try again.");
     }
   };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
   const resetLocalGameState = async () => {
     resetGameState();
@@ -616,9 +465,6 @@ const DoctorsOfficePage = () => {
   };
 
   const handleGameStart = async (userTestId: string) => {
-    // Play startup sound
-    audio.playSound('flashcard-startup');
-    
     // Start new testing activity
     await startActivity({
       type: 'testing',
@@ -673,7 +519,6 @@ const DoctorsOfficePage = () => {
     endGame();
   };
 
-
   // Create wrapper functions to adapt between React's setState and Zustand's actions
   const handleSetFlashcardRoomId = useCallback((roomId: string | ((prevState: string) => string)) => {
     if (typeof roomId === 'function') {
@@ -697,7 +542,6 @@ const DoctorsOfficePage = () => {
       setActiveRooms(new Set(rooms));
     }
   }, [activeRooms, setActiveRooms]);
-
 
   const handleSetIsFlashcardsOpen = useCallback((value: boolean) => {
     // Prevent rapid open/close cycles or redundant updates
@@ -735,17 +579,6 @@ const DoctorsOfficePage = () => {
     // Update state
     setIsFlashcardsOpen(value);
   }, [flashcardRoomId, setFlashcardRoomId, setIsFlashcardsOpen, audio, isFlashcardsOpen]);
-
-
-  // Handle flashcard dialog open/close - improved with audio state checks
-  const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
-    if (typeof complete === 'function') {
-      const newComplete = complete(completeAllRoom);
-      setCompleteAllRoom(newComplete);
-    } else {
-      setCompleteAllRoom(complete);
-    }
-  }, [completeAllRoom, setCompleteAllRoom]);
 
   // Simplified effect for test completion
   useEffect(() => {
@@ -793,173 +626,104 @@ const DoctorsOfficePage = () => {
     return <LoadingClinic />;
   }
 
-  const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
-    <button 
-      onClick={onClick}
-      className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-      aria-label="Toggle resources menu"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        <path d="M2 17l10 5 10-5" />
-        <path d="M2 12l10 5 10-5" />
-      </svg>
-    </button>
-  );
-
   /* ----------------------------------------- Render  ---------------------------------------- */
 
   return (
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
       
+      {/* HoverSidebar - positioned on the left side */}
+      <HoverSidebar
+        activities={activities}
+        onTasksUpdate={fetchActivities}
+        onTabChange={handleTabChange}
+        currentPage="ankiclinic"
+        isSubscribed={true}
+      />
+      
       {showWelcomeDialogue && 
         <WelcomeDialog 
           isOpen={showWelcomeDialogue}
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
-    <Suspense fallback={
+      <Suspense fallback={
         <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
-        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
-          {/* Mobile layout: completely separate components for sidebar and main content */}
-          {isMobile ? (
-            <>
-              {/* Main content container - full width on mobile */}
-              <div className="w-full h-full relative">
-                <OfficeContainer
-                  ref={officeContainerRef}
-                  onNewGame={handleSetPopulateRooms}
-                  visibleImages={visibleImages}
-                  imageGroups={imageGroups}
-                  updateVisibleImages={updateVisibleImages}
-                />
-              </div>
-              
-              {/* Mobile sidebar - completely separate from main content flow */}
-              <div 
-                className={`fixed inset-0 z-50 transition-all duration-300 ${
-                  isSidebarOpen 
-                    ? 'opacity-100 pointer-events-auto' 
-                    : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                <div className="bg-black/70 fixed inset-0" onClick={() => setIsSidebarOpen(false)}></div>
-                <div className={`fixed inset-x-0 bottom-0 top-auto z-50 bg-[--theme-gradient-startstreak] rounded-t-2xl p-4 max-h-[80vh] overflow-auto transition-transform duration-300 transform ${
-                  isSidebarOpen ? 'translate-y-0' : 'translate-y-full'
-                }`}
-                style={{ 
-                  boxShadow: '0 -4px 20px rgba(0,0,0,0.25)',
-                }}
-                >
-                  {/* Pill handle for UI feedback - now clickable */}
-                  <div 
-                    className="w-full h-8 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity"
-                    onClick={() => setIsSidebarOpen(false)}
-                    role="button"
-                    aria-label="Close sidebar"
-                  >
-                    <div className="w-12 h-1.5 bg-gray-300/30 rounded-full" />
-                  </div>
-                  
-                  <button 
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="absolute top-4 right-4 z-50 bg-black/20 hover:bg-black/30 rounded-full p-2 transition-colors"
-                    aria-label="Close sidebar"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                  
-                  <ResourcesMenu
-                    reportData={reportData}
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Desktop layout: side-by-side components */}
-              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50">
-                <ResourcesMenu
-                  reportData={reportData}
-                />
-              </div>
-              
-              <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
-                <OfficeContainer
-                  ref={officeContainerRef}
-                  onNewGame={handleSetPopulateRooms}
-                  visibleImages={visibleImages}
-                  imageGroups={imageGroups}
-                  updateVisibleImages={updateVisibleImages}
-                />
-              </div>
-            </>
-          )}
+        <div className={`flex w-full h-full gap-4 bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+          {/* Main content container - 3/4 width - Isolated from sidebar */}
+          <div 
+            className="w-3/4 h-full relative"
+            style={{
+              isolation: 'isolate', // CSS isolation to prevent event propagation
+              touchAction: 'manipulation', // Better touch handling
+            }}
+          >
+            <OfficeContainer
+              ref={officeContainerRef}
+              onNewGame={handleSetPopulateRooms}
+              visibleImages={visibleImages}
+              imageGroups={imageGroups}
+              updateVisibleImages={updateVisibleImages}
+            />
+          </div>
           
-          {/* Reposition buttons based on device type */}
+          {/* Sidebar container - 1/4 width - Explicitly prevent drag propagation */}
+          <div 
+            className="w-1/4 h-full"
+            style={{
+              isolation: 'isolate', // CSS isolation to prevent event propagation
+              touchAction: 'manipulation', // Better touch handling
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            <div className="h-full gradientbg p-3 pb-6 rounded-lg">
+              <SideBar 
+                activities={activities}
+                currentPage="ankiclinic"
+                chatbotContext={chatbotContext}
+                chatbotRef={chatbotRef}
+                handleSetTab={handleTabChange}
+                onActivitiesUpdate={fetchActivities}
+                isSubscribed={true}
+                showTasks={true}
+              />
+            </div>
+          </div>
+          
+          {/* Mobile buttons wrapper - fixed at bottom */}
           {isMobile && (
-            <>
-              {/* Mobile buttons wrapper - fixed at bottom */}
-              <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
-                {/* Left side - Tutorial button */}
-                <div>
-                  <a 
-                    href="/ankiclinic-tutorial" 
-                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // This functionality is now handled in the ClinicHeader component
-                      const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
-                      if (headerButton) {
-                        (headerButton as HTMLElement).click();
-                      }
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </a>
-                </div>
-                
-                {/* Center - New Game button */}
-                <div>
-
-                    <NewGameButton
-                      onGameStart={handleGameStart}
-                    />
-                </div>
-                
-                {/* Right side - Sidebar toggle and Marketplace */}
-                <div className="flex gap-2">
-                  {/* Marketplace button */}
-                  <button 
-                    onClick={() => setIsMarketplaceOpen(true)}
-                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-                    aria-label="Open marketplace"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </button>
-                  
-                  <SidebarToggleButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-                </div>
+            <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
+              {/* Left side - New Game button */}
+              <div>
+                <NewGameButton
+                  onGameStart={handleGameStart}
+                />
               </div>
-            </>
+              
+              {/* Center - Marketplace button */}
+              <div>
+                <button 
+                  onClick={() => setIsMarketplaceOpen(true)}
+                  className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
+                  aria-label="Open marketplace"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           )}
           
-          {/* Fellowship Level button with coins and patients - always at top */}
+          {/* Fellowship Level button with patients */}
           <ClinicHeader
             totalPatients={totalPatients}
             patientsPerDay={patientsPerDay}
-            userInfo={userInfo}
             userLevel={userLevel}
             imageGroups={imageGroups}
             visibleImages={visibleImages}
@@ -967,7 +731,7 @@ const DoctorsOfficePage = () => {
           />
           
           {/* Feature unlock banner */}
-          <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
+          <div className="absolute top-20 right-4 left-4 z-40">
             <FeatureUnlockBanner />
           </div>
         </div>
@@ -985,20 +749,7 @@ const DoctorsOfficePage = () => {
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
       />}
-
-      <HoverSidebar
-        activities={activities}
-        onTasksUpdate={fetchActivities}
-        onTabChange={handleTabChange}
-        currentPage="ankiclinic"
-        isSubscribed={isSubscribed}
-      />
       
-      <RedeemReferralModal 
-        isOpen={showReferralModal}
-        onClose={() => setShowReferralModal(false)}
-      />
-
       {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}
         isOpen={isFlashcardsOpen}
@@ -1011,36 +762,16 @@ const DoctorsOfficePage = () => {
         buttonContent={<div />}
       />}
 
-      {/* Desktop only - Tutorial button */}
+      {/* Desktop only - New Game and Tutorial buttons */}
       {!isMobile && (
-        <div className="absolute bottom-4 left-[calc(25%+16px)] z-50">
-          <a 
-            href="/ankiclinic-tutorial" 
-            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              // This functionality is now handled in the ClinicHeader component
-              const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
-              if (headerButton) {
-                (headerButton as HTMLElement).click();
-              }
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            Tutorial
-          </a>
-        </div>
-      )}
-
-      {/* Desktop only - New Game button */}
-      {!isMobile  && (
-        <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
-          <NewGameButton
-            onGameStart={handleGameStart}
-          />
-        </div>
+        <>
+          {/* New Game button at bottom left */}
+          <div className="absolute bottom-4 left-4 z-50">
+            <NewGameButton
+              onGameStart={handleGameStart}
+            />
+          </div>
+        </>
       )}
 
       {/* Add ShoppingDialog - always mounted */}
@@ -1049,10 +780,10 @@ const DoctorsOfficePage = () => {
         imageGroups={imageGroups}
         visibleImages={visibleImages}
         toggleGroup={toggleGroup}
-        userScore={userInfo?.score || 0}
+        userScore={1000} // Default score for now
         isOpen={isMarketplaceOpen}
         onOpenChange={setIsMarketplaceOpen}
-        clinicRooms={userInfo?.clinicRooms || "[]"}
+        clinicRooms="[]" // Default empty value for now
       />
     </div>
   );

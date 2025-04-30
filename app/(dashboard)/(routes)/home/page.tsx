@@ -8,8 +8,6 @@ import { useUserActivity } from '@/hooks/useUserActivity';
 import { useFeatureUnlock } from "@/hooks/useFeatureUnlock";
 import { FEATURE_UNLOCK } from "@/components/navigation/HoverSidebar";
 import type { FetchedActivity } from "@/types";
-import { isToday } from "date-fns";
-import Summary from "./Summary";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import TestingSuit from "./TestingSuit";
@@ -17,25 +15,21 @@ import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import FlashcardDeck from "./FlashcardDeck";
 import PracticeTests from "./PracticeTests";
 import StreakPopup from "@/components/score/StreakDisplay";
-import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
+import { checkProStatus } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { useUIStore } from "@/store/slices/uiSlice";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
-import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
-import IntroVideoPlayer from "@/components/home/IntroVideoPlayer";
 // Import the extracted components from their new location
 import { LoadingSpinner } from "@/components/home/LoadingSpinner";
 import { ContentWrapper } from "@/components/home/ContentWrapper";
 import LockedFeatureOverlay from "@/components/LockedFeatureOverlay";
 
 /* ----------------------------------------- Types ------------------------------------------ */
-type KalypsoState = "wait" | "talk" | "end" | "start";
 type ChatbotContextType = { contentTitle: string; context: string } | null;
 
 // Memoize components that don't need frequent updates
-const MemoizedSummary = memo(Summary);
 const MemoizedSideBar = memo(SideBar);
 const MemoizedAdaptiveTutoring = memo(AdaptiveTutoring);
 
@@ -46,7 +40,7 @@ const HomePage: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { userInfo, refreshUserInfo, isSubscribed, setHasSeenIntroVideo } = useUser();
+  const { userInfo, refreshUserInfo, isSubscribed } = useUser();
   const [isLoadingUserInfo, setIsLoadingUserInfo] = useState(false);
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
@@ -64,7 +58,6 @@ const HomePage: React.FC = () => {
   });
   
   /* ----------------------------------------- Refs ---------------------------------------- */
-  const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
@@ -83,7 +76,6 @@ const HomePage: React.FC = () => {
   
   // UI state group
   const [uiState, setUIState] = useState({
-    kalypsoState: "start" as KalypsoState,
     showScorePopup: false,
     showStreakPopup: false,
     showReferralModal: false
@@ -182,21 +174,14 @@ const HomePage: React.FC = () => {
       console.log('[HomePage] Fully loaded and ready to display content');
     }
   }, [isLoadingUserInfo, loadingState.isLoading]);
-  
-  // Check if intro video has been seen from userInfo.onboardingInfo
-  const hasSeenIntroVideo = useMemo(() => {
-    const seen = userInfo?.onboardingInfo?.hasSeenIntroVideo || false;
-    console.log('[HomePage] hasSeenIntroVideo calculated:', seen);
-    return seen;
-  }, [userInfo]);
 
   // Debug mode check
   const isDebugMode = searchParams?.get('debug') === 'true';
 
-  // Get the default tab from query parameters or use KalypsoAI as default
+  // Get the default tab from query parameters or use AdaptiveTutoringSuite as default
   const defaultTab = useMemo(() => {
     const tabParam = searchParams?.get("tab");
-    return tabParam || "KalypsoAI";
+    return tabParam || "AdaptiveTutoringSuite";
   }, [searchParams]);
 
   /* ---- Memoized Values ---- */
@@ -416,15 +401,9 @@ const HomePage: React.FC = () => {
 
     // Use global navigation
     navigateHomeTab(tab);
-
-    if (tab === "Summary" && view) {
-      // Add context for the view
-      updateSubSection({ currentView: view });
-      router.push(`/home?tab=Summary&view=${view}`);
-    }
     
     // REMOVED: Activity tracking is now handled by the effect triggered by activePage changes
-  }, [router, navigateHomeTab, updateSubSection, currentStudyActivityId, endActivity]);
+  }, [router, navigateHomeTab, currentStudyActivityId, endActivity]);
 
   // Add an effect for activity tracking that responds to global state changes
   useEffect(() => {
@@ -466,27 +445,18 @@ const HomePage: React.FC = () => {
     }
   }, [currentStudyActivityId, activePage]);
 
-  const switchKalypsoState = useCallback((newState: KalypsoState) => {
-    updateUIState({ kalypsoState: newState });
-    if (kalypsoRef.current) {
-      kalypsoRef.current.src = `/kalypso${newState}.gif`;
-    }
-  }, [updateUIState]);
-
   const toggleChatBot = useCallback(() => {
     // Use global navigation instead of local state
-    navigateHomeTab("KalypsoAI");
+    navigateHomeTab("AdaptiveTutoringSuite");
   }, [navigateHomeTab]);
 
   /* ---------------------------------------- Memoized Values ---------------------------------------- */
   const pageTitle = useMemo(() => {
     switch (activePage) {
-      case "Summary": return "Statistics";
       case "Tests": return "Testing Suite";
       case "AdaptiveTutoringSuite": return "Adaptive Tutoring Suite";
       case "flashcards": return "Flashcards";
       case "CARS": return "Daily CARs Practice";
-      case "KalypsoAI": return "Kalypso";
       default: return "Home";
     }
   }, [activePage]);
@@ -549,15 +519,6 @@ const HomePage: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []); // No dependencies needed as the effect only runs once
-
-  useEffect(() => {
-    switchKalypsoState("start"); // Start with talking animation to encourage engagement
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [switchKalypsoState]);
 
   // Payment status effect
   useEffect(() => {
@@ -622,25 +583,13 @@ const HomePage: React.FC = () => {
     };
   }, [endActivity, currentStudyActivityId]);
 
-  // Handle when the intro video is completed
-  const handleIntroVideoComplete = useCallback(async () => {
-    try {
-      // Update the user's hasSeenIntroVideo status in global state and database
-      await setHasSeenIntroVideo(true);
-      toast.success("Introduction video completed!");
-    } catch (error) {
-      console.error("[HomePage] Failed to update intro video status:", error);
-      toast.error("Failed to update your profile. Please try again.");
-    }
-  }, [setHasSeenIntroVideo]);
-
   // Add the missing navigation effect back without the console.log
   // Update URL parameter effect to respect user navigation 
   useEffect(() => {
     // Only set default page if we're on the home page without a tab parameter
     // AND navigation hasn't been initialized yet
     if (pathname === '/home' && !searchParams?.has('tab') && !navigationInitializedRef.current) {
-      navigateHomeTab('KalypsoAI');
+      navigateHomeTab('AdaptiveTutoringSuite');
       navigationInitializedRef.current = true;
     }
   }, [pathname, searchParams, navigateHomeTab]);
@@ -694,32 +643,6 @@ const HomePage: React.FC = () => {
             <div className="relative overflow-visible">
               <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
                 {/* Main content area - conditional rendering based on active page */}
-                {(activePage === 'KalypsoAI' || !activePage) && (
-                  <div className="h-full overflow-hidden relative">
-                    {!hasSeenIntroVideo ? (
-                      <IntroVideoPlayer 
-                        onComplete={handleIntroVideoComplete}
-                      />
-                    ) : (
-                      <>
-                        <ChatContainer chatbotRef={chatbotRef} activities={activities} />
-                        {!isFeatureUnlocked(FEATURE_UNLOCK.KALYPSO_AI) && (
-                          <LockedFeatureOverlay featureId={FEATURE_UNLOCK.KALYPSO_AI} />
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-                {activePage === 'Summary' && (
-                  <div className="h-full overflow-hidden relative">
-                    <MemoizedSummary 
-                      handleSetTab={handleTabChange}
-                      isActive={true}
-                      chatbotRef={chatbotRef}
-                      userInfo={userInfo}
-                    />
-                  </div>
-                )}
                 {activePage === 'AdaptiveTutoringSuite' && (
                   <div className="h-full overflow-hidden relative">
                     <MemoizedAdaptiveTutoring 
@@ -809,13 +732,10 @@ const HomePage: React.FC = () => {
     isSubscribed,
     userInfo,
     router,
-    handleIntroVideoComplete,
-    hasSeenIntroVideo,
     // Add dependencies for new state structure
     uiState.showReferralModal,
     uiState.showStreakPopup,
     userData.userStreak,
-    uiState.kalypsoState,
     updateUIState,
     fetchActivities,
     setActivities,

@@ -7,7 +7,6 @@ import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle, Cat } from 'lucide-
 import { FaCheckCircle, FaYoutube } from 'react-icons/fa';
 import { toast } from "react-hot-toast";
 import { isToday, isSameDay, isTomorrow, format } from "date-fns";
-import RedditPosts from "@/components/RedditPosts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
@@ -20,7 +19,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
-import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";  
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
@@ -246,13 +244,6 @@ const SideBar: React.FC<SideBarProps> = ({
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="flex-grow overflow-hidden">
-          <CardContent className="p-4 h-full overflow-hidden">
-            <div className="h-full overflow-auto">
-              <RedditPosts />
             </div>
           </CardContent>
         </Card>
@@ -541,7 +532,14 @@ const SideBar: React.FC<SideBarProps> = ({
     } else if (content.type === 'tutors') {
         return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
-        return <HelpContentTestingSuite />;
+        return (
+          <div className="p-6 text-center">
+            <h3 className="text-lg font-medium mb-4">Help Resources</h3>
+            <p className="text-sm opacity-70">
+              Help content is currently being updated. Please check back later.
+            </p>
+          </div>
+        );
     } else if (content.type === 'tasks') {
         return renderTasks();
     } else if (content.type === 'leaderboard') {

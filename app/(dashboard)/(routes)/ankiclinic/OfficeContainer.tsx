@@ -739,7 +739,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
           onTouchEnd={handleTouchEnd}
           style={{ 
             cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'none' // Prevent browser handling of touch events
+            touchAction: 'none', // Prevent browser handling of touch events
+            pointerEvents: 'auto', // Ensure this element captures pointer events
           }}
         >
           <Stage
