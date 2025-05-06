@@ -49,6 +49,8 @@ interface AdaptiveTutoringProps {
   }>;
   onActivityChange: (type: string, location: string, metadata?: any) => Promise<void>;
   className?: string;
+  showTopButtons?: boolean;
+  hideTopicSelector?: boolean;
 }
 
 type PlatformType = "spotify" | "apple" | "mymcat";
@@ -71,6 +73,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   onActivityChange,
   className,
+  showTopButtons = true,
+  hideTopicSelector = false,
 }) => {
   const { toast } = useToast();
   const audio = useAudio();
@@ -742,7 +746,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   return (
-    <div className={`relative p-2 h-full flex flex-col overflow-visible ${className || ''}`}>
+    <div className={`relative ${hideTopicSelector ? 'pt-0' : 'p-2'} h-full flex flex-col overflow-visible ${className || ''}`}>
       {showConfetti && (
         <ReactConfetti
           width={window.innerWidth}
@@ -752,283 +756,283 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           gravity={0.2}
         />
       )}
-      <div className="flex items-stretch w-full mb-3">
-        <div className="flex-grow mr-[3.5%] ml-[1%]">
-          <div className="grid grid-cols-7 gap-3 ats-topic-icons">
-            {isLoading ? (
-              (
-                [
-                  "empty",
-                  "medicine",
-                  "study",
-                  "vaccine",
-                  "science",
-                  "education",
-                  "cat",
-                ] as const
-              ).map((theme, index) => (
-                <ThemedSkeleton key={index} theme={theme} />
-              ))
-            ) : (
-              <>
-                <div
-                  ref={emptyButtonRef}
-                  className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
-                  style={{
-                    backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                  }}
-                  onClick={() => {
-                    updateEmptyButtonPosition();
-                    setIsSettingsOpen(!isSettingsOpen);
-                  }}
-                >
-                  <div className="relative w-full h-full flex flex-col justify-center items-center">
-                    <div className="settings-container flex-col">
-                      <svg
-                        className="settings-icon w-8 h-8"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                          className="text-[--theme-text-color]"
-                        />
-                      </svg>
-                      <span className="text-xs font-semibold text-[--theme-text-color]">
-                        SETTINGS
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                {checkedCategories?.slice(0, 6).map((category, index) => (
+      {!hideTopicSelector && (
+        <div className="flex items-stretch w-full mb-3">
+          <div className="flex-grow mr-[3.5%] ml-[1%]">
+            <div className="grid grid-cols-7 gap-3 ats-topic-icons">
+              {isLoading ? (
+                (
+                  [
+                    "empty",
+                    "medicine",
+                    "study",
+                    "vaccine",
+                    "science",
+                    "education",
+                    "cat",
+                  ] as const
+                ).map((theme, index) => (
+                  <ThemedSkeleton key={index} theme={theme} />
+                ))
+              ) : (
+                <>
                   <div
-                    key={category.id}
-                    className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? "specific-topic-icon" : ""}`}
+                    ref={emptyButtonRef}
+                    className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
                     style={{
                       backgroundColor: "var(--theme-adaptive-tutoring-color)",
                       boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "var(--theme-adaptive-tutoring-boxShadow-hover)";
-                      e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.zIndex = "30";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "var(--theme-adaptive-tutoring-boxShadow)";
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.zIndex = "10";
-                    }}
-                    onClick={(e) => {
-                      if (runTutorialPart1) {
-                        e.preventDefault();
-                        return;
-                      }
-                      handleCardClick(index);
+                    onClick={() => {
+                      updateEmptyButtonPosition();
+                      setIsSettingsOpen(!isSettingsOpen);
                     }}
                   >
                     <div className="relative w-full h-full flex flex-col justify-center items-center">
-                      <div className="absolute inset-0 flex flex-col justify-between items-center">
-                        <div className="m-auto transform scale-90">
-                          <Icon
-                            name={category.icon}
-                            className="w-6 h-6"
-                            color={category.color}
+                      <div className="settings-container flex-col">
+                        <svg
+                          className="settings-icon w-8 h-8"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                            className="text-[--theme-text-color]"
                           />
-                        </div>
-                        <p className="text-[--theme-text-color] text-xs p-1 truncate w-full text-center">
-                          {category?.conceptCategory || "No title"}
-                        </p>
+                        </svg>
+                        <span className="text-xs font-semibold text-[--theme-text-color]">
+                          SETTINGS
+                        </span>
                       </div>
                     </div>
                   </div>
-                ))}
-              </>
-            )}
+                  {checkedCategories?.slice(0, 6).map((category, index) => (
+                    <div
+                      key={category.id}
+                      className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? "specific-topic-icon" : ""}`}
+                      style={{
+                        backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                        boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow =
+                          "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                        e.currentTarget.style.transform = "scale(1.05)";
+                        e.currentTarget.style.zIndex = "30";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow =
+                          "var(--theme-adaptive-tutoring-boxShadow)";
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.zIndex = "10";
+                      }}
+                      onClick={(e) => {
+                        if (runTutorialPart1) {
+                          e.preventDefault();
+                          return;
+                        }
+                        handleCardClick(index);
+                      }}
+                    >
+                      <div className="relative w-full h-full flex flex-col justify-center items-center">
+                        <div className="absolute inset-0 flex flex-col justify-between items-center">
+                          <div className="m-auto transform scale-90">
+                            <Icon
+                              name={category.icon}
+                              className="w-6 h-6"
+                              color={category.color}
+                            />
+                          </div>
+                          <p className="text-[--theme-text-color] text-xs p-1 truncate w-full text-center">
+                            {category?.conceptCategory || "No title"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         </div>
-        <div className="col-span-1">
-          <div className="grid grid-cols-1 gap-2 mb-4 ml-14">
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-12 text-[--theme-text-color] gap-3 px-2 flex-grow overflow-visible">
+      )}
+      <div className={`grid grid-cols-12 text-[--theme-text-color] gap-3 ${hideTopicSelector ? 'px-0' : 'px-2'} flex-grow overflow-visible`}>
         <div className="col-span-11 h-full overflow-visible">
           <div
-            className="bg-[--theme-adaptive-tutoring-color] rounded-lg px-4 h-full flex flex-col overflow-visible"
+            className={`bg-[--theme-adaptive-tutoring-color] rounded-lg ${hideTopicSelector ? 'px-2' : 'px-4'} h-full flex flex-col overflow-visible`}
             style={{
               boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
             }}
           >
-            <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2 relative">
-              <div className="flex items-center justify-center gap-4">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={handleCameraClick}
-                        className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                      >
-                        <div className="w-6 h-6 relative theme-box">
-                          <Image
-                            src="/camera.svg"
-                            layout="fill"
-                            objectFit="contain"
-                            alt="camera"
-                            className="theme-svg"
-                          />
-                        </div>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                      <p className="text-white">Video Lectures</p>
-                    </TooltipContent>
-                  </Tooltip>
+            {showTopButtons && (
+              <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2 relative">
+                <div className="flex items-center justify-center gap-4">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleCameraClick}
+                          className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                        >
+                          <div className="w-6 h-6 relative theme-box">
+                            <Image
+                              src="/camera.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="camera"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                        <p className="text-white">Video Lectures</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={handleBookClick}
-                        className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                      >
-                        <div className="w-6 h-6 relative theme-box">
-                          <Image
-                            src="/bookopened.svg"
-                            layout="fill"
-                            objectFit="contain"
-                            alt="book opened"
-                            className="theme-svg"
-                          />
-                        </div>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                      <p className="text-white">Reading Materials</p>
-                    </TooltipContent>
-                  </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleBookClick}
+                          className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                        >
+                          <div className="w-6 h-6 relative theme-box">
+                            <Image
+                              src="/bookopened.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="book opened"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                        <p className="text-white">Reading Materials</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-                  <div className="flex items-center relative group">
-                    <div className="flex items-center">
-                      <p className="text-m px-10 flex items-center">
-                        {selectedCategory &&
-                          categories.find(
-                            (cat) =>
-                              cat.conceptCategory === selectedCategory &&
-                              cat.isCompleted
-                          ) && (
-                            <span className="flex items-center text-green-500 mr-2">
-                              <Check className="w-4 h-4" />
-                              {categories.find(
-                                (cat) => cat.conceptCategory === selectedCategory
-                              )?.conceptMastery !== undefined && 
-                              categories.find(
-                                (cat) => cat.conceptCategory === selectedCategory
-                              )?.conceptMastery! < 0.3 && (
-                                <span className="text-xs text-green-500 ml-1">(Review Needed)</span>
-                              )}
-                            </span>
-                          )}
-                        {selectedCategory || ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={handleQuizTabClick}
-                        className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                      >
-                        <div className="w-7 h-7 relative theme-box">
-                          <Image
-                            src="/exam.svg"
-                            layout="fill"
-                            objectFit="contain"
-                            alt="exam"
-                            className="theme-svg"
-                          />
-                        </div>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                      <p className="text-white">Practice Questions</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip delayDuration={0}>
-                    <DropdownMenu>
+                    <div className="flex items-center relative group">
                       <div className="flex items-center">
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 cat-icon">
-                              <div className="w-7 h-7 relative theme-box">
-                                <Image
-                                  src="/cat.svg"
-                                  alt="AI Chat"
-                                  width={28}
-                                  height={28}
-                                  className="theme-svg w-7 h-7"
-                                />
-                              </div>
-                            </button>
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
-                          <p className="text-white">Ask Kalypso for Help</p>
-                        </TooltipContent>
+                        <p className="text-m px-10 flex items-center">
+                          {selectedCategory &&
+                            categories.find(
+                              (cat) =>
+                                cat.conceptCategory === selectedCategory &&
+                                cat.isCompleted
+                            ) && (
+                              <span className="flex items-center text-green-500 mr-2">
+                                <Check className="w-4 h-4" />
+                                {categories.find(
+                                  (cat) => cat.conceptCategory === selectedCategory
+                                )?.conceptMastery !== undefined && 
+                                categories.find(
+                                  (cat) => cat.conceptCategory === selectedCategory
+                                )?.conceptMastery! < 0.3 && (
+                                  <span className="text-xs text-green-500 ml-1">(Review Needed)</span>
+                                )}
+                              </span>
+                            )}
+                          {selectedCategory || ""}
+                        </p>
                       </div>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => handleCatClick("explain")}>
-                          Explain This
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleCatClick("question")}>
-                          Question Me
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+                    </div>
 
-              {selectedCategory && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const category = categories.find(cat => cat.conceptCategory === selectedCategory);
-                          if (category?.isCompleted) return;
-                          setSelectedTopicToComplete({
-                            id: category?.id || "",
-                            name: selectedCategory
-                          });
-                          setIsCompleteDialogOpen(true);
-                        }}
-                        className={`absolute top-2 right-0 p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 ${
-                          categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
-                            ? 'text-green-500' 
-                            : 'text-[--theme-text-color]'
-                        }`}
-                      >
-                        <Check className="w-7 h-7" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="bg-[#001226] border border-[#5F7E92]">
-                      <p className="text-white">
-                        {categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
-                          ? 'Topic completed' 
-                          : 'Mark topic as completed'
-                        }
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleQuizTabClick}
+                          className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                        >
+                          <div className="w-7 h-7 relative theme-box">
+                            <Image
+                              src="/exam.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="exam"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                        <p className="text-white">Practice Questions</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip delayDuration={0}>
+                      <DropdownMenu>
+                        <div className="flex items-center">
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 cat-icon">
+                                <div className="w-7 h-7 relative theme-box">
+                                  <Image
+                                    src="/cat.svg"
+                                    alt="AI Chat"
+                                    width={28}
+                                    height={28}
+                                    className="theme-svg w-7 h-7"
+                                  />
+                                </div>
+                              </button>
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                            <p className="text-white">Ask Kalypso for Help</p>
+                          </TooltipContent>
+                        </div>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handleCatClick("explain")}>
+                            Explain This
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCatClick("question")}>
+                            Question Me
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {selectedCategory && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const category = categories.find(cat => cat.conceptCategory === selectedCategory);
+                            if (category?.isCompleted) return;
+                            setSelectedTopicToComplete({
+                              id: category?.id || "",
+                              name: selectedCategory
+                            });
+                            setIsCompleteDialogOpen(true);
+                          }}
+                          className={`absolute top-2 right-0 p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 ${
+                            categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
+                              ? 'text-green-500' 
+                              : 'text-[--theme-text-color]'
+                          }`}
+                        >
+                          <Check className="w-7 h-7" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-[#001226] border border-[#5F7E92]">
+                        <p className="text-white">
+                          {categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted 
+                            ? 'Topic completed' 
+                            : 'Mark topic as completed'
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            )}
 
             <div className="p-2 flex-grow overflow-y-auto scrollbar-hide">
               {isLoading ? (
@@ -1038,20 +1042,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   {contentType === "video" &&
                     currentContent &&
                     currentContent.type === "video" && (
-                      <div className="h-[calc(100vh-23rem)]">
-                        <ReactPlayer
-                          className="w-full h-full"
-                          url={currentContent.link}
-                          playing={isPlaying}
-                          width="100%"
-                          height="100%"
-                          onProgress={({ playedSeconds }) =>
-                            setPlayedSeconds(playedSeconds)
-                          }
-                          onEnded={() => setIsPlaying(false)}
-                          controls={true}
-                        />
-                        <div className="mt-4 flex justify-between items-center">
+                      <div className="flex flex-col h-full">
+                        <div className="flex-grow min-h-0">
+                          <ReactPlayer
+                            className="w-full h-full"
+                            url={currentContent.link}
+                            playing={isPlaying}
+                            width="100%"
+                            height="100%"
+                            onProgress={({ playedSeconds }) =>
+                              setPlayedSeconds(playedSeconds)
+                            }
+                            onEnded={() => setIsPlaying(false)}
+                            controls={true}
+                          />
+                        </div>
+                        <div className="mt-4 flex justify-between items-center flex-shrink-0">
                           <Collapsible open={isSummaryOpen}>
                             <CollapsibleTrigger
                               className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
@@ -1097,11 +1103,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   {contentType === "reading" &&
                     currentContent &&
                     currentContent.type === "reading" && (
-                      <div className="h-[calc(100vh-20.5rem)] overflow-y-auto">
-                        <div
-                          className="relative"
-                          style={{ height: "calc(100% - 2.5rem)" }}
-                        >
+                      <div className="flex flex-col h-full">
+                        <div className="relative flex-grow min-h-0">
                           <Dialog
                             open={isFullScreen}
                             onOpenChange={setIsFullScreen}
@@ -1174,7 +1177,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             onLoad={() => setIsPdfLoading(false)}
                           ></iframe>
                         </div>
-                        <div className="mt-4 flex justify-between items-center">
+                        <div className="mt-4 flex justify-between items-center flex-shrink-0">
                           <Collapsible open={isSummaryOpen}>
                             <CollapsibleTrigger
                               className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
@@ -1217,7 +1220,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       </div>
                     )}
                   {contentType === "quiz" && selectedCategory && (
-                    <div className="h-[calc(100vh-23rem)]">
+                    <div className="h-full">
                       <Quiz
                         category={selectedCategory}
                         shuffle={true}
@@ -1232,7 +1235,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
 
         <div className="col-span-1">
-          <div className="h-[calc(100vh-18rem)] overflow-y-auto">
+          <div className="h-full overflow-y-auto">
             {isLoading ? (
               Array(5)
                 .fill(0)

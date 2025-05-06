@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sprite } from '@pixi/react';
 import { Texture } from 'pixi.js';
 import * as PIXI from 'pixi.js';

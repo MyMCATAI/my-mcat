@@ -59,6 +59,7 @@ interface SideBarProps {
   sidebarRef?: React.MutableRefObject<{
     activateChatTab: () => void;
   } | null>;
+  onStartAssignedHomework?: () => void;
 }
 
 type TabContent = 
@@ -79,10 +80,12 @@ const SideBar: React.FC<SideBarProps> = ({
   onActivitiesUpdate,
   isSubscribed,
   showTasks = true,
-  sidebarRef
+  sidebarRef,
+  onStartAssignedHomework
 }) => {
   const { userInfo } = useUserInfo();
   const audio = useAudio();
+  const router = useRouter();
   
   // Initialize audio context when component mounts
   useEffect(() => {
@@ -300,90 +303,69 @@ const SideBar: React.FC<SideBarProps> = ({
     );
   };
 
-  const renderTutors = (tutors: Tutor[]) => (
-    <div className="h-full flex flex-col">
-      <ScrollArea className="flex-grow">
-        <div className="pb-4">
-          <div className="mb-3 flex justify-center">
-            <TutorBookingDialog />
+  const renderTutors = () => {
+    return (
+      <div className="flex flex-col h-full p-2 space-y-4">
+        <div className="bg-[--theme-leaguecard-color] rounded-lg p-5 shadow-sm flex flex-col items-center">
+          <div className="flex flex-col items-center gap-3 mb-4 w-full">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-[--theme-hover-color]">
+              <Image 
+                src="/tutors/SaanviA.png" 
+                alt="Saanvi" 
+                fill 
+                className="object-cover"
+              />
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-semibold">Saanvi</h3>
+              <p className="text-sm opacity-75">MCAT Expert Tutor</p>
+            </div>
           </div>
-
-          {tutors.map((tutor, index) => {
-            const firstName = tutor.name.split(/[\s.]/, 1)[0];
+          
+          <div className="mb-5 text-center px-2">
+            <p className="text-sm leading-relaxed">
+              With 5+ years of teaching experience and a 524 MCAT score (99th percentile), 
+              Saanvi specializes in CARS and Biochemistry. She's helped 200+ students achieve their target scores.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 w-full mb-6">
+            <button 
+              className="py-3 px-4 bg-[--theme-button-color] hover:bg-[--theme-hover-color] 
+                       text-[--theme-text-color] hover:text-[--theme-hover-text]
+                       rounded-lg transition-colors duration-200 font-semibold"
+            >
+              Question
+            </button>
             
-            return (
-              <div 
-                key={index} 
-                className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md"
-              >
-                <div className="flex items-start">
-                  <div className="mr-4 flex-shrink-0">
-                    <Image
-                      src={`/tutors/${tutor.name.split('.')[0].replace(/\s+/g, '')}.png`}
-                      alt={tutor.name}
-                      width={80}
-                      height={80}
-                      className="rounded-lg border border-[--theme-border-color] object-cover xl:w-24 xl:h-24"
-                    />
-                  </div>
-                  <div className="flex-grow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-[--theme-text-color]">{tutor.name}</h3>
-                        {tutorExpertise[tutor.name] && (
-                          <div className="flex items-center gap-1">
-                            {tutorExpertise[tutor.name].map((expertise, i) => (
-                              <span
-                                key={i}
-                                className="px-2 py-0.5 text-xs rounded-full bg-[--theme-hover-color] text-[--theme-hover-text]"
-                              >
-                                {expertise}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-sm text-[--theme-text-color] opacity-80">{tutor.university}</p>
-                    <div className="mt-1 flex items-center">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => {
-                          const starValue = i + 1;
-                          const isHalfStar = tutor.stars % 1 !== 0 && Math.ceil(tutor.stars) === starValue;
-                          
-                          return isHalfStar ? (
-                            <StarHalf
-                              key={i}
-                              className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                            />
-                          ) : (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < tutor.stars 
-                                  ? "fill-yellow-400 text-yellow-400" 
-                                  : "fill-none text-gray-300"
-                              }`}
-                            />
-                          );
-                        })}
-                        <span className="ml-2 text-sm text-[--theme-text-color] opacity-80">
-                          ({tutor.reviews})
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm text-[--theme-text-color] opacity-90">
-                  {getTutorDescription(tutor.name)}
-                </p>
-              </div>
-            );
-          })}
+            <button 
+              className="py-3 px-4 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] 
+                       text-[--theme-text-color] hover:text-[--theme-hover-text]
+                       border border-[--theme-border-color]
+                       rounded-lg transition-colors duration-200 font-semibold"
+            >
+              Upload
+            </button>
+          </div>
+          
+          <button 
+            className="w-full py-3 px-4 bg-[--theme-button-color] hover:bg-[--theme-hover-color] 
+                     text-[--theme-text-color]
+                     hover:text-[--theme-hover-text]
+                     rounded-lg transition-colors duration-200 font-semibold
+                     flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12" y2="16"/>
+            </svg>
+            Schedule Session
+          </button>
         </div>
-      </ScrollArea>
-    </div>
-  );
+      </div>
+    );
+  };
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -425,6 +407,57 @@ const SideBar: React.FC<SideBarProps> = ({
       );
     }
 
+    // Create a filtered version of todayActivities with only the activities we want to show
+    // Keep only "Assigned Homework" and filter out all variations of Daily Study tasks and other homework variations
+    const prioritizedActivities = todayActivities.filter(activity => {
+      // Keep only the specific "Assigned Homework" entry
+      if (activity.activityTitle === "Assigned Homework") {
+        return true;
+      }
+      
+      // Filter out all other homework variations (case insensitive)
+      if (activity.activityTitle.toLowerCase().includes("homework") || 
+          activity.activityTitle.toLowerCase().includes("assigned")) {
+        return false;
+      }
+      
+      // Filter out Daily Study tasks
+      if (activity.activityTitle.toLowerCase().includes("daily study")) {
+        return false;
+      }
+      
+      // Keep everything else
+      return true;
+    });
+    
+    // Then ensure each activity title appears only once (keeping the first occurrence)
+    const seenActivityTitles = new Set<string>();
+    const uniqueActivities = prioritizedActivities.filter(activity => {
+      if (seenActivityTitles.has(activity.activityTitle)) {
+        return false;
+      }
+      seenActivityTitles.add(activity.activityTitle);
+      return true;
+    });
+
+    // Add a reset function that clears all completed tasks (for demo purposes only)
+    const resetTasksForDemo = () => {
+      // Make a deep copy of activities and mark all tasks as uncompleted
+      const resetActivities = todayActivities.map(activity => ({
+        ...activity,
+        tasks: activity.tasks?.map(task => ({
+          ...task,
+          completed: false
+        })) || []
+      }));
+      
+      // Update only the local state without persisting to the database
+      setTodayActivities(resetActivities);
+      
+      // Show toast to confirm reset
+      toast.success("All tasks reset for demo!");
+    };
+
     return (
       <div className="h-full flex flex-col">
         <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg">
@@ -445,21 +478,30 @@ const SideBar: React.FC<SideBarProps> = ({
                 ? "Tomorrow"
                 : format(currentDate, 'EEEE, MMMM d')}
           </span>
-          <button
-            onClick={() => {
-              const newDate = new Date(currentDate);
-              newDate.setDate(newDate.getDate() + 1);
-              setCurrentDate(newDate);
-            }}
-            className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={resetTasksForDemo}
+              className="text-xs p-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded"
+              title="Reset tasks for demo"
+            >
+              Reset
+            </button>
+            <button
+              onClick={() => {
+                const newDate = new Date(currentDate);
+                newDate.setDate(newDate.getDate() + 1);
+                setCurrentDate(newDate);
+              }}
+              className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         
         <ScrollArea className="flex-grow mt-4">
           <div className="px-4 space-y-6 pb-4">
-            {todayActivities.map((activity) => (
+            {uniqueActivities.map((activity) => (
               <div key={activity.id} className="mb-6">
                 <button
                   className={`w-full py-2 px-3 
@@ -540,7 +582,7 @@ const SideBar: React.FC<SideBarProps> = ({
               </div>
             ))}
 
-            {todayActivities.length === 0 && (
+            {uniqueActivities.length === 0 && (
               <p className="text-center italic">
                 No activities scheduled for this day
               </p>
@@ -579,7 +621,7 @@ const SideBar: React.FC<SideBarProps> = ({
     if (content.type === 'insights') {
         return renderInsights();
     } else if (content.type === 'tutors') {
-        return renderTutors(content.schools);
+        return renderTutors();
     } else if (content.type === 'tutorial') {
         return <HelpContentTestingSuite />;
     } else if (content.type === 'tasks') {
@@ -639,10 +681,17 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   useEffect(() => {
+    // Filter activities for the selected date
     const activitiesForDate = initialActivities.filter((activity: Activity) => 
       isSameDay(new Date(activity.scheduledDate), currentDate)
     );
-    setTodayActivities(activitiesForDate);
+    
+    // Deduplicate activities by ID to ensure each appears only once
+    const uniqueActivities = Array.from(
+      new Map(activitiesForDate.map(item => [item.id, item])).values()
+    );
+    
+    setTodayActivities(uniqueActivities);
   }, [initialActivities, currentDate]);
 
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
@@ -692,33 +741,21 @@ const SideBar: React.FC<SideBarProps> = ({
       // Call onActivitiesUpdate to refresh parent state
       onActivitiesUpdate();
 
-      // Check if all tasks are completed for this activity
-      const allTasksCompleted = updatedTasks.every((task) => task.completed);
-      if (allTasksCompleted) {
-        // Play levelup sound
+      // Reward a coin for EACH task completion
+      if (completed && isToday(new Date(activity.scheduledDate))) {
+        // Play sound for completion
         audio.playSound('levelup');
         
-        // Get activity details from backend
-        const activityResponse = await fetch(`/api/calendar-activity`);
-        const activities = await activityResponse.json();
-        const completedActivity = activities.find((a: Activity) => a.id === activityId);
-
-        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
-          // Update user coin count
-          await fetch("/api/user-info", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: 1 }),
-          });
-          
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
-          );
-        } else {
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}!`
-          );
-        }
+        // Update user coin count
+        await fetch("/api/user-info", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: 1 }),
+        });
+        
+        toast.success(
+          `You've completed the task: ${activity.tasks[taskIndex].text}! You earned a coin!`
+        );
       }
 
       // Check if ALL activities have ALL tasks completed
@@ -820,8 +857,6 @@ const SideBar: React.FC<SideBarProps> = ({
     return atsActivity.tasks || [];
   }
 
-  const router = useRouter();
-
   const handleButtonClick = (section: string) => {
     switch (section) {
       case "MyMCAT Daily CARs":
@@ -836,6 +871,15 @@ const SideBar: React.FC<SideBarProps> = ({
         break;
       case "Anki Clinic":
         router.push("/ankiclinic");
+        break;
+      case "Assigned Homework":
+        if (currentPage === "ankiclinic" && onStartAssignedHomework) {
+          // If we're already in the clinic and have the callback, use it
+          onStartAssignedHomework();
+        } else {
+          // Otherwise navigate to the clinic with the query param
+          router.push("/ankiclinic?startGame=true");
+        }
         break;
       case "UWorld":
         setShowUWorldPopup(true);
@@ -888,6 +932,60 @@ const SideBar: React.FC<SideBarProps> = ({
       }
     }
   };
+
+  // Move useRef to the top level of the component
+  const specificTasksHasRun = useRef(false);
+
+  // Add this function to ensure your specific tasks are shown
+  useEffect(() => {
+    const ensureSpecificTasks = async () => {
+      // Only modify activities for today
+      if (!isToday(currentDate)) return;
+      
+      // Check if any homework activity already exists for today (using looser matching)
+      const homeworkExists = todayActivities.some(activity => 
+        activity.activityTitle.toLowerCase().includes("homework") || 
+        activity.activityTitle.toLowerCase().includes("assigned")
+      );
+      
+      // Only create the activity if it doesn't exist and we have activities loaded
+      if (!homeworkExists && todayActivities.length >= 0) {
+        try {
+          // Create a new daily activity with the specific tasks
+          const response = await fetch("/api/calendar-activity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scheduledDate: new Date().toISOString(),
+              activityTitle: "Homework",
+              activityText: "Complete these tasks to earn coins",
+              hours: 2,
+              activityType: "study",
+              tasks: [
+                { text: "Watch two videos", completed: false },
+                { text: "Complete two quizzes", completed: false },
+                { text: "Do one verbal passage", completed: false },
+                { text: "Message tutor a report", completed: false }
+              ]
+            })
+          });
+          
+          if (response.ok) {
+            // Refresh activities
+            onActivitiesUpdate();
+          }
+        } catch (error) {
+          console.error("Error creating tutor homework:", error);
+        }
+      }
+    };
+    
+    // Use the ref that was defined at the top level
+    if (isToday(currentDate) && !specificTasksHasRun.current) {
+      specificTasksHasRun.current = true;
+      ensureSpecificTasks();
+    }
+  }, [todayActivities, currentDate, onActivitiesUpdate]);
 
   return (
     <div className="flex flex-col h-full">

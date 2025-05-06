@@ -117,16 +117,16 @@ export const getRandomMessage = (messages: string[]): string => {
   return messages[Math.floor(Math.random() * messages.length)];
 };
 
-export const getWelcomeMessage = (firstName: string = ''): MessageResponse => {
+export const getWelcomeMessage = (name?: string): MessageResponse => {
   const timeOfDay = getTimeOfDay();
-  const greeting = `Good ${timeOfDay}, Dr. ${firstName}!`;
+  const greeting = `Good ${timeOfDay}, Dr. ${name || ''}!`;
   const message = getRandomMessage(welcomeMessages[timeOfDay]);
   return { greeting, message };
 };
 
-export const getSuccessMessage = (firstName: string = ''): MessageResponse => {
+export const getSuccessMessage = (name?: string): MessageResponse => {
   const timeOfDay = getTimeOfDay();
-  const greeting = `Excellent work, Dr. ${firstName}!`;
+  const greeting = `Excellent work, Dr. ${name || ''}!`;
   const message = getRandomMessage(successMessages[timeOfDay]);
   return { greeting, message };
 }; 

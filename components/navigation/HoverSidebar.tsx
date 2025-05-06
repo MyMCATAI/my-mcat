@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useRef, useMemo} from "react";
 import { useRouter } from "next/navigation";
-import { Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock } from "lucide-react";
+import { Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock, Home, MoreHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
 import { useNavigation, useUser } from "@/store/selectors";
 import { createPortal } from 'react-dom';
 import Image from "next/image";
@@ -19,7 +18,8 @@ export enum FEATURE_UNLOCK {
   CARS = "cars",
   TUTORING = "tutoring",
   TESTS = "tests",
-  ANKICLINIC = "ankiclinic"
+  ANKICLINIC = "ankiclinic",
+  DORM = "dorm"
 }
 
 interface Task {
@@ -48,6 +48,8 @@ interface NavigationItem {
   unlockCost?: number;
   description?: string;
   photo?: string;
+  isGroupHeader?: boolean;
+  groupItems?: NavigationItem[];
 }
 
 interface HoverSidebarProps {
@@ -60,45 +62,13 @@ interface HoverSidebarProps {
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
-    id: FEATURE_UNLOCK.KALYPSO_AI,
-    name: "Kalypso AI",
-    tab: "KalypsoAI",
-    icon: <Brain className="w-5 h-5" />,
-    requiresUnlock: true,
-    unlockCost: 5,
-    description: "Your personal AI assistant for MCAT preparation. Get personalized study guidance, a custom study plan generator, and answers to your questions.",
-    photo: "/kalypso/kalypsocalendar.png"
-  },
-  {
-    id: FEATURE_UNLOCK.CARS,
-    name: "CARS Suite",
-    tab: "CARS",
-    icon: <BookOpen className="w-5 h-5" />,
-    requiresUnlock: true,
-    unlockCost: 15,
-    description: "Critical Analysis and Reasoning Skills practice with advanced tools and strategies.",
-    photo: "/kalypso/kalypotesting.png"
-  },
-  {
-    id: FEATURE_UNLOCK.TUTORING,
-    name: "Adaptive Content",
-    tab: "AdaptiveTutoringSuite",
-    icon: <GraduationCap className="w-5 h-5" />,
-    requiresUnlock: true,
-    unlockCost: 20,
-    description: "Adaptive learning system that adjusts to your knowledge gaps and provides content currated for you.",
-    photo: "/kalypso/kalypsoteaching.png"
-  },
-  
-  {
-    id: FEATURE_UNLOCK.TESTS,
-    name: "Practice Test Review",
-    tab: "Tests",
-    icon: <Book className="w-5 h-5" />,
-    requiresUnlock: true,
-    unlockCost: 30,
-    description: "Review your full-length MCAT practice tests with focused feedback and performance tracking.",
-    photo: "/kalypso/kalypsodiagnostic.png"
+    id: FEATURE_UNLOCK.DORM,
+    name: "Dorm",
+    tab: "Dorm",
+    icon: <Home className="w-5 h-5" />,
+    requiresUnlock: false,
+    description: "Your personal student dormitory where you can relax and personalize your space.",
+    photo: "/dorm/dorm-preview.png"
   },
   {
     id: FEATURE_UNLOCK.ANKICLINIC,
@@ -108,6 +78,45 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     requiresUnlock: false,
     description: "Earn coins while mastering concepts through flashcards in a fun clinical setting.",
     photo: "/kalypso/KalypsoPicture.png"
+  },
+  {
+    id: 'more-section' as FEATURE_UNLOCK,
+    name: "More",
+    tab: "",
+    icon: <MoreHorizontal className="w-5 h-5" />,
+    isGroupHeader: true,
+    groupItems: [
+      {
+        id: FEATURE_UNLOCK.CARS,
+        name: "CARS Suite",
+        tab: "CARS",
+        icon: <BookOpen className="w-5 h-5" />,
+        requiresUnlock: true,
+        unlockCost: 15,
+        description: "Critical Analysis and Reasoning Skills practice with advanced tools and strategies.",
+        photo: "/kalypso/kalypotesting.png"
+      },
+      {
+        id: FEATURE_UNLOCK.TUTORING,
+        name: "Adaptive Content",
+        tab: "AdaptiveTutoringSuite",
+        icon: <GraduationCap className="w-5 h-5" />,
+        requiresUnlock: true,
+        unlockCost: 20,
+        description: "Adaptive learning system that adjusts to your knowledge gaps and provides content currated for you.",
+        photo: "/kalypso/kalypsoteaching.png"
+      },
+      {
+        id: FEATURE_UNLOCK.TESTS,
+        name: "Practice Test Review",
+        tab: "Tests",
+        icon: <Book className="w-5 h-5" />,
+        requiresUnlock: true,
+        unlockCost: 30,
+        description: "Review your full-length MCAT practice tests with focused feedback and performance tracking.",
+        photo: "/kalypso/kalypsodiagnostic.png"
+      },
+    ]
   },
 ];
 
@@ -122,11 +131,14 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
+  const [visibleSection, setVisibleSection] = useState<'nav'>('nav');
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<NavigationItem | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    'more-section': false
+  });
   
   // Use navigation selector hook
   const { activePage, navigateHomeTab } = useNavigation();
@@ -139,7 +151,12 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   
   // Check if any navigation items are unlocked
   const hasAnyUnlocked = useMemo(() => {
-    return NAVIGATION_ITEMS.some(item => 
+    // Check both main items and group items
+    const allItems = NAVIGATION_ITEMS.flatMap(item => 
+      item.groupItems ? [item, ...item.groupItems] : [item]
+    );
+    
+    return allItems.some(item => 
       item.requiresUnlock && isFeatureUnlocked(item.id)
     );
   }, [isFeatureUnlocked]);
@@ -155,7 +172,10 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       return 'ankiclinic';
     }
     // Otherwise use the global navigation state
-    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === activePage);
+    const allItems = NAVIGATION_ITEMS.flatMap(item => 
+      item.groupItems ? [item, ...item.groupItems] : [item]
+    );
+    const matchingItem = allItems.find(item => item.tab === activePage);
     return matchingItem ? matchingItem.id : "kalypso-ai";
   })();
   
@@ -220,7 +240,20 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     setIsVisible(!isVisible);
   };
 
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   const handleNavigationClick = (item: NavigationItem) => {
+    // If it's a group header, toggle the group
+    if (item.isGroupHeader) {
+      toggleGroup(item.id as string);
+      return;
+    }
+
     // Ensure navigation state is initialized
     if (typeof navigateHomeTab !== 'function') {
       console.error('Navigation not initialized yet');
@@ -232,6 +265,12 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       // Open unlock dialog instead of navigating
       setSelectedItem(item);
       setUnlockDialogOpen(true);
+      return;
+    }
+
+    // Special case for Dorm - redirect to /dorm route
+    if (item.id === FEATURE_UNLOCK.DORM) {
+      router.push('/dorm');
       return;
     }
 
@@ -255,27 +294,137 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
       return;
     }
     
-    // If we're on ankiclinic, navigate to the newly unlocked section
-    const item = NAVIGATION_ITEMS.find(item => item.id === itemId);
+    // Find the item whether it's in main list or group items
+    const allItems = NAVIGATION_ITEMS.flatMap(item => 
+      item.groupItems ? [item, ...item.groupItems] : [item]
+    );
+    const item = allItems.find(item => item.id === itemId);
+    
     if (item && currentPage === 'ankiclinic') {
       router.push(`/home?tab=${item.tab}`);
     }
   };
   
-  /* ---- Render Methods ----- */
-  const renderHelp = () => {
+  if (!mounted) return null;
+
+  const renderNavigationItem = (item: NavigationItem, isGroupItem = false) => {
+    const isUnlocked = isFeatureUnlocked(item.id);
+    // Special highlight for Kalypso AI when not unlocked
+    const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
+    const isActive = activeTab === item.id;
+
+    if (item.isGroupHeader) {
+      return (
+        <div key={item.id} className="space-y-1">
+          <button
+            className={cn(
+              "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300",
+              "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            )}
+            onClick={() => toggleGroup(item.id as string)}
+          >
+            <div className="flex-shrink-0">
+              {item.icon}
+            </div>
+            <span className="font-medium">
+              {item.name}
+            </span>
+            <svg 
+              className={cn(
+                "ml-auto w-5 h-5 transition-transform",
+                expandedGroups[item.id as string] ? "transform rotate-180" : ""
+              )} 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          
+          {expandedGroups[item.id as string] && item.groupItems && (
+            <div className="pl-3 ml-2 border-l-2 border-[--theme-border-color] space-y-1">
+              {item.groupItems.map(groupItem => 
+                renderNavigationItem(groupItem, true)
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
-      <div className="mt-4">
-        <ScrollArea className="h-[calc(100vh-15rem)]">
-          <div className="px-3">
-            <HelpContentTestingSuite />
+      <button
+        key={item.id}
+        className={cn(
+          "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
+          isActive
+            ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+            : isKalypsoHighlighted 
+                ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
+                : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]",
+          isGroupItem && "text-sm"
+        )}
+        onClick={() => {
+          handleNavigationClick(item);
+          if (isMobile) {
+            // Auto-close sidebar after navigation on mobile
+            setIsVisible(false);
+          }
+        }}
+      >
+        {/* Subtle border animation for Kalypso */}
+        {isKalypsoHighlighted && (
+          <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
+        )}
+        
+        <div className={cn(
+          "flex-shrink-0",
+          isKalypsoHighlighted && "text-emerald-500"
+        )}>
+          {item.icon}
+        </div>
+        <span className={cn(
+          "font-medium",
+          isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
+        )}>
+          {item.name}
+          {isKalypsoHighlighted && (
+            <span className="ml-1 text-[9.8px] font-bold text-emerald-600 dark:text-emerald-300">
+              (Recommended)
+            </span>
+          )}
+        </span>
+        {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
+          <div className={cn(
+            "ml-auto flex items-center gap-1",
+            isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
+          )}>
+            <Lock className="w-4 h-4" />
+            {item.unlockCost && (
+              <div className={cn(
+                "flex items-center text-xs",
+                isKalypsoHighlighted && "font-bold"
+              )}>
+                <span>{item.unlockCost}</span>
+                <Image 
+                  src="/coin.png" 
+                  alt="coins" 
+                  width={12} 
+                  height={12} 
+                  className="ml-0.5" 
+                />
+              </div>
+            )}
           </div>
-        </ScrollArea>
-      </div>
+        )}
+      </button>
     );
   };
-  
-  if (!mounted) return null;
 
   const sidebarContent = (
     <>
@@ -314,29 +463,10 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         )}
       >
         <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
-          <div className="flex justify-center gap-4">
-            <button
-              className={cn(
-                "px-6 py-1.5 rounded-lg transition-all duration-300 font-medium",
-                visibleSection === 'nav' 
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
-                  : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-              )}
-              onClick={() => setVisibleSection('nav')}
-            >
+          <div className="flex justify-center">
+            <div className="px-6 py-1.5 rounded-lg bg-[--theme-hover-color] text-[--theme-hover-text] font-medium">
               Navigation
-            </button>
-            <button
-              className={cn(
-                "px-6 py-1.5 rounded-lg transition-all duration-300 font-medium",
-                visibleSection === 'tasks' 
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
-                  : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-              )}
-              onClick={() => setVisibleSection('tasks')}
-            >
-              Help
-            </button>
+            </div>
           </div>
           
           {/* Close button for mobile */}
@@ -353,90 +483,16 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         </div>
         
         <div className="flex-1 overflow-hidden">
-          {visibleSection === 'nav' ? (
+          <ScrollArea className="h-full">
             <div className="p-4 space-y-2">
-              {NAVIGATION_ITEMS.map(item => {
-                const isUnlocked = isFeatureUnlocked(item.id);
-                // Special highlight for Kalypso AI when not unlocked
-                const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
-                
-                return (
-                <button
-                  key={item.id}
-                  className={cn(
-                    "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
-                    activeTab === item.id
-                      ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                      : isKalypsoHighlighted 
-                          ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
-                          : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                  )}
-                  onClick={() => {
-                    handleNavigationClick(item);
-                    if (isMobile) {
-                      // Auto-close sidebar after navigation on mobile
-                      setIsVisible(false);
-                    }
-                  }}
-                >
-                  {/* Subtle border animation for Kalypso */}
-                  {isKalypsoHighlighted && (
-                    <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
-                  )}
-                  
-                  <div className={cn(
-                    "flex-shrink-0",
-                    isKalypsoHighlighted && "text-emerald-500"
-                  )}>
-                    {item.icon}
-                  </div>
-                  <span className={cn(
-                    "font-medium",
-                    isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
-                  )}>
-                    {item.name}
-                    {isKalypsoHighlighted && (
-                      <span className="ml-1 text-[9.8px] font-bold text-emerald-600 dark:text-emerald-300">
-                        (Recommended)
-                      </span>
-                    )}
-                  </span>
-                  {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
-                    <div className={cn(
-                      "ml-auto flex items-center gap-1",
-                      isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
-                    )}>
-                      <Lock className="w-4 h-4" />
-                      {item.unlockCost && (
-                        <div className={cn(
-                          "flex items-center text-xs",
-                          isKalypsoHighlighted && "font-bold"
-                        )}>
-                          <span>{item.unlockCost}</span>
-                          <Image 
-                            src="/coin.png" 
-                            alt="coins" 
-                            width={12} 
-                            height={12} 
-                            className="ml-0.5" 
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </button>
-              )})}
+              {NAVIGATION_ITEMS.map(item => renderNavigationItem(item))}
             </div>
-          ) : (
-            <div className="h-full overflow-y-auto">
-              {renderHelp()}
-            </div>
-          )}
+          </ScrollArea>
         </div>
         
         <div className="p-4 text-center border-t border-[--theme-border-color]">
           <p className="text-xs text-[--theme-text-color] opacity-70">
-            {isMobile ? "Tap the menu icon to access navigation and help" : "Hover near the left edge to show sidebar"}
+            {isMobile ? "Tap the menu icon to access navigation" : "Hover near the left edge to show sidebar"}
           </p>
         </div>
       </div>

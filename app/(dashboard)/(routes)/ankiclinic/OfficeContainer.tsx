@@ -15,6 +15,8 @@ import { zoomLevels } from './constants';
 import CarsPromptSprite from './components/CarsPromptSprite';
 import ATSPromptSprite from './components/ATSPromptSprite';
 import CommunityPromptSprite from './components/CommunityPromptSprite';
+import { toast } from 'react-hot-toast';
+import CommunityFeedbackDialog from './components/CommunityFeedbackDialog';
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -817,15 +819,38 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   const audio = useAudio();
   
   // Function to handle community icon click
-  const handleCommunityClick = useCallback(() => {
+  const handleCommunityPromptClick = useCallback(() => {
     // Use the audio object from the outer scope
     audio.playSound('flashcard-door-open');
+    
+    // Open the community dialog instead of redirecting to Discord
     setTimeout(() => {
-      // Open Discord invite link in a new tab
-      window.open('https://discord.com/invite/DcHWnEu8Xb', '_blank');
-    }, 500);
+      setIsCommunityDialogOpen(true);
+    }, 300);
   }, [audio]);
 
+  // Add this effect near the beginning of your component
+  useEffect(() => {
+    // Fetch available CARS tests
+    const fetchTests = async () => {
+      try {
+        const response = await fetch('/api/tests?type=CARS');
+        if (response.ok) {
+          const data = await response.json();
+          // Store the tests in the window object
+          window.availableTests = data.tests || [];
+        }
+      } catch (error) {
+        console.error('Failed to fetch CARS tests:', error);
+      }
+    };
+    
+    fetchTests();
+  }, []);
+
+  const [isCommunityDialogOpen, setIsCommunityDialogOpen] = useState(false);
+  const communityDialogRef = useRef<{ open: () => void }>(null);
+  
   return (
     <div ref={ref} className="relative w-full h-full">
       {/* Pixi.js stage container - We need to make it have pointer events for pan/zoom */}
@@ -899,13 +924,19 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
                       scaleConstant={4}
                       zIndex={img.zIndex + 101}
                       onClick={() => {
-                        // Use the audio object from the outer scope
+                        // Play sound
                         audio.playSound('flashcard-door-open');
+
+                        // Show loading toast
+                        toast.loading('Loading CARS passage...');
+                        
+                        // Wait a moment for the sound to play and toast to appear
                         setTimeout(() => {
-                          const testId = window.availableTests?.[0]?.id || '';
-                          window.location.href = testId 
-                            ? `/test/testquestions?id=${testId}`
-                            : '/home?tab=testingsuit';
+                          // Go directly to the specified test
+                          window.location.href = `/test/testquestions?id=cm65mma4j00b1uqgeyoiozs01`;
+                          
+                          // Clear the loading toast
+                          toast.dismiss();
                         }, 500);
                       }}
                     />
@@ -945,7 +976,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
                       y={screenY(img.x, img.y) - img.height / 2 + img.height / 5 + 40} // Below other sprites
                       scaleConstant={3}
                       zIndex={img.zIndex + 103} // Highest z-index
-                      onClick={handleCommunityClick}
+                      onClick={handleCommunityPromptClick}
                     />
                   )}
                 </React.Fragment>
@@ -1018,6 +1049,12 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
           </button>
         </div>
       </div>
+      
+      <CommunityFeedbackDialog
+        isOpen={isCommunityDialogOpen}
+        onOpenChange={setIsCommunityDialogOpen}
+        ref={communityDialogRef}
+      />
     </div>
   );
 });

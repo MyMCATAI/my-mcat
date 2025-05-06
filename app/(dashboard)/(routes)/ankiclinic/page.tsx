@@ -21,6 +21,7 @@ import OfficeContainer from './OfficeContainer';
 import SideBar from "../home/SideBar";
 import { useUser } from "@/store/selectors";
 import AdaptiveTutoring from "../home/AdaptiveTutoring";
+import AnkiClinicTutoring from "./components/AnkiClinicTutoring";
 
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 
@@ -44,10 +45,6 @@ const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
 });
 
 const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
-  ssr: false
-});
-
-const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
   ssr: false
 });
 
@@ -116,8 +113,12 @@ const DoctorsOfficePage = () => {
     setStreakDays, setTotalPatients, updateUserLevel
   } = useGame();
   
+  const searchParams = useSearchParams();
+  
+  // Add reference for tracking if the start game was triggered from query params
+  const startGameTriggeredRef = useRef(false);
+  
   /* ------------------------------------------- State -------------------------------------------- */
-  const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
   const [mcqState, setMcqState] = useState({
@@ -338,41 +339,6 @@ const DoctorsOfficePage = () => {
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
-  // Simplified effect for welcome dialog
-  useEffect(() => {
-    if (userInfo && !isClinicUnlocked) {
-      setShowWelcomeDialogue(true);
-    }
-  }, [userInfo, isClinicUnlocked]);
-
-  // Add the fetchAvailableCarsTests function and useEffect here
-  const fetchAvailableCarsTests = async () => {
-    try {
-      const response = await fetch("/api/test?ordered=true&page=1&pageSize=5&CARSonly=true");
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch CARS tests");
-      }
-      
-      const data = await response.json();
-      
-      // Store the tests in the window object for access by CARS sprites
-      if (typeof window !== 'undefined' && data.tests && data.tests.length > 0) {
-        window.availableTests = data.tests;
-      } else {
-        console.warn("No CARS tests available");
-      }
-    } catch (error) {
-      console.error("Error fetching CARS tests:", error);
-      toast.error("Failed to load CARS tests. Try refreshing.");
-    }
-  };
-
-  // Effect to fetch CARS tests on mount
-  useEffect(() => {
-    fetchAvailableCarsTests();
-  }, []);
-
   // Use in the effect that manages audio
   useEffect(() => {
     if (!isBrowser) return;
@@ -652,7 +618,8 @@ const DoctorsOfficePage = () => {
   // Effect to run daily calculations after data is loaded
   useEffect(() => {
     if (!mcqState.isLoading && userInfo && !hasCalculatedRef.current) {
-      performDailyCalculations();
+      // Remove the automatic call to performDailyCalculations
+      // performDailyCalculations();
       hasCalculatedRef.current = true;
     }
   }, [mcqState.isLoading, userInfo]);
@@ -788,6 +755,54 @@ const DoctorsOfficePage = () => {
       toast.error("Failed to start new game. Please try refreshing the page.");
     }
   };
+
+  // Now define handleStartAssignedHomework which depends on handleGameStart
+  const handleStartAssignedHomework = useCallback(async () => {
+    if ((userInfo?.score || 0) < 1) {
+      toast.error("You need 1 coin to start a new game!");
+      return;
+    }
+
+    try {
+      await decrementScore();
+      resetGameState();
+
+      // Create a new user test
+      const response = await fetch("/api/user-test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create user test");
+      }
+
+      const data = await response.json();
+      const userTestId = data.id;
+
+      // Start a new game with the user test ID
+      handleGameStart(userTestId);
+    } catch (error) {
+      console.error("Error starting assigned homework game:", error);
+      toast.error("Failed to start assigned homework. Please try again.");
+    }
+  }, [decrementScore, resetGameState, handleGameStart, userInfo?.score]);
+
+  // NOW ADD THE EFFECT HERE - after both functions are defined
+  useEffect(() => {
+    const startGame = searchParams.get('startGame');
+    if (startGame === 'true' && !startGameTriggeredRef.current && !isGameInProgress) {
+      startGameTriggeredRef.current = true;
+      // Add a small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        handleStartAssignedHomework();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, handleStartAssignedHomework, isGameInProgress]);
 
   const handleMCQAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
@@ -942,30 +957,26 @@ const DoctorsOfficePage = () => {
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
       
-      {showWelcomeDialogue && 
-        <WelcomeDialog 
-          isOpen={showWelcomeDialogue}
-          onUnlocked={()=>setShowWelcomeDialogue(false)}
-        />}
-    <Suspense fallback={
+      <Suspense fallback={
         <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
-        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden relative`}>
           {/* Mobile layout: completely separate components for sidebar and main content */}
           {isMobile ? (
             <>
               {/* Main content container - full width on mobile */}
               <div className="w-full h-full relative">
                 {showAdaptiveTutoring ? (
-                  <AdaptiveTutoring
+                  <AnkiClinicTutoring
                     toggleChatBot={toggleChatBot}
                     setChatbotContext={setChatbotContext}
                     chatbotRef={chatbotRef}
                     onActivityChange={onActivityChange}
-                    className="bg-white dark:bg-gray-900 rounded-lg h-full w-full"
+                    className="gradientbg h-full w-full"
+                    onClose={() => setShowAdaptiveTutoring(false)}
                   />
                 ) : (
                   <OfficeContainer
@@ -1027,6 +1038,7 @@ const DoctorsOfficePage = () => {
                     isSubscribed={isSubscribed}
                     showTasks={true}
                     sidebarRef={sidebarRef}
+                    onStartAssignedHomework={handleStartAssignedHomework}
                   />
                 </div>
               </div>
@@ -1034,14 +1046,15 @@ const DoctorsOfficePage = () => {
           ) : (
             <>
               {/* Desktop layout: side-by-side components with sidebar on right */}
-              <div className="w-3/4 font-krungthep relative z-20 rounded-l-lg">
+              <div className="w-3/4 font-krungthep relative z-20 rounded-l-lg h-full">
                 {showAdaptiveTutoring ? (
-                  <AdaptiveTutoring
+                  <AnkiClinicTutoring
                     toggleChatBot={toggleChatBot}
                     setChatbotContext={setChatbotContext}
                     chatbotRef={chatbotRef}
                     onActivityChange={onActivityChange}
-                    className="bg-white dark:bg-gray-900 rounded-lg h-full w-full"
+                    className="gradientbg h-full w-full"
+                    onClose={() => setShowAdaptiveTutoring(false)}
                   />
                 ) : (
                   <OfficeContainer
@@ -1056,7 +1069,7 @@ const DoctorsOfficePage = () => {
                 )}
               </div>
               
-              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50 rounded-r-lg">
+              <div className="w-1/4 p-4 gradientbg relative z-50 rounded-r-lg">
                 <SideBar
                   activities={activities}
                   currentPage="ankiclinic"
@@ -1067,46 +1080,19 @@ const DoctorsOfficePage = () => {
                   isSubscribed={isSubscribed}
                   showTasks={true}
                   sidebarRef={sidebarRef}
+                  onStartAssignedHomework={handleStartAssignedHomework}
                 />
               </div>
             </>
           )}
           
-          {/* Reposition buttons based on device type */}
-          {isMobile && (
-            <>
-              {/* Mobile buttons wrapper - fixed at bottom */}
-              <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
-                {/* Left side - space for symmetry (remove tutorial button) */}
-                <div className="w-10"></div>
-                
-                {/* Center - New Game button */}
-                <div>
-                  <NewGameButton
-                    onGameStart={handleGameStart}
-                  />
-                </div>
-                
-                {/* Right side - Sidebar toggle and Marketplace */}
-                <div className="flex gap-2">
-                  {/* Marketplace button */}
-                  <button 
-                    onClick={() => setIsMarketplaceOpen(true)}
-                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-                    aria-label="Open marketplace"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </button>
-                  
-                  <SidebarToggleButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-                </div>
-              </div>
-            </>
+          {/* Conditionally render ClinicHeader */}
+          {showAdaptiveTutoring && (
+            <div className="absolute inset-0 z-[100] pointer-events-none">
+              {/* This empty div blocks the ClinicHeader from being visible */}
+            </div>
           )}
           
-          {/* Fellowship Level button with coins and patients - always at top */}
           <ClinicHeader
             totalPatients={totalPatients}
             patientsPerDay={patientsPerDay}
@@ -1115,8 +1101,7 @@ const DoctorsOfficePage = () => {
             imageGroups={imageGroups}
             visibleImages={visibleImages}
             toggleGroup={toggleGroup}
-            showAdaptiveTutoring={showAdaptiveTutoring}
-            toggleAdaptiveTutoring={toggleAdaptiveTutoring}
+            className={showAdaptiveTutoring ? 'opacity-0 pointer-events-none' : ''}
           />
           
           {/* Feature unlock banner */}
@@ -1175,15 +1160,6 @@ const DoctorsOfficePage = () => {
         onOpenChange={setIsMarketplaceOpen}
         clinicRooms={userInfo?.clinicRooms || "[]"}
       />
-
-      {/* Add back the desktop New Game button section */}
-      {!isMobile && (
-        <div className="absolute top-6 left-4 flex gap-2 z-50">
-          <NewGameButton
-            onGameStart={handleGameStart}
-          />
-        </div>
-      )}
     </div>
   );
 };
