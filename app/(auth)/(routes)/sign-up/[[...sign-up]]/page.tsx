@@ -1,3 +1,24 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { SignUp } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
+
+// --- TEMPORARY HIATUS REDIRECT ---
+// This effect will redirect all sign-up attempts to the hiatus page.
+// Remove this block to restore sign-up functionality.
+export default function Page() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/hiatus");
+  }, [router]);
+  return null;
+}
+// --- END HIATUS REDIRECT ---
+
+/*
+// To restore sign-up, revert to the original code below:
 import { SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
@@ -25,3 +46,4 @@ export default function Page() {
     />
   );
 }
+*/
