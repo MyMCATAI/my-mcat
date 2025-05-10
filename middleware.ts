@@ -30,6 +30,10 @@ const publicRoutes = [
   "/MD_Premium_Pro.png",
   "/MDPremium.png",
   
+  /* 🔥 NEW: make /hiatus public */
+  "/hiatus",
+  "/hiatus(.*)",
+  
   // Consolidated static asset pattern
   "/(.+)\\.(jpg|jpeg|gif|png|ico|xml|txt|js|css|svg|webm|mp4)$",
   
