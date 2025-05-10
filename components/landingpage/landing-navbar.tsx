@@ -61,15 +61,11 @@ const LandingNavbar = () => {
               Blog
             </button>
           </Link>
-          <Link href={"/sign-in"}>
+          <Link href={"/hiatus"}>
             <button 
               className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 hover:scale-105 hover:shadow-lg transition-all duration-300"
-              onClick={() => {
-                console.log('[LOGIN BUTTON] Login button clicked explicitly by user');
-                localStorage.setItem('explicit_login_click', 'true');
-              }}
             >
-              Login
+              Get&nbsp;Access
             </button>
           </Link>
         </div>
@@ -117,15 +113,11 @@ const LandingNavbar = () => {
               Blog
             </button>
           </Link>
-          <Link href={"/sign-in"} >
+          <Link href={"/hiatus"} >
             <button 
               className="w-full bg-white text-black py-3 text-lg rounded-lg hover:bg-white/90 transition-colors duration-300 mt-4"
-              onClick={() => {
-                console.log('[LOGIN BUTTON] Login button clicked explicitly by user');
-                localStorage.setItem('explicit_login_click', 'true');
-              }}
             >
-              Login
+              Get&nbsp;Access
             </button>
           </Link>
         </div>
