@@ -229,11 +229,10 @@ const DoctorsOfficePage = () => {
 
   // Add a handler for Kalypso click
   const handleKalypsoClick = useCallback(() => {
-    // Play a sound effect at reduced volume (50% of normal)
-    playSoundWithVolume('chatbot-open', 0.5);
+    // Play a sound effect at greatly reduced volume (20% of normal instead of 50%)
+    playSoundWithVolume('chatbot-open', 0.2);
     // Open the sidebar
     setIsSidebarOpen(true);
-    // Don't change the page context, it causes unnecessary rerenders
     
     // Activate the chat tab directly via ref
     setTimeout(() => {
@@ -321,17 +320,17 @@ const DoctorsOfficePage = () => {
     }
   }, []);
 
-  // Update the initializeAmbientSound function to use a reduced volume
+  // Update the initializeAmbientSound function to use a significantly reduced volume
   const initializeAmbientSound = useCallback(() => {
     // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
     if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
       // Set the flag before playing to prevent race conditions
       ambientSoundInitializedRef.current = true;
-      // Apply a reduced volume to the loop
+      // Apply a greatly reduced volume to the loop
       if (audio.audioContext && audio.loopGainNode) {
         const originalVolume = audio.loopGainNode.gain.value;
         // Further reduce the volume for this specific ambient sound
-        audio.loopGainNode.gain.value = originalVolume * 0.7; // Reduce by 30%
+        audio.loopGainNode.gain.value = originalVolume * 0.25; // Reduce to 25% (from 70%)
       }
       audio.playLoop(AMBIENT_SOUND);
     }
@@ -712,8 +711,8 @@ const DoctorsOfficePage = () => {
 
   // Replace the startup sound playback with the quieter version
   const handleGameStart = async (userTestId: string) => {
-    // Play startup sound at reduced volume (40% of normal)
-    playSoundWithVolume('flashcard-startup', 0.4);
+    // Play startup sound at MUCH lower volume (10% of normal instead of 40%)
+    playSoundWithVolume('flashcard-startup', 0.1);
     
     // Start new testing activity
     await startActivity({

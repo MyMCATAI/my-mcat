@@ -957,7 +957,7 @@ const SideBar: React.FC<SideBarProps> = ({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               scheduledDate: new Date().toISOString(),
-              activityTitle: "Homework",
+              activityTitle: "Assigned Homework",
               activityText: "Complete these tasks to earn coins",
               hours: 2,
               activityType: "study",
@@ -980,8 +980,10 @@ const SideBar: React.FC<SideBarProps> = ({
       }
     };
     
-    // Use the ref that was defined at the top level
-    if (isToday(currentDate) && !specificTasksHasRun.current) {
+    // Reset the ref when the date changes to today to ensure homework is created
+    if (!isToday(currentDate)) {
+      specificTasksHasRun.current = false;
+    } else if (!specificTasksHasRun.current) {
       specificTasksHasRun.current = true;
       ensureSpecificTasks();
     }
