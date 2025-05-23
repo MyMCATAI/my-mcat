@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { Chart } from 'react-chartjs-2';
 import { Brain, BookText, Atom, Activity } from 'lucide-react';
 import Image from "next/image";
+import type { ThemeType } from '@/store/slices/uiSlice';
 
 ChartJS.register(
   CategoryScale,
@@ -174,13 +175,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   document.head.appendChild(style);
 
   const getThemeColor = () => {
-    const themeColors = {
+    const themeColors: Record<ThemeType, string> = {
       cyberSpace: '#3b82f6',
       sakuraTrees: '#b85475',
       sunsetCity: '#ff6347',
-      mykonosBlue: '#4cb5e6'
+      mykonosBlue: '#4cb5e6',
+      cleanWhite: '#2ab2b0'
     };
-    return themeColors[theme];
+    return themeColors[theme] || '#3b82f6';
   };
 
   // Define section icons

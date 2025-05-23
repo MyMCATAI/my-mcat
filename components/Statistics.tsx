@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useUI } from '@/store/selectors';
+import type { ThemeType } from '@/store/slices/uiSlice';
 
 interface CategoryStats {
   categoryId: string;
@@ -112,13 +113,14 @@ const Statistics = ({
   };
 
   const getThemeColor = () => {
-    const themeColors = {
+    const themeColors: Record<ThemeType, string> = {
       cyberSpace: '#3b82f6',
       sakuraTrees: '#b85475',
       sunsetCity: '#ff6347',
-      mykonosBlue: '#4cb5e6'
+      mykonosBlue: '#4cb5e6',
+      cleanWhite: '#2ab2b0'
     };
-    return themeColors[theme];
+    return themeColors[theme] || '#3b82f6';
   };
 
   // Update the mastery chart data formatting

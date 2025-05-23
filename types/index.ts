@@ -12,6 +12,7 @@ export interface Passage {
 
 export interface Category {
   id: string;
+  name?: string;
   section: string;
   subjectCategory: string;
   contentCategory: string;

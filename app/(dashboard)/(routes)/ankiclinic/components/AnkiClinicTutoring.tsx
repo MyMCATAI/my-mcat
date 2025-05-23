@@ -389,7 +389,15 @@ const AnkiClinicTutoring: React.FC<AnkiClinicTutoringProps> = ({
           setCheckedCategories([{
             id: "debug-category",
             name: "Electrochemistry",
-            isCompleted: false
+            isCompleted: false,
+            section: "Debug Section",
+            subjectCategory: "Debug Subject",
+            contentCategory: "Debug Content",
+            conceptCategory: "electrochemistry",
+            generalWeight: 0,
+            color: "#FFFFFF",
+            icon: "atoms",
+            podcastLinks: ""
           }]);
         }
       }
@@ -516,7 +524,7 @@ const AnkiClinicTutoring: React.FC<AnkiClinicTutoringProps> = ({
                     const category = checkedCategories[0]; // Use first category
                     setSelectedTopicToComplete({
                       id: category.id,
-                      name: category.name
+                      name: category.name ?? category.conceptCategory // Provide fallback for optional name
                     });
                     setIsCompleteDialogOpen(true);
                   } else {
