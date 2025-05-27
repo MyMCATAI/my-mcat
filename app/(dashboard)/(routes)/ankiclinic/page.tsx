@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense, useMemo } from "react";
 import ReactDOM from 'react-dom';
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
 import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import { imageGroups } from "./constants/imageGroups";
@@ -24,6 +26,7 @@ import AdaptiveTutoring from "../home/AdaptiveTutoring";
 import AnkiClinicTutoring from "./components/AnkiClinicTutoring";
 
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
+import KalypsoOnboarding from '@/components/onboarding/KalypsoOnboarding';
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -138,6 +141,8 @@ const DoctorsOfficePage = () => {
     open: () => void
   } | null>(null);
   const [showAdaptiveTutoring, setShowAdaptiveTutoring] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showCoinReward, setShowCoinReward] = useState(false);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -200,6 +205,49 @@ const DoctorsOfficePage = () => {
   // Add toggle for AdaptiveTutoring
   const toggleAdaptiveTutoring = useCallback(() => {
     setShowAdaptiveTutoring(prev => !prev);
+  }, []);
+
+  const handleOnboardingComplete = useCallback((showCoinReward?: boolean) => {
+    localStorage.setItem('kalypso-onboarding-completed', 'true');
+    setShowOnboarding(false);
+    
+    if (showCoinReward) {
+      // Show coin reward animation
+      setShowCoinReward(true);
+    } else {
+      // Show a welcome message
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span>🎉 Welcome to MyMCAT! Your learning journey begins now.</span>
+        </div>,
+        { duration: 4000 }
+      );
+    }
+  }, []);
+
+  const handleCoinRewardClose = useCallback(() => {
+    setShowCoinReward(false);
+    
+    // Show welcome message after coin reward
+    setTimeout(() => {
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span>🎉 Welcome to MyMCAT! Your learning journey begins now.</span>
+        </div>,
+        { duration: 4000 }
+      );
+    }, 500);
+  }, []);
+
+  const handleOnboardingClose = useCallback(() => {
+    setShowOnboarding(false);
+  }, []);
+
+  // Manual trigger for testing onboarding
+  const handleTriggerOnboarding = useCallback(() => {
+    // Clear the localStorage to reset the tour every time
+    localStorage.removeItem('kalypso-onboarding-completed');
+    setShowOnboarding(true);
   }, []);
 
   // Add this function to provide a custom volume level for specific sounds
@@ -509,6 +557,12 @@ const DoctorsOfficePage = () => {
     const timer = setTimeout(() => {
       fetchData();
     }, 10);
+    
+    // Check if this is the user's first visit to show onboarding
+    const hasSeenOnboarding = localStorage.getItem('kalypso-onboarding-completed');
+    if (!hasSeenOnboarding && userInfo && !mcqState.isLoading) {
+      setShowOnboarding(true);
+    }
     
     return () => {
       clearTimeout(timer);
@@ -950,6 +1004,153 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
+  // Coin Reward Animation Component
+  const CoinRewardAnimation = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    const [showTitle, setShowTitle] = useState(false);
+    const [showCoin, setShowCoin] = useState(false);
+    const [showDescription, setShowDescription] = useState(false);
+    const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
+    const audio = useAudio();
+
+    useEffect(() => {
+      if (isOpen && !hasPlayedAudio) {
+        // Play fanfare audio only once
+        audio.playSound('fanfare');
+        setHasPlayedAudio(true);
+        
+        // Sequence the animations
+        setTimeout(() => setShowTitle(true), 500);
+        setTimeout(() => setShowCoin(true), 1000);
+        setTimeout(() => setShowDescription(true), 2000);
+        
+        // Auto close after 6 seconds
+        setTimeout(() => onClose(), 6000);
+      }
+    }, [isOpen, audio, onClose, hasPlayedAudio]);
+
+    // Reset audio flag when component closes
+    useEffect(() => {
+      if (!isOpen) {
+        setHasPlayedAudio(false);
+        setShowTitle(false);
+        setShowCoin(false);
+        setShowDescription(false);
+      }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/80 z-[10003] flex items-center justify-center">
+        <div className="text-center space-y-8">
+          {/* Title Animation - Made smaller */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: -50 }}
+            animate={showTitle ? { opacity: 1, scale: 1, y: 0 } : {}}
+            transition={{ type: "spring", damping: 15, stiffness: 300 }}
+            className="text-5xl md:text-5xl font-bold text-yellow-400"
+            style={{
+              textShadow: '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.6)',
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))'
+            }}
+          >
+            You've won your first coin!
+          </motion.div>
+
+          {/* Coin Animation - Made much bigger */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0, rotate: -180 }}
+            animate={showCoin ? { 
+              opacity: 1, 
+              scale: [0, 1.2, 1], 
+              rotate: [0, 360, 720] 
+            } : {}}
+            transition={{ 
+              duration: 1.5, 
+              type: "spring", 
+              damping: 12,
+              times: [0, 0.6, 1]
+            }}
+            className="flex justify-center"
+          >
+            <div className="relative">
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-xl scale-150 animate-pulse"></div>
+              
+              {/* Coin image - Made much bigger */}
+              <Image
+                src="/game-components/CupcakeCoin.gif"
+                alt="Cupcake Coin"
+                width={400}
+                height={400}
+                className="relative z-10 drop-shadow-2xl"
+                style={{
+                  filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))'
+                }}
+              />
+              
+              {/* Sparkle effects - Adjusted for bigger coin */}
+              <div className="absolute inset-0 pointer-events-none">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={showCoin ? {
+                      opacity: [0, 1, 0],
+                      scale: [0, 1, 0],
+                      x: [0, Math.cos(i * 45 * Math.PI / 180) * 150],
+                      y: [0, Math.sin(i * 45 * Math.PI / 180) * 150]
+                    } : {}}
+                    transition={{
+                      duration: 2,
+                      delay: 0.5 + i * 0.1,
+                      repeat: Infinity,
+                      repeatDelay: 1
+                    }}
+                    className="absolute top-1/2 left-1/2 w-4 h-4 bg-yellow-400 rounded-full"
+                    style={{
+                      boxShadow: '0 0 10px rgba(255, 215, 0, 0.8)'
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Description Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={showDescription ? { opacity: 1, y: 0 } : {}}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            className="text-2xl md:text-3xl text-white font-semibold max-w-2xl mx-auto px-4"
+            style={{
+              textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+            }}
+          >
+            You win coins for getting questions right and consistency, and lose them for inconsistency!
+          </motion.div>
+
+          {/* Click to continue hint */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={showDescription ? { opacity: 1 } : {}}
+            transition={{ delay: 1 }}
+            className="text-lg text-gray-300 cursor-pointer hover:text-white transition-colors"
+            onClick={onClose}
+          >
+            Click anywhere to continue
+          </motion.div>
+        </div>
+        
+        {/* Click overlay to close */}
+        <div 
+          className="absolute inset-0 cursor-pointer" 
+          onClick={onClose}
+        />
+      </div>
+    );
+  };
+
   /* ----------------------------------------- Render  ---------------------------------------- */
 
   return (
@@ -1068,7 +1269,7 @@ const DoctorsOfficePage = () => {
                 )}
               </div>
               
-              <div className="w-1/4 p-4 gradientbg relative z-50 rounded-r-lg">
+              <div className="w-1/4 p-4 gradientbg relative z-50 rounded-r-lg" data-sidebar>
                 <SideBar
                   activities={activities}
                   currentPage="ankiclinic"
@@ -1101,6 +1302,7 @@ const DoctorsOfficePage = () => {
             visibleImages={visibleImages}
             toggleGroup={toggleGroup}
             className={showAdaptiveTutoring ? 'opacity-0 pointer-events-none' : ''}
+            onTriggerOnboarding={handleTriggerOnboarding}
           />
           
           {/* Feature unlock banner */}
@@ -1159,6 +1361,18 @@ const DoctorsOfficePage = () => {
         onOpenChange={setIsMarketplaceOpen}
         clinicRooms={userInfo?.clinicRooms || "[]"}
       />
+
+      {/* Kalypso Onboarding */}
+      <KalypsoOnboarding
+        isOpen={showOnboarding}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+      />
+
+      {showCoinReward && <CoinRewardAnimation 
+        isOpen={showCoinReward}
+        onClose={handleCoinRewardClose}
+      />}
     </div>
   );
 };

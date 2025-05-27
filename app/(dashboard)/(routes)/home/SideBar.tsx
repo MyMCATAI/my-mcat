@@ -441,8 +441,46 @@ const SideBar: React.FC<SideBarProps> = ({
     });
 
     // Add a reset function that clears all completed tasks (for demo purposes only)
-    const resetTasksForDemo = () => {
-      // Make a deep copy of activities and mark all tasks as uncompleted
+    const resetTasksForDemo = async () => {
+      // First, force update any homework to amino acid content
+      const homeworkActivity = todayActivities.find(activity => 
+        activity.activityTitle.toLowerCase().includes("homework") || 
+        activity.activityTitle.toLowerCase().includes("assigned")
+      );
+      
+      if (homeworkActivity) {
+        const aminoAcidTasks = [
+          { text: "Watch Amino Acid Videos", completed: false },
+          { text: "Complete two Amino Acid Quizzes", completed: false },
+          { text: "Do a scientific passage", completed: false },
+          { text: "Submit progress to tutor", completed: false }
+        ];
+        
+        try {
+          const response = await fetch(`/api/calendar-activity`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: homeworkActivity.id,
+              tasks: aminoAcidTasks,
+              activityText: "Complete these amino acid focused tasks to earn coins"
+            }),
+          });
+          
+          if (response.ok) {
+            // Update local state immediately
+            setTodayActivities(prev => prev.map(activity => 
+              activity.id === homeworkActivity.id 
+                ? { ...activity, tasks: aminoAcidTasks, activityText: "Complete these amino acid focused tasks to earn coins" }
+                : activity
+            ));
+          }
+        } catch (error) {
+          console.error("Error updating homework tasks:", error);
+        }
+      }
+      
+      // Then reset all other tasks
       const resetActivities = todayActivities.map(activity => ({
         ...activity,
         tasks: activity.tasks?.map(task => ({
@@ -451,11 +489,14 @@ const SideBar: React.FC<SideBarProps> = ({
         })) || []
       }));
       
-      // Update only the local state without persisting to the database
+      // Update only the local state without persisting to the database for other activities
       setTodayActivities(resetActivities);
       
+      // Refresh from parent
+      onActivitiesUpdate();
+      
       // Show toast to confirm reset
-      toast.success("All tasks reset for demo!");
+      toast.success("Tasks updated with amino acid content!");
     };
 
     return (
@@ -942,36 +983,86 @@ const SideBar: React.FC<SideBarProps> = ({
       // Only modify activities for today
       if (!isToday(currentDate)) return;
       
-      // Check if any homework activity already exists for today (using looser matching)
-      const homeworkExists = todayActivities.some(activity => 
+      // Find existing homework activity for today
+      const existingHomework = todayActivities.find(activity => 
         activity.activityTitle.toLowerCase().includes("homework") || 
         activity.activityTitle.toLowerCase().includes("assigned")
       );
       
-      // Only create the activity if it doesn't exist and we have activities loaded
-      if (!homeworkExists && todayActivities.length >= 0) {
+      if (existingHomework) {
+        // Update existing homework with amino acid tasks
+        const aminoAcidTasks = [
+          { text: "Watch Amino Acid Videos", completed: false },
+          { text: "Complete two Amino Acid Quizzes", completed: false },
+          { text: "Do a scientific passage", completed: false },
+          { text: "Submit progress to tutor", completed: false }
+        ];
+        
+        // Check if tasks need updating (compare first task text)
+        const needsUpdate = !existingHomework.tasks || 
+          existingHomework.tasks.length === 0 || 
+          !existingHomework.tasks[0]?.text.includes("Amino Acid") ||
+          existingHomework.tasks.some(task => 
+            task.text === "Watch two videos" || 
+            task.text === "Complete two quizzes" || 
+            task.text === "Do one verbal passage" || 
+            task.text === "Message tutor a report"
+          );
+        
+        console.log("Homework update check:", { needsUpdate, existingTasks: existingHomework.tasks });
+        
+        if (needsUpdate) {
+          try {
+            console.log("Updating homework tasks to amino acid content...");
+            const response = await fetch(`/api/calendar-activity`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: existingHomework.id,
+                tasks: aminoAcidTasks,
+                activityText: "Complete these amino acid focused tasks to earn coins"
+              }),
+            });
+            
+            if (response.ok) {
+              console.log("Successfully updated homework tasks");
+              // Update local state immediately
+              setTodayActivities(prev => prev.map(activity => 
+                activity.id === existingHomework.id 
+                  ? { ...activity, tasks: aminoAcidTasks, activityText: "Complete these amino acid focused tasks to earn coins" }
+                  : activity
+              ));
+              // Also refresh from parent
+              onActivitiesUpdate();
+            } else {
+              console.error("Failed to update homework tasks:", response.status);
+            }
+          } catch (error) {
+            console.error("Error updating homework tasks:", error);
+          }
+        }
+      } else if (todayActivities.length >= 0) {
+        // Create new homework if none exists
         try {
-          // Create a new daily activity with the specific tasks
           const response = await fetch("/api/calendar-activity", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               scheduledDate: new Date().toISOString(),
               activityTitle: "Assigned Homework",
-              activityText: "Complete these tasks to earn coins",
+              activityText: "Complete these amino acid focused tasks to earn coins",
               hours: 2,
               activityType: "study",
               tasks: [
-                { text: "Watch two videos", completed: false },
-                { text: "Complete two quizzes", completed: false },
-                { text: "Do one verbal passage", completed: false },
-                { text: "Message tutor a report", completed: false }
+                { text: "Watch Amino Acid Videos", completed: false },
+                { text: "Complete two Amino Acid Quizzes", completed: false },
+                { text: "Do a scientific passage", completed: false },
+                { text: "Submit progress to tutor", completed: false }
               ]
             })
           });
           
           if (response.ok) {
-            // Refresh activities
             onActivitiesUpdate();
           }
         } catch (error) {
@@ -980,7 +1071,7 @@ const SideBar: React.FC<SideBarProps> = ({
       }
     };
     
-    // Reset the ref when the date changes to today to ensure homework is created
+    // Reset the ref when the date changes to today to ensure homework is created/updated
     if (!isToday(currentDate)) {
       specificTasksHasRun.current = false;
     } else if (!specificTasksHasRun.current) {

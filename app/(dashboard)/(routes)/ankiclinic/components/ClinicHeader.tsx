@@ -20,6 +20,7 @@ interface ClinicHeaderProps {
   visibleImages: Set<string>;
   toggleGroup: (groupName: string) => Promise<void>;
   className?: string;
+  onTriggerOnboarding?: () => void;
 }
 
 const ClinicHeader = ({
@@ -31,6 +32,7 @@ const ClinicHeader = ({
   visibleImages,
   toggleGroup,
   className = '',
+  onTriggerOnboarding,
 }: ClinicHeaderProps) => {
 /* ---- State ----- */
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
@@ -46,7 +48,7 @@ const ClinicHeader = ({
 
   return (
     <>
-      <div className={`absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4 z-50 flex items-center ${className}`}>
+      <div className={`absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4 z-50 flex items-center gap-2 ${className}`}>
         <button
           onClick={() => setIsTutorialOpen(true)}
           className="flex items-center justify-center px-2 py-2 sm:px-4 md:px-6 md:py-3
@@ -59,6 +61,19 @@ const ClinicHeader = ({
         >
           <span>TUTORING FIRM HQ</span>
         </button>
+        
+        {onTriggerOnboarding && (
+          <button
+            onClick={onTriggerOnboarding}
+            className="flex items-center justify-center px-2 py-2 sm:px-3 md:px-4 md:py-2
+            bg-gradient-to-r from-blue-500 to-purple-500
+            text-white
+            hover:from-blue-600 hover:to-purple-600
+            transition-all text-sm sm:text-base md:text-lg font-bold rounded-md shadow-md"
+          >
+            <span>🎯 Start Tour</span>
+          </button>
+        )}
       </div>
       
       {isTutorialOpen && (
