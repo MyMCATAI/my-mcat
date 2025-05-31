@@ -15650,10 +15650,10 @@ diff --git a/public/KalypsoPicture.png b/public/kalypso/KalypsoPicture.png
 similarity index 100%
 rename from public/KalypsoPicture.png
 rename to public/kalypso/KalypsoPicture.png
-diff --git a/public/kalypsoapproval.gif b/public/kalypso/kalypsoapproval.gif
+diff --git a/public/Kalypsoapproval.gif b/public/kalypso/Kalypsoapproval.gif
 similarity index 100%
-rename from public/kalypsoapproval.gif
-rename to public/kalypso/kalypsoapproval.gif
+rename from public/Kalypsoapproval.gif
+rename to public/kalypso/Kalypsoapproval.gif
 diff --git a/public/Kalypsodistressed.gif b/public/kalypso/Kalypsodistressed.gif
 similarity index 100%
 rename from public/Kalypsodistressed.gif

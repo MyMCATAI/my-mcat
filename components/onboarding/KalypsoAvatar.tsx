@@ -1,9 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 /* --- Constants ----- */
-const KALYPSO_AVATAR = '/kalypso/kalypsoapproval.gif';
+const KALYPSO_AVATAR = '/kalypso/Kalypsoapproval.gif';
 
 /* ----- Types ---- */
 interface KalypsoAvatarProps {
@@ -22,12 +21,11 @@ const KalypsoAvatar: React.FC<KalypsoAvatarProps> = ({ onAction }) => {
       onClick={onAction}
     >
       <div className="w-[32rem] h-[32rem] md:w-[50rem] md:h-[50rem] relative hover:scale-105 transition-transform duration-200">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={KALYPSO_AVATAR}
           alt="Kalypso"
-          fill
-          className="object-contain object-bottom"
-          priority
+          style={{ objectFit: 'contain', objectPosition: 'bottom', width: '100%', height: '100%' }}
         />
       </div>
     </motion.div>

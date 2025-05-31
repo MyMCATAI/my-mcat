@@ -63,7 +63,7 @@ const CompletionDialog: React.FC<CompletionDialogProps> = ({ isOpen, onClose }) 
           <div className="flex flex-col items-center justify-center p-6 space-y-6">
             <div className="relative w-[31rem] h-56 overflow-hidden ml-20">
               <Image
-                src="/kalypso/kalypsoapproval.gif"
+                src="/kalypso/Kalypsoapproval.gif"
                 alt="Kalypso Approval"
                 layout="fill"
                 objectFit="cover"

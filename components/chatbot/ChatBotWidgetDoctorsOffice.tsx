@@ -22,7 +22,7 @@ const ChatBotWidgetDoctorsOffice: React.FC<ChatBotWidgetDoctorsOfficeProps> = ({
       case 1:
         return '/kalypso/kalypsodistressed.gif';
       case 2:
-        return '/kalypso/kalypsoapproval.gif';
+        return '/kalypso/Kalypsoapproval.gif';
       default:
         return '/kalypso/kalypsoend.gif';
     }
