@@ -15,7 +15,8 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /* ----------------------------------------- Constants ------------------------------------------ */
 const VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4";
-const DEMO_VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCAT+Software+and+Mission-VEED.mp4";
+// const DEMO_VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCAT+Software+and+Mission-VEED.mp4";
+const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/2ltRTaTkAc4";
 const BROWSER_REGEX = {
   safari: /^((?!chrome|android).)*safari/i,
   firefox: /firefox/i
@@ -165,12 +166,13 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
             className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <video
+            <iframe
               className="w-full h-full"
-              controls
-              autoPlay
-              src={DEMO_VIDEO_URL}
-            />
+              src={`${YOUTUBE_EMBED_URL}?autoplay=1&rel=0`}
+              title="MyMCAT.ai Demo Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
             <button
               onClick={handleCloseModal}
               className="absolute top-4 right-4 text-white hover:text-gray-300 p-2"
