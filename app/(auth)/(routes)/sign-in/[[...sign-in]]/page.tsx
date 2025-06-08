@@ -4,6 +4,7 @@ import { dark } from "@clerk/themes";
 export default function Page() {
   return (
     <SignIn
+      afterSignInUrl="/ankiclinic"
       appearance={{
         baseTheme: dark,
         variables: {
