@@ -62,11 +62,36 @@ const LandingNavbar = () => {
             </button>
           </Link>
           <Link href={"/hiatus"}>
-            <button 
-              className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 hover:scale-105 hover:shadow-lg transition-all duration-300"
-            >
-              Get&nbsp;Access
-            </button>
+            <div className="relative group flex flex-col items-center">
+              <button 
+                className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 hover:scale-105 hover:shadow-lg transition-all duration-300"
+              >
+                Get&nbsp;Access
+              </button>
+              {/* Tooltip box below button */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+                <div className="w-3 h-3 rotate-45 bg-white border-b border-r border-gray-300 -mb-1"></div>
+                <div className="bg-white border border-gray-300 text-black text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
+                  for new users
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href={"/sign-in"}>
+            <div className="relative group flex flex-col items-center">
+              <button 
+                className="bg-blue-600 text-white py-2 text-[16px] px-6 rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300"
+              >
+                Sign In
+              </button>
+              {/* Tooltip box below button */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+                <div className="w-3 h-3 rotate-45 bg-blue-600 border-b border-r border-blue-700 -mb-1"></div>
+                <div className="bg-blue-600 border border-blue-700 text-white text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
+                  for returning users
+                </div>
+              </div>
+            </div>
           </Link>
         </div>
       </div>
@@ -114,11 +139,36 @@ const LandingNavbar = () => {
             </button>
           </Link>
           <Link href={"/hiatus"} >
-            <button 
-              className="w-full bg-white text-black py-3 text-lg rounded-lg hover:bg-white/90 transition-colors duration-300 mt-4"
-            >
-              Get&nbsp;Access
-            </button>
+            <div className="relative group flex flex-col items-center">
+              <button 
+                className="w-full bg-white text-black py-3 text-lg rounded-lg hover:bg-white/90 transition-colors duration-300 mt-4"
+              >
+                Get&nbsp;Access
+              </button>
+              {/* Tooltip box below button */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+                <div className="w-3 h-3 rotate-45 bg-white border-b border-r border-gray-300 -mb-1"></div>
+                <div className="bg-white border border-gray-300 text-black text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
+                  for new users
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href={"/sign-in"}>
+            <div className="relative group flex flex-col items-center">
+              <button 
+                className="w-full bg-blue-600 text-white py-3 text-lg rounded-lg hover:bg-blue-700 transition-colors duration-300 mt-4"
+              >
+                Sign In
+              </button>
+              {/* Tooltip box below button */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+                <div className="w-3 h-3 rotate-45 bg-blue-600 border-b border-r border-blue-700 -mb-1"></div>
+                <div className="bg-blue-600 border border-blue-700 text-white text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
+                  for returning users
+                </div>
+              </div>
+            </div>
           </Link>
         </div>
       </div>
