@@ -194,7 +194,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
            Meow there, <span className="text-[#f2f64f]">I'm Kalypso!</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-        MyMCAT.ai is a high-tech tutoring platform that transforms MCAT courses into video games.
+        I help guide you through an MCAT prep course that is tailored to your needs.
         </p>
         <div className="flex justify-center gap-4">
           <motion.button
