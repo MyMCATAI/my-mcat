@@ -76,7 +76,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const stepMessages = useMemo(() => [
     {
       title: "Meow there, I'm Kalypso!",
-      message: "Premedley sent me to help you learn. My job is to help you study and report your weaknesses back to your firm!",
+      message: "Welcome to your firm's studyverse! My job is to study with you, reward you, and then report your weaknesses back to your tutor!",
       action: "Let's get started!",
       audioFile: "/kalypso/KalypsoVoice1.mp3"
     },

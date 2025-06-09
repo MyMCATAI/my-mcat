@@ -118,7 +118,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
             <Link href="/home" className="flex items-center">
               <div className="flex flex-col justify-center h-16">
                 <span className={`text-xl font-krungthep ${theme === 'cleanWhite' ? 'text-black' : 'text-white'}`}>
-                  <span className="font-bold">PREMED</span><span className="text-gray-400">LEY</span>
+                  <span className="font-bold">STUDY</span><span className="text-gray-400">VERSE</span>
                 </span>
               </div>
             </Link>
