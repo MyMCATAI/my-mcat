@@ -109,11 +109,13 @@ RoomSprite.displayName = 'RoomSprite';
 const AnimatedSpriteWalking = React.memo(({ 
   position, 
   direction, 
-  scale 
+  scale,
+  onClick
 }: {
   position: { x: number; y: number };
   direction: Direction;
   scale: number;
+  onClick?: () => void;
 }) => {
   const [frame, setFrame] = useState(0);
   const [baseTexture, setBaseTexture] = useState<BaseTexture | null>(null);
@@ -163,6 +165,14 @@ const AnimatedSpriteWalking = React.memo(({
       width={fixedWidth}
       height={fixedHeight}
       zIndex={8}
+      interactive={!!onClick}
+      pointerdown={(event) => {
+        if (onClick) {
+          event.stopPropagation();
+          onClick();
+        }
+      }}
+      cursor="pointer"
     />
   );
 });
@@ -182,6 +192,7 @@ interface OfficeContainerProps {
   visibleImages: Set<string>;
   imageGroups: ImageGroup[];
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
+  onKalypsoClick?: () => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -210,7 +221,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   onNewGame,
   visibleImages,
   imageGroups,
-  updateVisibleImages
+  updateVisibleImages,
+  onKalypsoClick
 }, ref) => {
   // Check for browser environment
   const isBrowser = typeof window !== 'undefined';
@@ -240,6 +252,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
+  const [isKalypsoClicked, setIsKalypsoClicked] = useState(false);
 
   // Then all useRef hooks
   const sprite1WaypointIndexRef = useRef(0);
@@ -788,7 +801,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
                   key={sprite.id}
                   position={{ x: sprite.x, y: sprite.y }}
                   direction={sprite.direction}
-                  scale={1} 
+                  scale={1}
+                  onClick={onKalypsoClick}
                 />
               ))}
             </Container>
@@ -798,9 +812,6 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       
       {/* UI Elements */}
       <div className="absolute inset-0 z-30 pointer-events-none">
-        <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-20' : 'bottom-6'} left-0 w-full text-center text-xl font-bold text-[--theme-text-color]`}>
-          {userInfo?.firstName && `${userInfo.firstName} Medical Center`}
-        </div>
         
         {/* Zoom controls - moved to bottom right */}
         <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-28' : 'bottom-4'} ${isMobile ? 'right-4' : 'right-4'} flex ${isMobile ? 'flex-row' : 'flex-col'} gap-2`}>
