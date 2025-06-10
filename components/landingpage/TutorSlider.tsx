@@ -62,12 +62,12 @@ const processBio = (bio: string): string => {
 
 const tutors = [
   {
-    name: 'Phillip',
+    name: 'Philip',
     score: '520',
     institution: 'Harvard',
     role: 'Tutor',
     image: '/tutors/PhillipB.png',
-    bio: "I'm Phillip! Harvard '23, soon to be an MSTP student at UMiami. I'll help you self-study to boost your MCAT score from 508 to 520 just like I did. In my free time, you can find me rock climbing or reading neuroscience articles."
+    bio: "I'm Philip! Harvard '23, soon to be an MSTP student at UMiami. I'll help you self-study to boost your MCAT score from 508 to 520 just like I did. In my free time, you can find me rock climbing or reading neuroscience articles."
   },
   {
     name: 'Chas',
