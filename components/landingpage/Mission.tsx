@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -37,6 +37,7 @@ const MethodologyAndTestimonials = () => {
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const polygonRef = useRef(null);
   const textBoxRef = useRef(null);
+  const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({});
 
   const universityLogos = [
     '/landingpage/CornellLogo.png',
@@ -121,15 +122,6 @@ const MethodologyAndTestimonials = () => {
     },
   ];
 
-  const discordReviews = [
-    '/landingpage/review4.png',
-    '/landingpage/review1.png',
-    '/landingpage/review2.png',
-    '/landingpage/review3.png',
-    '/landingpage/review5.png',
-    '/landingpage/review6.png'
-  ];
-
   const openTallyPopup = () => {
     if (typeof window !== 'undefined' && window.Tally) {
       window.Tally.openPopup('31vBY4', {
@@ -139,6 +131,35 @@ const MethodologyAndTestimonials = () => {
         hideTitle: true,
       });
     }
+  };
+
+  const testimonials = [
+    {
+      name: 'Kaya',
+      videoUrl: 'https://my-mcat.s3.us-east-2.amazonaws.com/studyverse/Kaya.mov',
+      points: '+13',
+      review: 'Kaya was such a cool student. She has the lovely, bubbly personality that was lost in those large Kaplan classes, but at home right here at MyMCAT <3'
+    },
+    {
+      name: 'Sanjay',
+      videoUrl: 'https://my-mcat.s3.us-east-2.amazonaws.com/studyverse/Sanjay.mov',
+      points: '+16',
+      review: 'Sanjayyyy. He started at such a low score, 497, but fought so hard to get a great score on his actual MCAT! I wish he was going to vet school instead!'
+    },
+    {
+      name: 'Eni',
+      videoUrl: 'https://my-mcat.s3.us-east-2.amazonaws.com/studyverse/Eni.mov',
+      points: '+21',
+      review: 'Eni has a face that makes you smile. He started at a 492, lost, confused, and then with a little bit of guidance he was a star. You earned that 513 buddy!'
+    }
+  ];
+
+  const handlePlay = (name: string) => {
+    setPlayingStates(prev => ({ ...prev, [name]: true }));
+  };
+
+  const handlePause = (name: string) => {
+    setPlayingStates(prev => ({ ...prev, [name]: false }));
   };
 
   return (
@@ -159,109 +180,84 @@ const MethodologyAndTestimonials = () => {
             <h2 
               className="text-4xl font-bold text-white text-center mb-6 font-krungthep"
             >
-              {"THAT's How You Study?"}
+              {"A Tutor Over Your Shoulder"}
             </h2>
             <div className="text-white text-2xl leading-relaxed mb-16">
               <p className="mb-4">
-                {"So, you're spending 700+ hours watching videos, skimming through textbooks, and brute-forcing practice questions, and suprised that your score isn't going up?"}
-              </p>
-              <p className="mb-4">
-                <span className="font-semibold">{"Well, I'm Kalypso, and I'm here to change that — by making it interactive! 🫡."}</span>
+                {"Hi, I'm Kalypso! I'm your dedicated MCAT study companion, here to help you "}<span className="text-green-400">STUDY LESS</span>{" and "}<span className="text-green-400">SCORE HIGHER</span>{"."}
               </p>
               
               <p className="mb-4">
-                {"I don't just give you content. I understand you. I track your weaknesses, adjust your plan, and yes, occasionally nudge you when you'd rather be doing anything else. I integrate trusted resources like Anki, UWorld, and AAMC materials, building a personalized schedule that adapts as you improve. If you struggle with organic molecules, I won't let you conveniently avoid them. I'll surface videos, readings, targeted UWorld questions, and prioritized Anki flashcards exactly when you need them."}
+                {"MyMCAT.ai is your complete studyverse—intelligently planning your schedule and curating the best free resources online. But I'm what makes it perfect for you. I track what you know and what you don't, constantly adjusting your study plan to focus on your weak spots."}
               </p>
               
               <p className="mb-4">
-                <span className="font-semibold">{"Because real learning is active, not passive page-turning."}</span>
+                {"When you're avoiding organic chemistry, I notice. When you're excelling at biochem but struggling with physics passages, I identify that pattern and shift your plan accordingly. When you have a tutor, I provide them with precise insights about your areas of improvement (no more guessing about your problem areas!)."}
+              </p>
+              
+              <p className="mb-4">
+                <span className="font-semibold">{"Because the difference between a good score and a great score isn't more hours—it's smarter hours."}</span>
               </p>
               
               <p className="mb-8">
-                {"And that's what medicine is, too. Empathy isn't just feeling for others; it's the act of understanding. Understanding your mistakes, your thinking, your growth. The world needs doctors who listen, who learn, who don't just memorize—but truly absorb."}
+                {"I integrate trusted resources like Anki, UWorld, and AAMC materials, building a personalized schedule that adapts as you improve. If you're struggling with specific concepts, I'll surface the right videos, readings, targeted UWorld questions, and prioritized Anki flashcards exactly when you need them."}
               </p>
               
               <p className="mb-4">
-                <span className="text-green-400 text-4xl font-semibold">{"That's the kind of doctor we see in you."}</span>
+                <span className="text-green-400 text-4xl font-semibold">{"LET'S GET THIS MED!"}</span>
               </p>
             </div>
           </div>
 
-          {/* Information Cards */}
-          <div className="mb-16 border-t border-white/10 pt-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
-              <a 
-                href="https://hpa.princeton.edu/news/free-early-access-program-mymcatai-software-designed-rice-student-increase-your-mcat-score"
-                target="_blank"
-                className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
-              >
-                <Image 
-                  src="/landingpage/PrincetonPage.jpg" 
-                  alt="Princeton" 
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-green-400 text-lg font-bold mb-2">Featured on Princeton</h3>
-                  <p className="text-white/90 text-sm">Read about our early access program</p>
+          {/* Video Testimonials Section */}
+          <section className="py-16 relative mb-8">
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-[#011528] rounded-2xl p-6 shadow-lg transform transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center gap-3 mb-4">
+                    <h3 className="text-2xl font-semibold text-white">{testimonial.name}</h3>
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="relative aspect-[9/16] mb-4 rounded-xl overflow-hidden group">
+                    <video
+                      className="w-full h-full object-cover"
+                      controls
+                      playsInline
+                      onPlay={() => handlePlay(testimonial.name)}
+                      onPause={() => handlePause(testimonial.name)}
+                      onEnded={() => handlePause(testimonial.name)}
+                    >
+                      <source src={testimonial.videoUrl} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                    {!playingStates[testimonial.name] && (
+                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300 pointer-events-none flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">
+                          <svg className="w-8 h-8 text-[#011528] ml-1" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold text-green-400 mb-4">{testimonial.points} points</p>
+                  <div className="border-t border-white/10 pt-4">
+                    <p className="text-white/80 italic text-sm">
+                      &quot;{testimonial.review}&quot;
+                    </p>
+                    <p className="text-green-400 text-sm mt-2">- Kalypso</p>
+                  </div>
                 </div>
-              </a>
-
-              <a 
-                href="/pricing"
-                className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
-              >
-                <Image 
-                  src="/landingpage/OurMethodology.png" 
-                  alt="Our Methodology" 
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-green-400 text-lg font-bold mb-2">Our Methodology</h3>
-                  <p className="text-white/90 text-sm">How we systemize your prep</p>
-                </div>
-              </a>
-
-              <a 
-                href="https://louisville.edu/ideastoaction/-/files/featured/halpern/25-principles.pdf"
-                target="_blank"
-                className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
-              >
-                <Image 
-                  src="/landingpage/DrGraessar.png" 
-                  alt="Dr. Graesser" 
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-green-400 text-lg font-bold mb-2">Research Foundation</h3>
-                  <p className="text-white/90 text-sm">The science behind our methods</p>
-                </div>
-              </a>
-
-              <a 
-                href="https://en.wikipedia.org/wiki/Benefit_corporation"
-                target="_blank"
-                className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
-              >
-                <Image 
-                  src="/landingpage/Corporate.jpg" 
-                  alt="Public Benefit Corporation" 
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-green-400 text-lg font-bold mb-2">Public Benefit Corp</h3>
-                  <p className="text-white/90 text-sm">What does it mean to be mission based?</p>
-                </div>
-              </a>
+              ))}
             </div>
-          </div>
+          </section>
 
           {/* Our Tutors Section */}
           <section 
@@ -275,7 +271,7 @@ const MethodologyAndTestimonials = () => {
               <TutorSlider />
               
               {/* Consultation Button */}
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-8 mb-16">
                 <a 
                   href="/pricing"
                   className="inline-flex items-center bg-[#23b961] text-white py-3 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#1a8d4a] hover:-translate-y-1 shadow-lg"
@@ -283,90 +279,84 @@ const MethodologyAndTestimonials = () => {
                   Book a Consultation
                 </a>
               </div>
+
+              {/* Information Cards */}
+              <div className="border-t border-white/10 pt-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+                  <a 
+                    href="https://hpa.princeton.edu/news/free-early-access-program-mymcatai-software-designed-rice-student-increase-your-mcat-score"
+                    target="_blank"
+                    className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+                  >
+                    <Image 
+                      src="/landingpage/PrincetonPage.jpg" 
+                      alt="Princeton" 
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <h3 className="text-green-400 text-lg font-bold mb-2">Featured on Princeton</h3>
+                      <p className="text-white/90 text-sm">Read about our early access program</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="/pricing"
+                    className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+                  >
+                    <Image 
+                      src="/landingpage/OurMethodology.png" 
+                      alt="Our Methodology" 
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <h3 className="text-green-400 text-lg font-bold mb-2">Our Methodology</h3>
+                      <p className="text-white/90 text-sm">How we systemize your prep</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="https://louisville.edu/ideastoaction/-/files/featured/halpern/25-principles.pdf"
+                    target="_blank"
+                    className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+                  >
+                    <Image 
+                      src="/landingpage/DrGraessar.png" 
+                      alt="Dr. Graesser" 
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <h3 className="text-green-400 text-lg font-bold mb-2">Research Foundation</h3>
+                      <p className="text-white/90 text-sm">The science behind our methods</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="https://en.wikipedia.org/wiki/Benefit_corporation"
+                    target="_blank"
+                    className="relative group overflow-hidden rounded-xl aspect-square transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+                  >
+                    <Image 
+                      src="/landingpage/Corporate.jpg" 
+                      alt="Public Benefit Corporation" 
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-75"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <h3 className="text-green-400 text-lg font-bold mb-2">Public Benefit Corp</h3>
+                      <p className="text-white/90 text-sm">What does it mean to be mission based?</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
             </div>
           </section>
-        </div>
-      </section>
-
-      {/* Discord Testimonials Section */}
-      <section 
-        className="bg-[#000c1e] py-32 relative opacity-90 overflow-hidden" 
-        id="testimonials" 
-        ref={sectionRef}
-        style={{
-          backgroundImage: "url('/stars.jpeg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="absolute inset-0 bg-[#011528] opacity-100"></div>
-        <div 
-          className="polygon absolute top-0 left-0 right-0 h-[120%] bg-[#292a58] opacity-100" 
-          style={{
-            clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)',
-          }}
-        ></div>
-        <div className="container-fluid relative z-10">
-          <h1 className="text-4xl md:text-4xl font-bold text-center font-krungthep mb-16 text-white">
-            Our Students Say We're Better
-          </h1>
-          
-          <div className="max-w-5xl mx-auto px-4">
-            <Swiper
-              modules={[Autoplay, Pagination]}
-              spaceBetween={30}
-              slidesPerView={1}
-              autoplay={{
-                delay: 5000,
-                disableOnInteraction: false,
-              }}
-              pagination={{ clickable: true }}
-              className="mb-16"
-            >
-              {discordReviews.map((reviewPath, index) => (
-                <SwiperSlide key={index} className="pb-12">
-                  <div className="bg-[#00101e] rounded-lg p-8 shadow-lg" style={{ boxShadow: '0px 0px 15px 0px rgba(35,185,97,0.3)' }}>
-                    <div className="flex justify-center mb-8">
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} className="w-8 h-8 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <Image
-                      src={reviewPath}
-                      alt={`Review ${index + 1}`}
-                      width={800}
-                      height={400}
-                      className="rounded-lg mx-auto mb-8"
-                      style={{ maxHeight: '400px', width: 'auto', objectFit: 'contain' }}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-            
-            <div className="flex justify-center space-x-6 mt-12">
-              <a 
-                href="https://discord.gg/DcHWnEu8Xb"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center bg-[#5865F2] text-white py-3 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#4752C4] hover:-translate-y-1"
-              >
-                <FaDiscord className="mr-2 text-2xl" />
-                Join Discord
-              </a>
-              <button 
-                onClick={openTallyPopup}
-                className="inline-flex items-center bg-[#23b961] text-white py-3 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#1a8d4a] hover:-translate-y-1"
-              >
-                Register Now
-              </button>
-            </div>
-          </div>
         </div>
       </section>
 

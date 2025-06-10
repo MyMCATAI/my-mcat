@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback, ReactNode, forwardRef, useImperativeHandle } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';
-import AnimatedStar from "./AnimatedStar";
 import { Button } from "@/components/ui/button";
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -96,7 +95,7 @@ interface VideoRecommendation {
 }
 
 /* ---------------------------------------- Constants --------------------------------------- */
-const STAR_THRESHOLDS = {
+const RATING_THRESHOLDS = {
   PERFECT: 100,
   EXCELLENT: 80,
   GOOD: 60,
@@ -226,14 +225,6 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }, []);
 
   /* -------------------------------------- Helpers --------------------------------------- */
-  const getStarCount = useCallback((score: number): number => {
-    if (score >= STAR_THRESHOLDS.PERFECT) return 5;
-    if (score >= STAR_THRESHOLDS.EXCELLENT) return 4;
-    if (score >= STAR_THRESHOLDS.GOOD) return 3;
-    if (score >= STAR_THRESHOLDS.FAIR) return 2;
-    if (score >= STAR_THRESHOLDS.POOR) return 1;
-    return 0;
-  }, []);
 
   const cleanAnswer = useCallback((text: string): string => {
     const matches = [...text.matchAll(/{{c[^:]*::(.+?)(?=::|}})/g)];
@@ -338,14 +329,20 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   /* ------------------------------------ Effects -------------------------------------- */
   useEffect(() => {
     if (open) {
-      const starCount = getStarCount(score);
-      fetchReview(starCount).then(reviewData => {
+      // Simple rating based on percentage score
+      let rating = 1;
+      if (score >= RATING_THRESHOLDS.PERFECT) rating = 5;
+      else if (score >= RATING_THRESHOLDS.EXCELLENT) rating = 4;
+      else if (score >= RATING_THRESHOLDS.GOOD) rating = 3;
+      else if (score >= RATING_THRESHOLDS.FAIR) rating = 2;
+      
+      fetchReview(rating).then(reviewData => {
         if (reviewData) {
           setReview(reviewData);
         }
       });
     }
-  }, [open, score, getStarCount, fetchReview]);
+  }, [open, score, fetchReview]);
 
   useEffect(() => {
     if (open) {
@@ -528,32 +525,6 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }, [handleScroll]);
 
   /* ------------------------------------ Render Methods ------------------------------------ */
-  const renderStars = () => {
-    return (
-      <div className="flex justify-center mb-4">
-        {[...Array(5)].map((_, i) => {
-          const starProgress = Math.max(Math.min(score - i, 1), 0);
-          const delay = i * 200;
-
-          return (
-            <animated.div
-              key={i}
-              style={{
-                opacity: starProgress,
-                transform: starProgress ? 'scale(1)' : 'scale(0.5)',
-                transition: `opacity 0.5s ${delay}ms, transform 0.5s ${delay}ms`,
-              }}
-            >
-              <AnimatedStar
-                progress={starProgress}
-                uniqueId={`dialog-star-${i}`}
-              />
-            </animated.div>
-          );
-        })}
-      </div>
-    );
-  };
 
   const renderPerformanceSummary = () => (
     <div className="mt-4 text-left">
@@ -725,13 +696,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                 </div>
 
                 <div className="flex justify-center mt-2">
-                  {[...Array(5)].map((_, i) => (
-                    <AnimatedStar
-                      key={i}
-                      progress={i < review.rating ? 1 : 0}
-                      uniqueId={`review-star-${i}`}
-                    />
-                  ))}
+                  <div className="text-lg font-semibold text-[--theme-hover-color]">
+                    {review.rating}/5 stars
+                  </div>
                 </div>
               </div>
             )}
