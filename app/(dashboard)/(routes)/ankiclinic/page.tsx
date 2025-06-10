@@ -19,7 +19,7 @@ import { useWindowSize } from "@/store/selectors";
 import ClinicHeader from "./components/ClinicHeader";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
-import ResourcesMenu from './ResourcesMenu';
+import SideBar from '../home/SideBar';
 import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
@@ -85,6 +85,9 @@ const DoctorsOfficePage = () => {
   const isClosingDialogRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasCalculatedRef = useRef(false);
+  const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({
+    sendMessage: () => {},
+  });
   
   // Use a ref instead of state to track ambient sound initialization
   // This prevents re-renders when the ambient sound is initialized
@@ -443,23 +446,7 @@ const DoctorsOfficePage = () => {
       const data = await response.json();
       
       if (data.error || data.alreadyUpdatedToday) {
-        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-amber-600 dark:text-amber-400">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>{"You've already treated your patients for today. Total patients treated:"} <span className="font-medium text-amber-600 dark:text-amber-400">{data.totalPatientsTreated}</span></p>
-              <p className="text-emerald-600 dark:text-emerald-400">{"Come back tomorrow to treat more patients!"}</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
+        // User has already treated patients today - no notification needed
         return;
       }
 
@@ -494,22 +481,7 @@ const DoctorsOfficePage = () => {
           }
         );
       } else {
-        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>No new patients to treat today. Try completing more flashcards!</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
+        // No new patients to treat today - no notification needed
       }
     } catch (error) {
       console.error('🚨 Error in daily calculations:', error);
@@ -535,6 +507,15 @@ const DoctorsOfficePage = () => {
     }
     // No need to update activeTab state
   };
+
+  // Add a function to handle chatbot activation from the Kalypso sprite
+  const handleActivateChatbot = useCallback(() => {
+    // Play the chatbot-open sound
+    audio.playSound('chatbot-open');
+    
+    // For now, just show a toast - in the future this could activate the chatbot tab
+    toast.success("Kalypso says hello! 🐱");
+  }, [audio]);
 
   const handleCompleteAllRoom = () => {
     handleSetCompleteAllRoom(true);
@@ -822,12 +803,12 @@ const DoctorsOfficePage = () => {
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
     <Suspense fallback={
-        <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
+        <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] rounded-lg overflow-hidden">
+          <div className="w-1/4 p-4 bg-[--theme-leaguecard-color] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
-        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
           {/* Mobile layout: completely separate components for sidebar and main content */}
           {isMobile ? (
             <>
@@ -839,6 +820,7 @@ const DoctorsOfficePage = () => {
                   visibleImages={visibleImages}
                   imageGroups={imageGroups}
                   updateVisibleImages={updateVisibleImages}
+                  onKalypsoClick={handleActivateChatbot}
                 />
               </div>
               
@@ -851,7 +833,7 @@ const DoctorsOfficePage = () => {
                 }`}
               >
                 <div className="bg-black/70 fixed inset-0" onClick={() => setIsSidebarOpen(false)}></div>
-                <div className={`fixed inset-x-0 bottom-0 top-auto z-50 bg-[--theme-gradient-startstreak] rounded-t-2xl p-4 max-h-[80vh] overflow-auto transition-transform duration-300 transform ${
+                <div className={`fixed inset-x-0 bottom-0 top-auto z-50 gradientbg p-4 max-h-[80vh] overflow-auto transition-transform duration-300 transform ${
                   isSidebarOpen ? 'translate-y-0' : 'translate-y-full'
                 }`}
                 style={{ 
@@ -879,8 +861,15 @@ const DoctorsOfficePage = () => {
                     </svg>
                   </button>
                   
-                  <ResourcesMenu
-                    reportData={reportData}
+                  <SideBar
+                    activities={activities}
+                    currentPage="ankiclinic"
+                    chatbotContext={null}
+                    chatbotRef={chatbotRef}
+                    handleSetTab={() => {}}
+                    onActivitiesUpdate={fetchActivities}
+                    isSubscribed={isSubscribed}
+                    showTasks={true}
                   />
                 </div>
               </div>
@@ -888,19 +877,27 @@ const DoctorsOfficePage = () => {
           ) : (
             <>
               {/* Desktop layout: side-by-side components */}
-              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50">
-                <ResourcesMenu
-                  reportData={reportData}
-                />
-              </div>
-              
-              <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
+              <div className="w-3/4 font-krungthep relative z-20 rounded-l-lg">
                 <OfficeContainer
                   ref={officeContainerRef}
                   onNewGame={handleSetPopulateRooms}
                   visibleImages={visibleImages}
                   imageGroups={imageGroups}
                   updateVisibleImages={updateVisibleImages}
+                  onKalypsoClick={handleActivateChatbot}
+                />
+              </div>
+              
+              <div className="w-1/4 p-4 gradientbg relative z-50">
+                <SideBar
+                  activities={activities}
+                  currentPage="ankiclinic"
+                  chatbotContext={null}
+                  chatbotRef={chatbotRef}
+                  handleSetTab={() => {}}
+                  onActivitiesUpdate={fetchActivities}
+                  isSubscribed={isSubscribed}
+                  showTasks={true}
                 />
               </div>
             </>
@@ -932,7 +929,7 @@ const DoctorsOfficePage = () => {
                 </div>
                 
                 {/* Center - New Game button */}
-                <div>
+                <div className="ml-2">
                     <NewGameButton
                       onGameStart={handleGameStart}
                     />
@@ -1016,35 +1013,14 @@ const DoctorsOfficePage = () => {
         buttonContent={<div />}
       />}
 
-      {/* Desktop only - Tutorial button */}
-      {!isMobile && (
-        <div className="absolute bottom-4 left-[calc(25%+16px)] z-50">
-          <a 
-            href="/ankiclinic-tutorial" 
-            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              // This functionality is now handled in the ClinicHeader component
-              const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
-              if (headerButton) {
-                (headerButton as HTMLElement).click();
-              }
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            Tutorial
-          </a>
-        </div>
-      )}
-
       {/* Desktop only - New Game button */}
       {!isMobile && userLevel !== "PATIENT LEVEL" && (
-        <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
-          <NewGameButton
-            onGameStart={handleGameStart}
-          />
+        <div className="absolute top-6 left-4 flex gap-2 z-50">
+          <div className="ml-4 mt-2">
+            <NewGameButton
+              onGameStart={handleGameStart}
+            />
+          </div>
         </div>
       )}
 
