@@ -22,7 +22,6 @@ import OfficeContainer from './OfficeContainer';
 import SideBar from '../home/SideBar';
 import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
-import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 // Add import for KalypsoOnboarding
 const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding'), {
@@ -783,11 +782,6 @@ const DoctorsOfficePage = () => {
     }
   }, [currentUserTestId, completeAllRoom, mcqState.isLoading, isFlashcardsOpen, largeDialogQuit, 
       fetchUserResponses, correctCount, wrongCount, setTestScore]);
-  
-  // Show loading state during initial load
-  if (mcqState.isLoading && !isClinicUnlocked) {
-    return <LoadingClinic />;
-  }
 
   const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
     <button 
@@ -814,12 +808,14 @@ const DoctorsOfficePage = () => {
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
+  // Show loading state during initial load
+  if (mcqState.isLoading && !isClinicUnlocked) {
+    return <LoadingClinic />;
+  }
+
   return (
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
-      
-      {/* Conditionally render the OnboardingModal if onboarding is not complete */}
-      { !onboardingComplete && <OnboardingModal /> }
       
       {/* Conditionally render KalypsoOnboarding every time the page loads */}
       {showKalypsoOnboarding && onboardingComplete && (

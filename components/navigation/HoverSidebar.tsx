@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo} from "react";
 import { useRouter } from "next/navigation";
 import { Book, BookOpen, GraduationCap, Brain, Clock, Menu, Lock } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
 import { useNavigation, useUser } from "@/store/selectors";
 import { createPortal } from 'react-dom';
 import Image from "next/image";
@@ -122,7 +120,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
@@ -262,19 +259,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     }
   };
   
-  /* ---- Render Methods ----- */
-  const renderHelp = () => {
-    return (
-      <div className="mt-4">
-        <ScrollArea className="h-[calc(100vh-15rem)]">
-          <div className="px-3">
-            <HelpContentTestingSuite />
-          </div>
-        </ScrollArea>
-      </div>
-    );
-  };
-  
   if (!mounted) return null;
 
   const sidebarContent = (
@@ -314,29 +298,8 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         )}
       >
         <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
-          <div className="flex justify-center gap-4">
-            <button
-              className={cn(
-                "px-6 py-1.5 rounded-lg transition-all duration-300 font-medium",
-                visibleSection === 'nav' 
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
-                  : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-              )}
-              onClick={() => setVisibleSection('nav')}
-            >
-              Navigation
-            </button>
-            <button
-              className={cn(
-                "px-6 py-1.5 rounded-lg transition-all duration-300 font-medium",
-                visibleSection === 'tasks' 
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
-                  : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-              )}
-              onClick={() => setVisibleSection('tasks')}
-            >
-              Help
-            </button>
+          <div className="flex-1 text-center">
+            <h2 className="text-lg font-semibold text-[--theme-text-color]">Navigation</h2>
           </div>
           
           {/* Close button for mobile */}
@@ -353,90 +316,84 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
         </div>
         
         <div className="flex-1 overflow-hidden">
-          {visibleSection === 'nav' ? (
-            <div className="p-4 space-y-2">
-              {NAVIGATION_ITEMS.map(item => {
-                const isUnlocked = isFeatureUnlocked(item.id);
-                // Special highlight for Kalypso AI when not unlocked
-                const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
+          <div className="p-4 space-y-2">
+            {NAVIGATION_ITEMS.map(item => {
+              const isUnlocked = isFeatureUnlocked(item.id);
+              // Special highlight for Kalypso AI when not unlocked
+              const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
+              
+              return (
+              <button
+                key={item.id}
+                className={cn(
+                  "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
+                  activeTab === item.id
+                    ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                    : isKalypsoHighlighted 
+                        ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
+                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                )}
+                onClick={() => {
+                  handleNavigationClick(item);
+                  if (isMobile) {
+                    // Auto-close sidebar after navigation on mobile
+                    setIsVisible(false);
+                  }
+                }}
+              >
+                {/* Subtle border animation for Kalypso */}
+                {isKalypsoHighlighted && (
+                  <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
+                )}
                 
-                return (
-                <button
-                  key={item.id}
-                  className={cn(
-                    "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
-                    activeTab === item.id
-                      ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                      : isKalypsoHighlighted 
-                          ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
-                          : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                  )}
-                  onClick={() => {
-                    handleNavigationClick(item);
-                    if (isMobile) {
-                      // Auto-close sidebar after navigation on mobile
-                      setIsVisible(false);
-                    }
-                  }}
-                >
-                  {/* Subtle border animation for Kalypso */}
+                <div className={cn(
+                  "flex-shrink-0",
+                  isKalypsoHighlighted && "text-emerald-500"
+                )}>
+                  {item.icon}
+                </div>
+                <span className={cn(
+                  "font-medium",
+                  isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
+                )}>
+                  {item.name}
                   {isKalypsoHighlighted && (
-                    <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
+                    <span className="ml-1 text-[9.8px] font-bold text-emerald-600 dark:text-emerald-300">
+                      (Recommended)
+                    </span>
                   )}
-                  
+                </span>
+                {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
                   <div className={cn(
-                    "flex-shrink-0",
-                    isKalypsoHighlighted && "text-emerald-500"
+                    "ml-auto flex items-center gap-1",
+                    isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
                   )}>
-                    {item.icon}
-                  </div>
-                  <span className={cn(
-                    "font-medium",
-                    isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
-                  )}>
-                    {item.name}
-                    {isKalypsoHighlighted && (
-                      <span className="ml-1 text-[9.8px] font-bold text-emerald-600 dark:text-emerald-300">
-                        (Recommended)
-                      </span>
+                    <Lock className="w-4 h-4" />
+                    {item.unlockCost && (
+                      <div className={cn(
+                        "flex items-center text-xs",
+                        isKalypsoHighlighted && "font-bold"
+                      )}>
+                        <span>{item.unlockCost}</span>
+                        <Image 
+                          src="/coin.png" 
+                          alt="coins" 
+                          width={12} 
+                          height={12} 
+                          className="ml-0.5" 
+                        />
+                      </div>
                     )}
-                  </span>
-                  {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
-                    <div className={cn(
-                      "ml-auto flex items-center gap-1",
-                      isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
-                    )}>
-                      <Lock className="w-4 h-4" />
-                      {item.unlockCost && (
-                        <div className={cn(
-                          "flex items-center text-xs",
-                          isKalypsoHighlighted && "font-bold"
-                        )}>
-                          <span>{item.unlockCost}</span>
-                          <Image 
-                            src="/coin.png" 
-                            alt="coins" 
-                            width={12} 
-                            height={12} 
-                            className="ml-0.5" 
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </button>
-              )})}
-            </div>
-          ) : (
-            <div className="h-full overflow-y-auto">
-              {renderHelp()}
-            </div>
-          )}
+                  </div>
+                )}
+              </button>
+            )})}
+          </div>
         </div>
         
         <div className="p-4 text-center border-t border-[--theme-border-color]">
           <p className="text-xs text-[--theme-text-color] opacity-70">
-            {isMobile ? "Tap the menu icon to access navigation and help" : "Hover near the left edge to show sidebar"}
+            {isMobile ? "Tap the menu icon to access navigation" : "Hover near the left edge to show sidebar"}
           </p>
         </div>
       </div>
