@@ -22,6 +22,8 @@ import OfficeContainer from './OfficeContainer';
 import SideBar from '../home/SideBar';
 import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 // Add import for KalypsoOnboarding
 const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding'), {
@@ -137,6 +139,9 @@ const DoctorsOfficePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [showKalypsoOnboarding, setShowKalypsoOnboarding] = useState(false);
+  const [showCoinReward, setShowCoinReward] = useState(false);
+  const [showCoin, setShowCoin] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -797,14 +802,29 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
-  const handleKalypsoOnboardingComplete = useCallback((showCoinReward?: boolean) => {
+  const handleKalypsoOnboardingComplete = useCallback((shouldShowCoinReward?: boolean) => {
     setShowKalypsoOnboarding(false);
     
-    if (showCoinReward) {
-      // Optional: show some coin reward or success message
-      toast.success("Welcome to AnkiClinic! Ready to start studying? 🎉");
+    if (shouldShowCoinReward) {
+      // Play fanfare sound
+      audio.playSound('fanfare');
+      
+      // Show coin reward animation
+      setShowCoinReward(true);
+      
+      // Animate the coin and description with delays
+      setTimeout(() => setShowCoin(true), 500);
+      setTimeout(() => setShowDescription(true), 1500);
+      
+      // Auto-close the coin reward after 5 seconds
+      setTimeout(() => {
+        setShowCoinReward(false);
+        setShowCoin(false);
+        setShowDescription(false);
+        toast.success("Welcome to AnkiClinic! Ready to start studying! 🎉");
+      }, 5000);
     }
-  }, []);
+  }, [audio]);
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
@@ -1029,6 +1049,110 @@ const DoctorsOfficePage = () => {
         isOpen={showReferralModal}
         onClose={() => setShowReferralModal(false)}
       />
+
+      {/* Coin Reward Popup */}
+      {showCoinReward && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 z-[10002] flex items-center justify-center"
+          onClick={() => {
+            setShowCoinReward(false);
+            setShowCoin(false);
+            setShowDescription(false);
+          }}
+        >
+          <div className="flex flex-col items-center space-y-8 max-w-4xl mx-auto px-4">
+            {/* "You've won a coin!" text */}
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={showCoin ? { opacity: 1, y: 0 } : {}}
+              transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.2 }}
+              className="text-4xl md:text-5xl text-yellow-400 font-bold text-center"
+              style={{
+                textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(255, 215, 0, 0.5)'
+              }}
+            >
+              You've won a coin! 🎉
+            </motion.div>
+            
+            {/* Coin Animation */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0, y: 100 }}
+              animate={showCoin ? { 
+                opacity: 1, 
+                scale: 1, 
+                y: 0,
+                rotate: [0, 360]
+              } : {}}
+              transition={{ 
+                type: "spring", 
+                damping: 15, 
+                stiffness: 200,
+                rotate: { duration: 2, ease: "easeOut" }
+              }}
+              className="flex items-center justify-center"
+            >
+              <div className="relative">
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-xl scale-150 animate-pulse"></div>
+                
+                {/* Coin image - Made much bigger */}
+                <Image
+                  src="/game-components/CupcakeCoin.gif"
+                  alt="Cupcake Coin"
+                  width={400}
+                  height={400}
+                  className="relative z-10 drop-shadow-2xl"
+                  style={{
+                    filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))'
+                  }}
+                />
+                
+                {/* Sparkle effects - Adjusted for bigger coin */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={showCoin ? {
+                        opacity: [0, 1, 0],
+                        scale: [0, 1, 0],
+                        x: [0, Math.cos(i * 45 * Math.PI / 180) * 150],
+                        y: [0, Math.sin(i * 45 * Math.PI / 180) * 150]
+                      } : {}}
+                      transition={{
+                        duration: 2,
+                        delay: 0.5 + i * 0.1,
+                        repeat: Infinity,
+                        repeatDelay: 1
+                      }}
+                      className="absolute top-1/2 left-1/2 w-4 h-4 bg-yellow-400 rounded-full"
+                      style={{
+                        boxShadow: '0 0 10px rgba(255, 215, 0, 0.8)'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Description Animation */}
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={showDescription ? { opacity: 1, y: 0 } : {}}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="text-2xl md:text-3xl text-white font-semibold max-w-2xl mx-auto px-4 text-center"
+              style={{
+                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+              }}
+            >
+              You win coins for getting questions right and consistency, and lose them for inconsistency!
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
 
       {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}

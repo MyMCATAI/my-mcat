@@ -379,9 +379,8 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         const uniqueWeekdays = Array.from(new Set(availableDays.map(day => day.dayName)));
         
         return (
-          <div className="space-y-6 p-6">
+          <div className="space-y-4 p-4">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Schedule</h3>
               {getNextExam() ? (
                 <p className="text-[--theme-emphasis-color] text-sm">
                   {format(new Date(), 'MMMM do')} → {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} ({getNextExam()!.activityTitle})
@@ -499,8 +498,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         return (
           <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Resources</h3>
-              <p className="text-[--theme-emphasis-color] text-sm">
+              <p className="text-[--theme-emphasis-color] text-base">
                 Select the resources you&apos;ll use to prepare for your {getNextExam()?.activityTitle}
               </p>
             </div>
@@ -557,8 +555,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         return (
           <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Balance</h3>
-              <p className="text-[--theme-emphasis-color] text-sm">
+              <p className="text-[--theme-emphasis-color] text-base">
                 Choose how to balance content review and practice
               </p>
             </div>
