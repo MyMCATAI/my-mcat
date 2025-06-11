@@ -721,7 +721,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
               onClick={() => setIsResetConfirmOpen(true)}
               variant="secondary"
               size="sm"
-              className="opacity-70 hover:opacity-100"
+              className="opacity-70 hover:opacity-100 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"
             >
               Reset Schedule
             </Button>

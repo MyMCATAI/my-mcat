@@ -3,13 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useUserInfo } from '@/hooks/useUserInfo';
 import { useAudio } from '@/store/selectors';
+import { toast } from 'react-hot-toast';
 import KalypsoAvatar from './KalypsoAvatar';
-import VoiceRecorder from './VoiceRecorder';
-import AnalysisDisplay from './AnalysisDisplay';
-import ScheduleGenerator from './ScheduleGenerator';
-import CalendarView from './CalendarView';
+import TestCalendar from '@/components/calendar/TestCalendar';
+import WeeklyCalendarModal from '@/components/calendar/WeeklyCalendarModal';
 import ChatBubble from './ChatBubble';
 import StepNavigation from './StepNavigation';
+import DemographicsStep from './DemographicsStep';
+import SettingContent from '@/components/calendar/SettingContent';
+import { useExamActivities, useAllCalendarActivities } from '@/hooks/useCalendarActivities';
+import { CalendarEvent } from '@/types/calendar';
+import DatePickerDialog from '@/components/DatePickerDialog';
+import { CalendarIcon } from 'lucide-react';
+import { formatDisplayDate, toUTCDate } from "@/lib/utils";
 
 /* --- Constants ----- */
 const DIAGNOSTIC_TEST_ID = 'cm65mma4j00b1uqgeyoiozs01';
@@ -31,11 +37,16 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [kalypsoMessage, setKalypsoMessage] = useState('');
   const [showKalypsoChat, setShowKalypsoChat] = useState(false);
-  const [showVoiceInput, setShowVoiceInput] = useState(false);
-  const [skippedDiagnostic, setSkippedDiagnostic] = useState(false);
-  const [showAnalysis, setShowAnalysis] = useState(false);
-  const [showScheduleGeneration, setShowScheduleGeneration] = useState(false);
+  const [showExamCalendarSetup, setShowExamCalendarSetup] = useState(false);
   const [showFinalCalendar, setShowFinalCalendar] = useState(false);
+  const [showDemographics, setShowDemographics] = useState(false);
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [showWeeklyCalendar, setShowWeeklyCalendar] = useState(false);
+  const [tasksGenerated, setTasksGenerated] = useState(false);
+  const [refreshingCalendar, setRefreshingCalendar] = useState(false);
 
   /* ---- Refs --- */
   const isPlayingVoiceRef = useRef(false);
@@ -44,6 +55,8 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const router = useRouter();
   const { userInfo } = useUserInfo();
   const audio = useAudio();
+  const { activities: examActivities, updateExamDate, fetchExamActivities } = useExamActivities();
+  const { activities: allActivities, refetch: refetchAllActivities } = useAllCalendarActivities();
 
   // Function to play Kalypso's voice
   const playKalypsoVoice = useCallback((audioFile: string) => {
@@ -76,27 +89,27 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const stepMessages = useMemo(() => [
     {
       title: "Meow there, I'm Kalypso!",
-      message: "Welcome to your firm's studyverse! My job is to study with you, reward you, and then report your weaknesses back to your tutor!",
+      message: "Welcome to MyMCAT.ai! My job is to be your best friend, learn your weaknesses, and then serve up exactly what you need to study and when!",
       action: "Let's get started!",
-      audioFile: "/kalypso/KalypsoVoice1.mp3"
+      audioFile: "/audio/KOnboarding1.mp3"
     },
     {
-      title: "Let's See What You Know! 🧠",
-      message: "Your tutoring firm has loaded a diagnostic for you to take so I can start discovering what you know and don't know. If you'd rather skip it, then press skip and just tell me what you struggle with quickly!",
-      action: "Start Diagnostic",
-      audioFile: "/kalypso/KalypsoVoice2.mp3"
+      title: "Tell Me About Yourself! 📋",
+      message: "Did you know that I've never met an annoying premed? See, what I did just now was lie. Don't do that! Answer these questions truthfully!",
+      action: "Save My Information",
+      audioFile: "/audio/KOnboarding2.mp3"
     },
     {
-      title: "Creating Your Study Plan 📅",
-      message: "Perfect! Now I'm going to create your personalized study schedule based on what I learned about you.",
-      action: "Create My Study Plan",
-      audioFile: "/kalypso/KalypsoVoice3.mp3"
+      title: "Let's Set Up Your Study Schedule! 📅",
+      message: "Purr-fect! Now let's set up your exam dates and study schedule. This will help me create the most paw-some personalized study plan for you!",
+      action: "Configure My Schedule",
+      audioFile: "/audio/KOnboarding3.mp3"
     },
     {
-      title: "Your Personalized Schedule 📅",
-      message: "Purr-fect! Here's your custom study schedule. I've organized everything by topic and sent that information to your tutor!",
+      title: "Your Schedule",
+      message: "Purr-fect! Research has shown the content, practice, and test phase is ineffective. Instead, it's better to test frequently, diagnose your weaknesses, and target content and practice. And that's why I'm here. You can edit this now, or edit it later in the testing suite including adding third party exams.",
       action: "Complete Setup",
-      audioFile: "/kalypso/KalypsoVoiceStudySchedule.mp3"
+      audioFile: "/audio/KOnboarding4.mp3"
     }
   ], []);
 
@@ -109,50 +122,118 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       link.rel = 'stylesheet';
       document.head.appendChild(link);
 
-      // Only play Kalypso's voice on the very first step (step 0) and not in voice input mode
-      if (!showVoiceInput && !showAnalysis && currentStep === 0) {
+      // Only play Kalypso's voice on the very first step (step 0)
+      if (currentStep === 0) {
         playKalypsoVoice(stepMessages[0].audioFile);
       }
       setShowKalypsoChat(true);
-      setKalypsoMessage(showVoiceInput ? "" : stepMessages[0].message);
+      setKalypsoMessage(stepMessages[0].message);
     } else {
       setShowKalypsoChat(false);
       setCurrentStep(0);
       // Reset voice playing flag when closing
       isPlayingVoiceRef.current = false;
     }
-  }, [isOpen, audio, stepMessages, playKalypsoVoice, showVoiceInput, showAnalysis, currentStep]);
+  }, [isOpen, audio, stepMessages, playKalypsoVoice, currentStep]);
+
+  // Play onboarding audio for calendar setup when it appears
+  useEffect(() => {
+    if (showExamCalendarSetup) {
+      playKalypsoVoice('/audio/KOnboarding3.mp3');
+    }
+  }, [showExamCalendarSetup, playKalypsoVoice]);
 
   // Update message when step changes
   useEffect(() => {
-    if (showVoiceInput) {
-      setKalypsoMessage(""); // No message for voice input
-    } else if (showAnalysis) {
-      setKalypsoMessage(""); // No message for analysis - just the title
-    } else if (stepMessages[currentStep]) {
+    if (stepMessages[currentStep]) {
       setKalypsoMessage(stepMessages[currentStep].message);
     }
-  }, [currentStep, stepMessages, showVoiceInput, showAnalysis]);
+  }, [currentStep, stepMessages]);
+
+  // Process calendar events from activities
+  useEffect(() => {
+    if (examActivities && allActivities) {
+      const examEvents = examActivities.map((activity) => {
+        // Map exam titles to shorter display names
+        let displayTitle = "EXAM";
+        if (activity.activityTitle === "MCAT Exam") {
+          displayTitle = "MCAT";
+        } else if (activity.activityTitle.includes("Unscored Sample")) {
+          displayTitle = "Unscored";
+        } else if (activity.activityTitle.includes("Full Length Exam")) {
+          const number = activity.activityTitle.match(/\d+/)?.[0];
+          displayTitle = `FL${number}`;
+        } else if (activity.activityTitle.includes("Sample Scored")) {
+          displayTitle = "Scored";
+        }
+
+        return {
+          id: activity.id,
+          title: displayTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
+          resource: { 
+            ...activity, 
+            eventType: 'exam' as const,
+            fullTitle: activity.activityTitle,
+            activityText: activity.activityText,
+            hours: activity.hours,
+            activityType: activity.activityType,
+            activityTitle: activity.activityTitle,
+            status: activity.status
+          }
+        };
+      });
+
+      const studyEvents = allActivities
+        .filter(activity => activity.activityType !== 'exam')
+        .map((activity) => ({
+          id: activity.id,
+          title: activity.activityTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
+          resource: { 
+            ...activity, 
+            eventType: 'study' as const,
+            fullTitle: `${activity.activityTitle} (${activity.hours}h)`,
+            activityText: activity.activityText,
+            hours: activity.hours,
+            activityType: activity.activityType,
+            activityTitle: activity.activityTitle,
+            status: activity.status
+          }
+        }));
+
+      setCalendarEvents([...examEvents, ...studyEvents]);
+    }
+  }, [examActivities, allActivities]);
 
   /* ---- Event Handlers ----- */
   const handleStepAction = useCallback(async () => {
     switch (currentStep) {
       case 0:
-        // Introduction -> Diagnostic Setup
+        // Introduction -> Demographics Collection
         setCurrentStep(1);
-        setKalypsoMessage(stepMessages[1].message);
+        setShowDemographics(true);
+        setKalypsoMessage("");
+        // Play the demographics step audio
         playKalypsoVoice(stepMessages[1].audioFile);
         break;
       
       case 1:
-        // Start Diagnostic - Navigate to CARS passage
-        router.push(`/test-questions/${DIAGNOSTIC_TEST_ID}`);
+        // Demographics -> handled by handleDemographicsComplete
         break;
       
       case 2:
-        // Start Schedule Generation
-        setShowScheduleGeneration(true);
-        setKalypsoMessage("");
+        // Exam Calendar Setup -> handled by handleExamCalendarComplete
         break;
       
       case 3:
@@ -165,33 +246,139 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
         }, 2000);
         break;
     }
-  }, [currentStep, stepMessages, playKalypsoVoice, router, onComplete]);
+  }, [currentStep, onComplete, playKalypsoVoice, stepMessages]);
 
-  const handleSkipDiagnostic = useCallback(() => {
-    setSkippedDiagnostic(true);
-    setShowVoiceInput(true);
-    setKalypsoMessage("");
-  }, []);
+  const handleDemographicsComplete = useCallback(async (data: {
+    firstName: string;
+    college: string;
+    isNonTraditional: boolean;
+    isCanadian: boolean;
+    currentMcatScore: number | null;
+    hasNotTakenMCAT: boolean;
+    targetScore: number;
+  }) => {
+    try {
+      // Save all the demographic data to the database
+      const response = await fetch('/api/user-info/onboarding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: data.firstName,
+          college: data.college,
+          isNonTraditional: data.isNonTraditional,
+          isCanadian: data.isCanadian,
+          currentMcatScore: data.currentMcatScore,
+          hasNotTakenMCAT: data.hasNotTakenMCAT,
+          mcatAttemptNumber: "1", // Default to first attempt if not specified
+          targetScore: data.targetScore,
+          currentStep: 2, // Go to exam calendar setup step
+        })
+      });
 
-  const handleVoiceInputComplete = useCallback(() => {
-      setShowVoiceInput(false);
-      setShowAnalysis(true);
-      setKalypsoMessage("");
-  }, []);
+      if (!response.ok) throw new Error('Failed to save demographic information');
 
-  const handleAnalysisComplete = useCallback(() => {
-    setShowAnalysis(false);
-    setShowScheduleGeneration(true);
-    setKalypsoMessage("");
-  }, []);
-
-  const handleScheduleGenerationComplete = useCallback(() => {
-            setShowScheduleGeneration(false);
-            setCurrentStep(3);
-            setShowFinalCalendar(true);
-            setKalypsoMessage(stepMessages[3].message);
-            playKalypsoVoice(stepMessages[3].audioFile);
+      // Hide demographics form and go to exam calendar setup
+      setShowDemographics(false);
+      setCurrentStep(2);
+      setShowExamCalendarSetup(true);
+      setKalypsoMessage(stepMessages[2].message);
+      playKalypsoVoice(stepMessages[2].audioFile);
+    } catch (error) {
+      console.error('Error saving demographics:', error);
+      toast.error('Failed to save your information. Please try again.');
+    }
   }, [stepMessages, playKalypsoVoice]);
+
+  const handleExamCalendarComplete = useCallback(async (result: {
+    success: boolean;
+    action: "generate" | "save";
+    data?: {
+      examDate: Date;
+      hoursPerDay: Record<string, string>;
+      fullLengthDays: string[];
+    };
+  }) => {
+    try {
+      if (result.success) {
+        // Hide exam calendar setup and go to final calendar
+        setShowExamCalendarSetup(false);
+        setCurrentStep(3);
+        setShowFinalCalendar(true);
+        setKalypsoMessage(stepMessages[3].message);
+        playKalypsoVoice(stepMessages[3].audioFile);
+        
+        toast.success('Your exam schedule has been set up successfully!');
+      } else {
+        toast.error('Failed to set up your exam schedule. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error handling exam calendar completion:', error);
+      toast.error('Failed to process your exam schedule. Please try again.');
+    }
+  }, [stepMessages, playKalypsoVoice]);
+
+  // Calendar event handlers
+  const handleCalendarNavigate = useCallback((date: Date) => {
+    setCalendarDate(date);
+  }, []);
+
+  const handleSelectEvent = useCallback((event: CalendarEvent) => {
+    // For onboarding, we can just show basic info or do nothing
+    console.log('Selected event:', event);
+  }, []);
+
+  // Handle opening date picker for a test
+  const handleOpenDatePicker = useCallback((testId: string) => {
+    setSelectedTestId(testId);
+    setDatePickerOpen(true);
+  }, []);
+
+  // Handle date selection
+  const handleDateSelect = useCallback(async (date: Date) => {
+    if (selectedTestId) {
+      try {
+        // Convert to UTC date without time component
+        const utcDate = toUTCDate(date);
+        await updateExamDate(selectedTestId, utcDate);
+        setDatePickerOpen(false);
+        setSelectedTestId(null);
+        toast.success('Exam date updated successfully!');
+      } catch (error) {
+        console.error('Failed to update test date:', error);
+        toast.error('Failed to update exam date. Please try again.');
+      }
+    }
+  }, [selectedTestId, updateExamDate]);
+
+  // Handle weekly calendar completion
+  const handleWeeklyCalendarComplete = useCallback(async (result: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => {
+    if (result.success) {
+      try {
+        setRefreshingCalendar(true);
+        
+        // Small delay to ensure backend processing is complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Refresh all activities to show newly generated tasks
+        await Promise.all([
+          fetchExamActivities(),
+          refetchAllActivities()
+        ]);
+        
+        setTasksGenerated(true);
+        setShowWeeklyCalendar(false);
+        setRefreshingCalendar(false);
+        toast.success('Your study tasks have been generated successfully!');
+        return true;
+      } catch (error) {
+        console.error('Failed to refresh activities after task generation:', error);
+        setRefreshingCalendar(false);
+        toast.error('Tasks generated but failed to refresh calendar. Please refresh the page.');
+        return false;
+      }
+    }
+    return false;
+  }, [fetchExamActivities, refetchAllActivities]);
 
   /* ---- Render Methods ----- */
   const renderOverlay = () => (
@@ -205,24 +392,173 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   );
 
   const renderChatContent = () => {
-    if (showVoiceInput) {
-      return <VoiceRecorder onComplete={handleVoiceInputComplete} />;
+    if (showDemographics) {
+      return <DemographicsStep onComplete={handleDemographicsComplete} />;
     }
 
-    if (showAnalysis) {
-      return <AnalysisDisplay onComplete={handleAnalysisComplete} />;
+    if (showExamCalendarSetup) {
+      return (
+        <div className="w-[43rem] h-[40rem] flex flex-col justify-between">
+          {/* Custom styled container for onboarding */}
+          <div className="flex-1 flex flex-col justify-center [&_.text-white]:text-gray-800 [&_.border-gray-400\\/30]:border-gray-300 [&_.bg-white\\/5]:bg-gray-100 [&_.bg-white\\/10]:bg-gray-200 [&_.hover\\:bg-white\/20]:hover:bg-gray-300">
+            <SettingContent
+              isInitialSetup={true}
+              onComplete={handleExamCalendarComplete}
+            />
+          </div>
+        </div>
+      );
     }
 
-    if (showScheduleGeneration) {
-      return <ScheduleGenerator onComplete={handleScheduleGenerationComplete} />;
+    if (showWeeklyCalendar) {
+      return (
+        <div className="w-[43rem] h-[40rem] flex flex-col">
+          {/* Custom styled container for weekly calendar */}
+          <div 
+            className="flex-1 flex flex-col overflow-y-auto [&_.text-white]:text-gray-800 [&_.border-gray-400\\/30]:border-gray-300 [&_.bg-white\\/5]:bg-gray-100 [&_.bg-white\\/10]:bg-gray-200 [&_.hover\\:bg-white\/20]:hover:bg-gray-300"
+            style={{
+              // Override theme colors for onboarding white background
+              '--theme-mainbox-color': '#ffffff',
+              '--theme-text-color': '#374151',
+              '--theme-emphasis-color': '#62c1e5',
+              '--theme-hover-color': '#f3f4f6',
+              '--theme-hover-text': '#1f2937',
+              '--theme-border-color': '#e5e7eb',
+              '--theme-leaguecard-color': '#f9fafb',
+              '--theme-leaguecard-accent': '#ffffff',
+              '--theme-button-color': '#ffffff',
+              '--theme-box-shadow': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+              // Make scrollbar always visible and styled
+              scrollbarWidth: 'auto',
+              scrollbarColor: '#cbd5e1 #f1f5f9'
+            } as React.CSSProperties}
+          >
+            <WeeklyCalendarModal
+              onComplete={handleWeeklyCalendarComplete}
+              isInitialSetup={false}
+            />
+          </div>
+        </div>
+      );
     }
 
     if (showFinalCalendar) {
+      // Get upcoming exam activities for the list
+      const upcomingExams = examActivities?.filter(activity => 
+        new Date(activity.scheduledDate) >= new Date()
+      ).sort((a, b) => 
+        new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+      ) || [];
+
       return (
-        <CalendarView 
-          title={stepMessages[currentStep]?.title || ""}
-          message={kalypsoMessage}
-        />
+        <div className="w-[43rem] h-[35rem] flex flex-col">
+          {/* Title and message - Fixed at top */}
+          <div className="mb-4 text-center flex-shrink-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight mb-2"
+            >
+              {stepMessages[3]?.title || ""}
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-base md:text-lg text-gray-800 dark:text-gray-200 leading-relaxed font-medium"
+            >
+              {stepMessages[3]?.message || ""}
+            </motion.div>
+          </div>
+          
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Show calendar only after tasks are generated */}
+            {tasksGenerated && (
+              <div 
+                className="h-[20rem] mb-4 relative"
+                style={{
+                  // Override theme colors for onboarding white background
+                  '--theme-mainbox-color': '#ffffff',
+                  '--theme-text-color': '#374151',
+                  '--theme-emphasis-color': '#62c1e5',
+                  '--theme-hover-color': '#f3f4f6',
+                  '--theme-hover-text': '#1f2937',
+                  '--theme-border-color': '#e5e7eb',
+                  '--theme-leaguecard-color': '#f9fafb',
+                  '--theme-leaguecard-accent': '#ffffff',
+                  '--theme-button-color': '#ffffff',
+                  '--theme-box-shadow': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)'
+                } as React.CSSProperties}
+              >
+                {refreshingCalendar && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <div className="text-sm text-gray-600">Updating calendar...</div>
+                    </div>
+                  </div>
+                )}
+                <TestCalendar
+                  events={calendarEvents}
+                  date={calendarDate}
+                  onNavigate={handleCalendarNavigate}
+                  onSelectEvent={handleSelectEvent}
+                  buttonLabels={{
+                    hideSummarize: true,
+                    generate: ""
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-4 pb-4">
+              {!tasksGenerated ? (
+                <>
+                  {/* Primary Button - Fill Tasks */}
+                  <button
+                    onClick={() => setShowWeeklyCalendar(true)}
+                    className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity duration-200"
+                  >
+                    Fill Tasks
+                  </button>
+                  
+                  {/* Secondary Button - Complete Setup */}
+                  <button
+                    onClick={() => {
+                      setIsCompleting(true);
+                      setTimeout(() => {
+                        onComplete(true);
+                        setIsCompleting(false);
+                      }, 2000);
+                    }}
+                    disabled={isCompleting}
+                    className="bg-gray-200 text-gray-700 px-8 py-3 rounded-full font-semibold hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {isCompleting ? "Completing..." : "Complete Setup"}
+                  </button>
+                </>
+              ) : (
+                /* Show only Complete Setup after tasks are generated */
+                <button
+                  onClick={() => {
+                    setIsCompleting(true);
+                    setTimeout(() => {
+                      onComplete(true);
+                      setIsCompleting(false);
+                    }, 2000);
+                  }}
+                  disabled={isCompleting}
+                  className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
+                >
+                  {isCompleting ? "Completing..." : "Complete Setup"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       );
     }
 
@@ -242,7 +578,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-lg md:text-xl text-gray-800 dark:text-gray-200 leading-relaxed font-medium bg-gray-50 dark:bg-gray-700 p-6 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm"
+                    className="text-xl md:text-2xl text-gray-800 dark:text-gray-200 leading-relaxed font-medium bg-gray-50 dark:bg-gray-700 p-6 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm"
                   >
                     {kalypsoMessage}
                   </motion.div>
@@ -258,29 +594,42 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
           {renderOverlay()}
           <KalypsoAvatar onAction={handleStepAction} />
           <ChatBubble 
-            showAnalysis={showAnalysis}
-            showScheduleGeneration={showScheduleGeneration}
             showFinalCalendar={showFinalCalendar}
+            showDemographics={showDemographics}
+            showExamCalendarSetup={showExamCalendarSetup}
           >
             {renderChatContent()}
             
             {/* Show navigation only for regular steps */}
-            {!showVoiceInput && !showAnalysis && !showScheduleGeneration && (
+            {!showDemographics && !showExamCalendarSetup && !showWeeklyCalendar && !showFinalCalendar && (
               <StepNavigation
                 currentStep={currentStep}
                 totalSteps={stepMessages.length}
                 actionText={stepMessages[currentStep]?.action || "Continue"}
                 isCompleting={isCompleting}
                 showPrevious={currentStep > 0}
-                showSkip={currentStep === 1}
+                showSkip={false}
                 onPrevious={() => setCurrentStep(currentStep - 1)}
-                onSkip={handleSkipDiagnostic}
+                onSkip={() => {}}
                 onAction={handleStepAction}
               />
             )}
           </ChatBubble>
         </>
       )}
+      
+      <DatePickerDialog
+        isOpen={datePickerOpen}
+        onClose={() => {
+          setDatePickerOpen(false);
+          setSelectedTestId(null);
+        }}
+        onDateSelect={handleDateSelect}
+        currentDate={selectedTestId && examActivities ? new Date(examActivities.find(t => t.id === selectedTestId)?.scheduledDate || '') : undefined}
+        testName={selectedTestId && examActivities ? examActivities.find(t => t.id === selectedTestId)?.activityTitle : undefined}
+      />
+
+
     </AnimatePresence>
   );
 };
