@@ -106,10 +106,16 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       audioFile: "/audio/KOnboarding3.mp3"
     },
     {
-      title: "Your Schedule",
-      message: "Purr-fect! Research has shown the content, practice, and test phase is ineffective. Instead, it's better to test frequently, diagnose your weaknesses, and target content and practice. And that's why I'm here. You can edit this now, or edit it later in the testing suite including adding third party exams.",
-      action: "Complete Setup",
+      title: "Your Personalized Schedule 📅",
+      message: "Don't take all exams at the end. Learning scientists say test frequently. That's why I recommend spacing them out like below. Change the dates now, or later in the testing suite — where you can also add third party exams!.",
+      action: "Fill Tasks",
       audioFile: "/audio/KOnboarding4.mp3"
+    },
+    {
+      title: "Pawsitively awesome! 🐾",
+      message: "This is your calendar. Everyday, on the sidebar, you'll have tasks and be able to edit this calendar — including rescheduling, changing preferences, and adding third party exams.",
+      action: "Complete Setup",
+      audioFile: "/audio/KOnboarding6.mp3"
     }
   ], []);
 
@@ -142,6 +148,13 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       playKalypsoVoice('/audio/KOnboarding3.mp3');
     }
   }, [showExamCalendarSetup, playKalypsoVoice]);
+
+  // Play onboarding audio for weekly calendar modal when it appears
+  useEffect(() => {
+    if (showWeeklyCalendar) {
+      playKalypsoVoice('/audio/KOnboarding5.mp3');
+    }
+  }, [showWeeklyCalendar, playKalypsoVoice]);
 
   // Update message when step changes
   useEffect(() => {
@@ -237,6 +250,11 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
         break;
       
       case 3:
+        // Fill Tasks -> Show weekly calendar modal
+        setShowWeeklyCalendar(true);
+        break;
+      
+      case 4:
         // Complete setup
         setIsCompleting(true);
         
@@ -300,7 +318,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   }) => {
     try {
       if (result.success) {
-        // Hide exam calendar setup and go to final calendar
+        // Hide exam calendar setup and go to step 3 (Your Personalized Schedule)
         setShowExamCalendarSetup(false);
         setCurrentStep(3);
         setShowFinalCalendar(true);
@@ -368,6 +386,12 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
         setTasksGenerated(true);
         setShowWeeklyCalendar(false);
         setRefreshingCalendar(false);
+        
+        // Move to final step (Pawsitively awesome!)
+        setCurrentStep(4);
+        setKalypsoMessage(stepMessages[4].message);
+        playKalypsoVoice(stepMessages[4].audioFile);
+        
         toast.success('Your study tasks have been generated successfully!');
         return true;
       } catch (error) {
@@ -378,7 +402,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       }
     }
     return false;
-  }, [fetchExamActivities, refetchAllActivities]);
+  }, [fetchExamActivities, refetchAllActivities, stepMessages, playKalypsoVoice]);
 
   /* ---- Render Methods ----- */
   const renderOverlay = () => (
@@ -421,12 +445,13 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
               '--theme-mainbox-color': '#ffffff',
               '--theme-text-color': '#374151',
               '--theme-emphasis-color': '#62c1e5',
-              '--theme-hover-color': '#f3f4f6',
+              '--theme-hover-color': '#bbf7d0', // Light green for study events
               '--theme-hover-text': '#1f2937',
               '--theme-border-color': '#e5e7eb',
               '--theme-leaguecard-color': '#f9fafb',
               '--theme-leaguecard-accent': '#ffffff',
               '--theme-button-color': '#ffffff',
+              '--theme-doctorsoffice-accent': '#bbf7d0', // Light green for study events
               '--theme-box-shadow': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
               // Make scrollbar always visible and styled
               scrollbarWidth: 'auto',
@@ -460,7 +485,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
               transition={{ delay: 0.1 }}
               className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight mb-2"
             >
-              {stepMessages[3]?.title || ""}
+              {stepMessages[currentStep]?.title || ""}
             </motion.div>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -468,80 +493,93 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
               transition={{ delay: 0.3 }}
               className="text-base md:text-lg text-gray-800 dark:text-gray-200 leading-relaxed font-medium"
             >
-              {stepMessages[3]?.message || ""}
+              {stepMessages[currentStep]?.message || ""}
             </motion.div>
           </div>
           
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto">
-            {/* Show calendar only after tasks are generated */}
-            {tasksGenerated && (
-              <div 
-                className="h-[20rem] mb-4 relative"
-                style={{
-                  // Override theme colors for onboarding white background
-                  '--theme-mainbox-color': '#ffffff',
-                  '--theme-text-color': '#374151',
-                  '--theme-emphasis-color': '#62c1e5',
-                  '--theme-hover-color': '#f3f4f6',
-                  '--theme-hover-text': '#1f2937',
-                  '--theme-border-color': '#e5e7eb',
-                  '--theme-leaguecard-color': '#f9fafb',
-                  '--theme-leaguecard-accent': '#ffffff',
-                  '--theme-button-color': '#ffffff',
-                  '--theme-box-shadow': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)'
-                } as React.CSSProperties}
-              >
-                {refreshingCalendar && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-lg">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <div className="text-sm text-gray-600">Updating calendar...</div>
-                    </div>
+          {/* Step 4: Calendar - Takes available space */}
+          {currentStep === 4 && tasksGenerated && (
+            <div 
+              className="flex-1 mb-4 relative"
+              style={{
+                // Override theme colors for onboarding white background
+                '--theme-mainbox-color': '#ffffff',
+                '--theme-text-color': '#374151',
+                '--theme-emphasis-color': '#62c1e5',
+                '--theme-hover-color': '#bbf7d0', // Light green for study events
+                '--theme-hover-text': '#1f2937',
+                '--theme-border-color': '#e5e7eb',
+                '--theme-leaguecard-color': '#f9fafb',
+                '--theme-leaguecard-accent': '#ffffff',
+                '--theme-button-color': '#ffffff',
+                '--theme-doctorsoffice-accent': '#bbf7d0', // Light green for study events
+                '--theme-box-shadow': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)'
+              } as React.CSSProperties}
+            >
+              {refreshingCalendar && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-lg">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <div className="text-sm text-gray-600">Updating calendar...</div>
                   </div>
-                )}
-                <TestCalendar
-                  events={calendarEvents}
-                  date={calendarDate}
-                  onNavigate={handleCalendarNavigate}
-                  onSelectEvent={handleSelectEvent}
-                  buttonLabels={{
-                    hideSummarize: true,
-                    generate: ""
-                  }}
-                />
-              </div>
-            )}
+                </div>
+              )}
+              <TestCalendar
+                events={calendarEvents}
+                date={calendarDate}
+                onNavigate={handleCalendarNavigate}
+                onSelectEvent={handleSelectEvent}
+                buttonLabels={{
+                  hideSummarize: true,
+                  generate: ""
+                }}
+              />
+            </div>
+          )}
 
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 pb-4">
-              {!tasksGenerated ? (
-                <>
-                  {/* Primary Button - Fill Tasks */}
-                  <button
-                    onClick={() => setShowWeeklyCalendar(true)}
-                    className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity duration-200"
-                  >
-                    Fill Tasks
-                  </button>
-                  
-                  {/* Secondary Button - Complete Setup */}
-                  <button
-                    onClick={() => {
-                      setIsCompleting(true);
-                      setTimeout(() => {
-                        onComplete(true);
-                        setIsCompleting(false);
-                      }, 2000);
-                    }}
-                    disabled={isCompleting}
-                    className="bg-gray-200 text-gray-700 px-8 py-3 rounded-full font-semibold hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
-                  >
-                    {isCompleting ? "Completing..." : "Complete Setup"}
-                  </button>
-                </>
+          {/* Step 3: Upcoming exams list - Takes available space */}
+          {currentStep === 3 && upcomingExams.length > 0 && (
+            <div className="flex-1 mb-4 overflow-y-auto">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="space-y-2">
+                  {upcomingExams.map((exam) => (
+                    <div key={exam.id} className="flex items-center justify-between bg-white rounded-md p-3 border border-gray-100">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{exam.activityTitle}</div>
+                        <div className="text-xs text-gray-500">{exam.activityText}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          {formatDisplayDate(new Date(exam.scheduledDate))}
+                        </span>
+                        <button
+                          onClick={() => handleOpenDatePicker(exam.id)}
+                          className="p-1.5 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                          title="Change date"
+                        >
+                          <CalendarIcon className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons - Always visible at bottom */}
+          {(currentStep === 3 || currentStep === 4) && (
+            <div className="flex justify-center gap-4 pb-4 flex-shrink-0">
+              {currentStep === 3 ? (
+                /* Step 3: Show Fill Tasks button */
+                <button
+                  onClick={() => setShowWeeklyCalendar(true)}
+                  className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity duration-200"
+                >
+                  Fill Tasks
+                </button>
               ) : (
-                /* Show only Complete Setup after tasks are generated */
+                /* Step 4: Show Complete Setup button */
                 <button
                   onClick={() => {
                     setIsCompleting(true);
@@ -557,7 +595,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
                 </button>
               )}
             </div>
-          </div>
+          )}
         </div>
       );
     }
