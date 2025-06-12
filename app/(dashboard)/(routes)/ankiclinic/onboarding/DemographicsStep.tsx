@@ -160,7 +160,7 @@ const DemographicsStep: React.FC<DemographicsStepProps> = ({ onComplete }) => {
           transition={{ delay: 0.3 }}
           className="text-lg md:text-xl text-gray-800 dark:text-gray-200 leading-relaxed font-medium"
         >
-          Did you know that I've never met an annoying premed? See, what I did just now was lie. Don't do that! Answer these questions truthfully!
+          I love making new friends! And then, uh, cancelling plans with them to sleep on a keyboard.
         </motion.p>
       </div>
 

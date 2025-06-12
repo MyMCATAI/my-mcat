@@ -34,8 +34,8 @@ const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding')
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
   ssr: false,
   loading: () => (
-    <button className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center opacity-70">
-      <span className="animate-pulse">Loading...</span>
+    <button className="p-3 bg-[--theme-leaguecard-color] rounded-full shadow-lg flex items-center justify-center opacity-70">
+      <span className="animate-pulse text-white">Loading...</span>
     </button>
   )
 });
@@ -63,9 +63,55 @@ const RedeemReferralModal = dynamic(() => import('@/components/social/friend-req
 
 // Loading component for better UX during initial load
 const LoadingClinic = () => (
-  <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-    <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse"></div>
-    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg"></div>
+  <div className={`flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${typeof window !== 'undefined' && window.innerWidth <= 768 ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+    {/* Main office area - left side (3/4 width) */}
+    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-l-lg relative">
+      {/* Simulated isometric grid pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="grid grid-cols-8 grid-rows-6 h-full w-full gap-1 p-4">
+          {Array.from({ length: 48 }).map((_, i) => (
+            <div key={i} className="bg-gray-700/40 rounded-sm animate-pulse" style={{ animationDelay: `${i * 50}ms` }} />
+          ))}
+        </div>
+      </div>
+      {/* Loading text */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <div className="text-white/70 text-lg font-medium animate-pulse">Setting up your clinic...</div>
+          <div className="flex space-x-1 justify-center">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="w-2 h-2 bg-[--theme-leaguecard-color] rounded-full animate-bounce" style={{ animationDelay: `${i * 200}ms` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {/* Sidebar area - right side (1/4 width) */}
+    <div className="w-1/4 p-4 gradientbg animate-pulse relative">
+      {/* Simulated sidebar content */}
+      <div className="space-y-4">
+        {/* Header area */}
+        <div className="h-8 bg-white/20 rounded animate-pulse" />
+        
+        {/* Stats area */}
+        <div className="space-y-2">
+          <div className="h-4 bg-white/15 rounded animate-pulse" />
+          <div className="h-4 bg-white/15 rounded animate-pulse w-3/4" />
+          <div className="h-4 bg-white/15 rounded animate-pulse w-1/2" />
+        </div>
+        
+        {/* Activity area */}
+        <div className="space-y-3 mt-6">
+          <div className="h-6 bg-white/20 rounded animate-pulse" />
+          <div className="space-y-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-12 bg-white/10 rounded animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 );
 
@@ -142,6 +188,7 @@ const DoctorsOfficePage = () => {
   const [showCoinReward, setShowCoinReward] = useState(false);
   const [showCoin, setShowCoin] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [isOfficeContainerReady, setIsOfficeContainerReady] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -520,6 +567,18 @@ const DoctorsOfficePage = () => {
     }
   }, [mcqState.isLoading, userInfo]);
 
+  // Effect to set OfficeContainer as ready after data loading is complete
+  useEffect(() => {
+    if (!mcqState.isLoading && reportData && userRooms.length > 0) {
+      // Add a small delay to ensure OfficeContainer has time to initialize
+      const timer = setTimeout(() => {
+        setIsOfficeContainerReady(true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [mcqState.isLoading, reportData, userRooms.length]);
+
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
       router.push(`/home?tab=${tab}`);
@@ -802,27 +861,43 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
-  const handleKalypsoOnboardingComplete = useCallback((shouldShowCoinReward?: boolean) => {
+  const handleKalypsoOnboardingComplete = useCallback(async (shouldShowCoinReward?: boolean) => {
     setShowKalypsoOnboarding(false);
     
     if (shouldShowCoinReward) {
-      // Play fanfare sound
-      audio.playSound('fanfare');
-      
-      // Show coin reward animation
-      setShowCoinReward(true);
-      
-      // Animate the coin and description with delays
-      setTimeout(() => setShowCoin(true), 500);
-      setTimeout(() => setShowDescription(true), 1500);
-      
-      // Auto-close the coin reward after 5 seconds
-      setTimeout(() => {
-        setShowCoinReward(false);
-        setShowCoin(false);
-        setShowDescription(false);
-        toast.success("Welcome to AnkiClinic! Ready to start studying! 🎉");
-      }, 5000);
+      try {
+        // Actually increment the user's coin count
+        const response = await fetch("/api/user-info", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: 1 }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to award coin");
+        }
+
+        // Play fanfare sound
+        audio.playSound('fanfare');
+        
+        // Show coin reward animation
+        setShowCoinReward(true);
+        
+        // Animate the coin and description with delays
+        setTimeout(() => setShowCoin(true), 500);
+        setTimeout(() => setShowDescription(true), 1500);
+        
+        // Auto-close the coin reward after 5 seconds
+        setTimeout(() => {
+          setShowCoinReward(false);
+          setShowCoin(false);
+          setShowDescription(false);
+          toast.success("Welcome to AnkiClinic! You earned 1 coin! 🎉");
+        }, 5000);
+      } catch (error) {
+        console.error("Error awarding onboarding coin:", error);
+        toast.error("Failed to award coin, but welcome to AnkiClinic!");
+      }
     }
   }, [audio]);
 
@@ -852,9 +927,13 @@ const DoctorsOfficePage = () => {
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
     <Suspense fallback={
-        <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] rounded-lg overflow-hidden">
-          <div className="w-1/4 p-4 bg-[--theme-leaguecard-color] animate-pulse" />
-          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
+        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-l-lg relative">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white/70 text-lg font-medium animate-pulse">Loading clinic components...</div>
+            </div>
+          </div>
+          <div className="w-1/4 p-4 gradientbg animate-pulse" />
         </div>
       }>
         <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
@@ -871,6 +950,29 @@ const DoctorsOfficePage = () => {
                   updateVisibleImages={updateVisibleImages}
                   onKalypsoClick={handleActivateChatbot}
                 />
+                
+                {/* Mobile OfficeContainer Loading Overlay */}
+                {!isOfficeContainerReady && (
+                  <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30">
+                    <div className="text-center space-y-4 px-6">
+                      <div className="text-white/90 text-lg font-medium animate-pulse">
+                        Preparing your clinic...
+                      </div>
+                      <div className="flex space-x-2 justify-center">
+                        {[...Array(4)].map((_, i) => (
+                          <div 
+                            key={i} 
+                            className="w-2 h-2 bg-[--theme-leaguecard-color] rounded-full animate-bounce" 
+                            style={{ animationDelay: `${i * 150}ms` }} 
+                          />
+                        ))}
+                      </div>
+                      <div className="text-white/60 text-sm">
+                        Loading rooms and sprites...
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Mobile sidebar - completely separate from main content flow */}
@@ -935,6 +1037,29 @@ const DoctorsOfficePage = () => {
                   updateVisibleImages={updateVisibleImages}
                   onKalypsoClick={handleActivateChatbot}
                 />
+                
+                {/* OfficeContainer Loading Overlay */}
+                {!isOfficeContainerReady && (
+                  <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-l-lg">
+                    <div className="text-center space-y-4">
+                      <div className="text-white/90 text-xl font-medium animate-pulse">
+                        Preparing your clinic rooms...
+                      </div>
+                      <div className="flex space-x-2 justify-center">
+                        {[...Array(5)].map((_, i) => (
+                          <div 
+                            key={i} 
+                            className="w-3 h-3 bg-[--theme-leaguecard-color] rounded-full animate-bounce" 
+                            style={{ animationDelay: `${i * 150}ms` }} 
+                          />
+                        ))}
+                      </div>
+                      <div className="text-white/60 text-sm">
+                        Setting up textures and positioning...
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="w-1/4 p-4 gradientbg relative z-50">

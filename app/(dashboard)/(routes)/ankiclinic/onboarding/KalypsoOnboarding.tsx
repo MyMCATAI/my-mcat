@@ -50,6 +50,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
 
   /* ---- Refs --- */
   const isPlayingVoiceRef = useRef(false);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   /* ----- Callbacks --- */
   const router = useRouter();
@@ -58,33 +59,84 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const { activities: examActivities, updateExamDate, fetchExamActivities } = useExamActivities();
   const { activities: allActivities, refetch: refetchAllActivities } = useAllCalendarActivities();
 
+  // Function to stop any currently playing audio
+  const stopKalypsoVoice = useCallback(() => {
+    if (currentAudioRef.current) {
+      console.log('🛑 Stopping Kalypso audio...');
+      try {
+        const audio = currentAudioRef.current;
+        
+        // Remove all event listeners first
+        audio.onended = null;
+        audio.onerror = null;
+        audio.onloadstart = null;
+        audio.oncanplay = null;
+        
+        // Aggressively stop the audio
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0; // Mute it immediately
+        audio.src = ''; // Clear the source
+        
+        // Force cleanup
+        try {
+          audio.load(); // Force reload to stop any buffering
+        } catch (loadError) {
+          // Ignore load errors when clearing
+        }
+        
+        currentAudioRef.current = null;
+        console.log('✅ Audio stopped successfully');
+      } catch (error) {
+        console.error('❌ Error stopping audio:', error);
+        currentAudioRef.current = null;
+      }
+    }
+    isPlayingVoiceRef.current = false;
+  }, []);
+
   // Function to play Kalypso's voice
   const playKalypsoVoice = useCallback((audioFile: string) => {
-    // Prevent playing if already playing
-    if (isPlayingVoiceRef.current) return;
+    console.log(`🎵 Playing Kalypso audio: ${audioFile}`);
+    
+    // Stop any currently playing audio first
+    stopKalypsoVoice();
     
     try {
       isPlayingVoiceRef.current = true;
       const audioElement = new Audio(audioFile);
       audioElement.volume = 0.7; // Set volume to 70%
+      currentAudioRef.current = audioElement;
       
-      // Reset the flag when audio ends or errors
+      // Reset the refs when audio ends or errors
       audioElement.onended = () => {
         isPlayingVoiceRef.current = false;
+        if (currentAudioRef.current === audioElement) {
+          currentAudioRef.current = null;
+        }
       };
       audioElement.onerror = () => {
         isPlayingVoiceRef.current = false;
+        if (currentAudioRef.current === audioElement) {
+          currentAudioRef.current = null;
+        }
       };
       
-      audioElement.play().catch(error => {
-        console.error('Error playing Kalypso voice:', error);
+      audioElement.play().then(() => {
+        console.log(`▶️ Audio started playing: ${audioFile}`);
+      }).catch(error => {
+        console.error('❌ Error playing Kalypso voice:', error);
         isPlayingVoiceRef.current = false;
+        if (currentAudioRef.current === audioElement) {
+          currentAudioRef.current = null;
+        }
       });
     } catch (error) {
       console.error('Error creating audio element:', error);
       isPlayingVoiceRef.current = false;
+      currentAudioRef.current = null;
     }
-  }, []);
+  }, [stopKalypsoVoice]);
 
   const stepMessages = useMemo(() => [
     {
@@ -95,7 +147,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
     },
     {
       title: "Tell Me About Yourself! 📋",
-      message: "Did you know that I've never met an annoying premed? See, what I did just now was lie. Don't do that! Answer these questions truthfully!",
+      message: "I love making new friends. And then, uh, cancelling plans with them to sleep on a keyboard.",
       action: "Save My Information",
       audioFile: "/audio/KOnboarding2.mp3"
     },
@@ -120,6 +172,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   ], []);
 
   /* --- Animations & Effects --- */
+  // Handle opening/closing the onboarding
   useEffect(() => {
     if (isOpen) {
       // Load Google Font for the sales sidebar
@@ -128,33 +181,25 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       link.rel = 'stylesheet';
       document.head.appendChild(link);
 
-      // Only play Kalypso's voice on the very first step (step 0)
-      if (currentStep === 0) {
-        playKalypsoVoice(stepMessages[0].audioFile);
-      }
       setShowKalypsoChat(true);
       setKalypsoMessage(stepMessages[0].message);
+      
+      // Play initial audio only when first opening
+      playKalypsoVoice(stepMessages[0].audioFile);
     } else {
       setShowKalypsoChat(false);
       setCurrentStep(0);
-      // Reset voice playing flag when closing
-      isPlayingVoiceRef.current = false;
+      // Stop and reset audio when closing
+      stopKalypsoVoice();
     }
-  }, [isOpen, audio, stepMessages, playKalypsoVoice, currentStep]);
+    }, [isOpen, stepMessages, playKalypsoVoice, stopKalypsoVoice]);
 
-  // Play onboarding audio for calendar setup when it appears
+  // Cleanup audio on unmount
   useEffect(() => {
-    if (showExamCalendarSetup) {
-      playKalypsoVoice('/audio/KOnboarding3.mp3');
-    }
-  }, [showExamCalendarSetup, playKalypsoVoice]);
-
-  // Play onboarding audio for weekly calendar modal when it appears
-  useEffect(() => {
-    if (showWeeklyCalendar) {
-      playKalypsoVoice('/audio/KOnboarding5.mp3');
-    }
-  }, [showWeeklyCalendar, playKalypsoVoice]);
+    return () => {
+      stopKalypsoVoice();
+    };
+  }, [stopKalypsoVoice]);
 
   // Update message when step changes
   useEffect(() => {
@@ -231,9 +276,11 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
 
   /* ---- Event Handlers ----- */
   const handleStepAction = useCallback(async () => {
+    console.log(`🚀 Step transition: ${currentStep} -> ${currentStep + 1}`);
     switch (currentStep) {
       case 0:
         // Introduction -> Demographics Collection
+        console.log('📝 Moving to Demographics step');
         setCurrentStep(1);
         setShowDemographics(true);
         setKalypsoMessage("");
@@ -251,7 +298,10 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       
       case 3:
         // Fill Tasks -> Show weekly calendar modal
+        console.log('📊 Opening Weekly Calendar Modal');
         setShowWeeklyCalendar(true);
+        // Play the weekly calendar modal audio
+        playKalypsoVoice('/audio/KOnboarding5.mp3');
         break;
       
       case 4:
@@ -296,6 +346,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       if (!response.ok) throw new Error('Failed to save demographic information');
 
       // Hide demographics form and go to exam calendar setup
+      console.log('📅 Moving to Exam Calendar Setup step');
       setShowDemographics(false);
       setCurrentStep(2);
       setShowExamCalendarSetup(true);
@@ -309,7 +360,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
 
   const handleExamCalendarComplete = useCallback(async (result: {
     success: boolean;
-    action: "generate" | "save";
+    action: "generate" | "save" | "skip";
     data?: {
       examDate: Date;
       hoursPerDay: Record<string, string>;
@@ -318,14 +369,24 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   }) => {
     try {
       if (result.success) {
-        // Hide exam calendar setup and go to step 3 (Your Personalized Schedule)
-        setShowExamCalendarSetup(false);
-        setCurrentStep(3);
-        setShowFinalCalendar(true);
-        setKalypsoMessage(stepMessages[3].message);
-        playKalypsoVoice(stepMessages[3].audioFile);
-        
-        toast.success('Your exam schedule has been set up successfully!');
+        if (result.action === "skip") {
+          // Skip directly to completion with coin reward
+          console.log('⏭️ Skipping calendar setup, completing onboarding');
+          toast.success('Calendar setup skipped. Welcome to MyMCAT.ai!');
+          
+          // Call onComplete immediately to show coin reward without delay
+          onComplete(true);
+        } else {
+          // Normal flow: Hide exam calendar setup and go to step 3 (Your Personalized Schedule)
+          console.log('📋 Moving to Personalized Schedule step');
+          setShowExamCalendarSetup(false);
+          setCurrentStep(3);
+          setShowFinalCalendar(true);
+          setKalypsoMessage(stepMessages[3].message);
+          playKalypsoVoice(stepMessages[3].audioFile);
+          
+          toast.success('Your exam schedule has been set up successfully!');
+        }
       } else {
         toast.error('Failed to set up your exam schedule. Please try again.');
       }
@@ -333,7 +394,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       console.error('Error handling exam calendar completion:', error);
       toast.error('Failed to process your exam schedule. Please try again.');
     }
-  }, [stepMessages, playKalypsoVoice]);
+  }, [stepMessages, playKalypsoVoice, onComplete]);
 
   // Calendar event handlers
   const handleCalendarNavigate = useCallback((date: Date) => {
@@ -388,6 +449,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
         setRefreshingCalendar(false);
         
         // Move to final step (Pawsitively awesome!)
+        console.log('🎉 Moving to Final Completion step');
         setCurrentStep(4);
         setKalypsoMessage(stepMessages[4].message);
         playKalypsoVoice(stepMessages[4].audioFile);
@@ -537,32 +599,30 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
             </div>
           )}
 
-          {/* Step 3: Upcoming exams list - Takes available space */}
+          {/* Step 3: Upcoming exams list - Takes available space and is directly scrollable */}
           {currentStep === 3 && upcomingExams.length > 0 && (
-            <div className="flex-1 mb-4 overflow-y-auto">
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="space-y-2">
-                  {upcomingExams.map((exam) => (
-                    <div key={exam.id} className="flex items-center justify-between bg-white rounded-md p-3 border border-gray-100">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{exam.activityTitle}</div>
-                        <div className="text-xs text-gray-500">{exam.activityText}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">
-                          {formatDisplayDate(new Date(exam.scheduledDate))}
-                        </span>
-                        <button
-                          onClick={() => handleOpenDatePicker(exam.id)}
-                          className="p-1.5 hover:bg-gray-100 rounded-md transition-colors duration-200"
-                          title="Change date"
-                        >
-                          <CalendarIcon className="w-4 h-4 text-gray-600" />
-                        </button>
-                      </div>
+            <div className="flex-1 mb-4 overflow-y-auto bg-gray-50 rounded-lg border border-gray-200 p-4">
+              <div className="space-y-2">
+                {upcomingExams.map((exam) => (
+                  <div key={exam.id} className="flex items-center justify-between bg-white rounded-md p-3 border border-gray-100 shadow-sm">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">{exam.activityTitle}</div>
+                      <div className="text-xs text-gray-500">{exam.activityText}</div>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {formatDisplayDate(new Date(exam.scheduledDate))}
+                      </span>
+                      <button
+                        onClick={() => handleOpenDatePicker(exam.id)}
+                        className="p-1.5 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                        title="Change date"
+                      >
+                        <CalendarIcon className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
