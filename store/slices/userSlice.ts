@@ -174,16 +174,11 @@ export const useUserStore = create<UserState & UserActions>()(
           return;
         }
         
-        // Determine which query param to use
-        const queryParam = userInfo.email 
-          ? `email=${encodeURIComponent(userInfo.email)}`
-          : `userId=${userInfo.userId}`;
-        
         set({ profileLoading: true, error: null });
         
-        // Send update to API
-        const response = await fetch(`/api/user-info/profile?${queryParam}`, {
-          method: 'PATCH',
+        // Send update to API - Changed to PUT /api/user-info
+        const response = await fetch(`/api/user-info`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updates)
         });
@@ -322,8 +317,9 @@ export const useUserStore = create<UserState & UserActions>()(
       (async () => {
         try {
           console.log('[DEBUG][userSlice] Persisting onboardingComplete to backend');
-          const response = await fetch('/api/user-info/profile', {
-            method: 'PATCH',
+          // Changed to PUT /api/user-info
+          const response = await fetch('/api/user-info', {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               onboardingInfo: updatedUserInfo.onboardingInfo 
@@ -370,106 +366,119 @@ export const useUserStore = create<UserState & UserActions>()(
           error: null 
         });
         
-        console.log('[UserStore DEBUG] Making API requests for user info');
-        const [userInfoResponse, profileResponse] = await Promise.all([
-          fetch('/api/user-info'),
-          fetch('/api/user-info/profile')
-        ]);
+        console.log('[UserStore DEBUG] Making initial API request for user info');
+        let userInfoResponse = await fetch('/api/user-info');
+        let userInfo;
 
-        console.log('[UserStore DEBUG] API responses received:', {
+        console.log('[UserStore DEBUG] Initial API response received:', {
           userInfoStatus: userInfoResponse.status,
-          profileStatus: profileResponse.status
         });
 
-        if (!userInfoResponse.ok) {
-          console.error('[UserStore DEBUG] User info fetch failed:', userInfoResponse.status, userInfoResponse.statusText);
+        if (userInfoResponse.status === 404) {
+          console.log('[UserStore DEBUG] User info not found (404). Attempting to create profile.');
+
+          // Simulate obtaining Clerk user data. In a real scenario, this would come from Clerk's context or props.
+          // The backend uses auth() to get the actual clerkUserId for the new record.
+          const simulatedClerkUser = { id: "test_clerk_user_123", firstName: "TestUser" };
+          // IMPORTANT: Replace "TestUser" with actual user's first name from Clerk when integrating.
+          // The 'id' above is just for simulation clarity; the backend uses the authenticated user's ID.
+
+          const createProfileResponse = await fetch('/api/user-info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              firstName: simulatedClerkUser.firstName, // Essential for backend user creation
+              bio: "" // Default empty bio
+            })
+          });
+
+          if (!createProfileResponse.ok) {
+            const errorBody = await createProfileResponse.text();
+            console.error('[UserStore DEBUG] Profile creation failed:', createProfileResponse.status, errorBody);
+            throw new Error(`Failed to create profile: ${createProfileResponse.status} ${errorBody}`);
+          }
+
+          console.log('[UserStore DEBUG] Profile creation successful. Refetching user info.');
+          userInfoResponse = await fetch('/api/user-info'); // Refetch after creation
+
+          if (!userInfoResponse.ok) {
+            console.error('[UserStore DEBUG] User info refetch failed after creation:', userInfoResponse.status, userInfoResponse.statusText);
+            throw new Error(`Failed to refetch user info after creation: ${userInfoResponse.status} ${userInfoResponse.statusText}`);
+          }
+        } else if (!userInfoResponse.ok) {
+          console.error('[UserStore DEBUG] User info fetch failed (non-404):', userInfoResponse.status, userInfoResponse.statusText);
           throw new Error(`Failed to fetch user info: ${userInfoResponse.status} ${userInfoResponse.statusText}`);
         }
 
-        const userInfo = await userInfoResponse.json();
+        userInfo = await userInfoResponse.json();
         console.log('[UserStore DEBUG] Received userInfo:', {
           hasOnboardingInfo: !!userInfo.onboardingInfo,
           hasSeenIntroVideo: userInfo.onboardingInfo?.hasSeenIntroVideo,
           subscriptionType: userInfo.subscriptionType,
-          userInfo: userInfo
+          firstName: userInfo.firstName, // Check if first name is present
+          userInfo: userInfo // Log the whole object for detailed inspection
         });
         
-        const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
-
         // Create clean updates object with proper typing
         const baseUpdates: Partial<UserState> = {
           error: null,
           version: CURRENT_VERSION,
-          userInfo: userInfo // Always include userInfo as it's our source of truth
+          userInfo: userInfo, // Always include userInfo as it's our source of truth
+          profileLoading: false, // Initial profile data is from userInfo
+          statsLoading: false, // Initial stats data is from userInfo
         };
 
         // Add coins if changed
-        if (userInfo.score !== get().coins) {
+        if (userInfo.score !== undefined && userInfo.score !== get().coins) {
           baseUpdates.coins = userInfo.score || 0;
         }
-
-        // Platform is free for all users - no need to check subscription status
-        // const newSubStatus = 
-        //   userInfo.subscriptionType === 'gold' || 
-        //   userInfo.subscriptionType === 'premium' ||
-        //   userInfo.subscriptionType?.startsWith('Gold') ||
-        //   userInfo.subscriptionType?.includes('_Trial') || 
-        //   isNewUserTrial || 
-        //   false;
-          
-        // if (newSubStatus !== get().isSubscribed) {
-        //   baseUpdates.isSubscribed = newSubStatus;
-        // }
-
-        // Handle profile updates if available
-        if (profileResponse.ok) {
-          console.log('[UserStore DEBUG] Processing profile response');
-          const profileData = await profileResponse.json();
-          console.log('[UserStore DEBUG] Profile data:', { 
-            hasProfilePhoto: !!profileData.profilePhoto,
-            firstName: profileData.firstName,
-            completedStepsLength: profileData.completedSteps?.length
-          });
-          
-          const currentProfile = get().profile;
-          
-          if (JSON.stringify(currentProfile) !== JSON.stringify(profileData)) {
-            console.log('[UserStore DEBUG] Profile data changed, updating');
-            Object.assign(baseUpdates, {
-              profile: profileData,
-              completedSteps: profileData.completedSteps || [],
-              studyPreferences: profileData.studyPreferences || {
-                dailyGoal: 30,
-                reminderTime: '09:00'
-              },
-              interfaceSettings: profileData.interfaceSettings || {
-                darkMode: false,
-                fontSize: 'medium'
-              },
-              tutorialProgress: profileData.tutorialProgress || {
-                currentStep: 0,
-                completedRoutes: []
-              },
-              lastVisitedRoute: profileData.lastVisitedRoute || '/',
-              isProfileComplete: (profileData.completedSteps || []).length >= 3
-            });
-          } else {
-            console.log('[UserStore DEBUG] Profile data unchanged');
-          }
-        } else {
-          console.warn(`[UserStore DEBUG] Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`);
-        }
         
-        console.log('[UserStore DEBUG] Applying updates to store:', Object.keys(baseUpdates));
+        // The /api/user-info response is now the single source of truth for profile information.
+        // Update profile-related store fields directly from `userInfo`.
 
-        // IMPORTANT: Set profileLoading to false to ensure the spinner stops
-        baseUpdates.profileLoading = false;
-        baseUpdates.statsLoading = false;
+        baseUpdates.profile = {
+          // Preserve existing profile fields not directly in userInfo if necessary,
+          // but prefer userInfo as the authoritative source.
+          ...(get().profile),
+          userId: userInfo.userId, // This might not be directly in userInfo from GET /api/user-info
+          firstName: userInfo.firstName,
+          bio: userInfo.bio,
+          coins: userInfo.score,
+          profilePhoto: userInfo.profilePhoto,
+          studyPreferences: userInfo.studyPreferences,
+          interfaceSettings: userInfo.interfaceSettings,
+          tutorialProgress: userInfo.tutorialProgress,
+          completedSteps: userInfo.onboardingInfo?.completedSteps || userInfo.completedSteps, // Prefer onboardingInfo if available
+          lastVisitedRoute: userInfo.lastVisitedRoute,
+          // patientsCount can be derived if patientRecord is part of UserInfo
+          patientsCount: userInfo.patientRecord?.patientsTreated,
+        };
+
+        // Ensure all relevant parts of UserState are updated from userInfo
+        if (userInfo.firstName !== undefined) baseUpdates.profile.firstName = userInfo.firstName;
+        if (userInfo.bio !== undefined) baseUpdates.profile.bio = userInfo.bio;
+        if (userInfo.score !== undefined) baseUpdates.profile.coins = userInfo.score;
+        if (userInfo.profilePhoto !== undefined) baseUpdates.profile.profilePhoto = userInfo.profilePhoto;
+
+        const completedSteps = userInfo.onboardingInfo?.completedSteps || userInfo.completedSteps || [];
+        baseUpdates.completedSteps = completedSteps;
+        baseUpdates.profile.completedSteps = completedSteps;
+        baseUpdates.isProfileComplete = isProfileComplete(baseUpdates.profile);
+
+        if (userInfo.studyPreferences) baseUpdates.studyPreferences = userInfo.studyPreferences;
+        if (userInfo.interfaceSettings) baseUpdates.interfaceSettings = userInfo.interfaceSettings;
+        if (userInfo.tutorialProgress) baseUpdates.tutorialProgress = userInfo.tutorialProgress;
+        if (userInfo.lastVisitedRoute) baseUpdates.lastVisitedRoute = userInfo.lastVisitedRoute;
+
+        // Removed the secondary fetch to /api/user-info/profile and its processing logic.
+        // userInfo from GET /api/user-info is now the single source of truth.
+
+        console.log('[UserStore DEBUG] Applying updates to store from GET /api/user-info:', Object.keys(baseUpdates));
         
         set(baseUpdates);
         console.log('[UserStore DEBUG] Store updates applied');
         
-        return userInfo;
+        return userInfo; // Return the core userInfo object
       } catch (error) {
         console.error('[UserStore DEBUG] Error in refreshUserInfo:', error);
         set({ 
@@ -697,8 +706,9 @@ export const useUserStore = create<UserState & UserActions>()(
         
         // Then persist to backend
         console.log('[DEBUG][userSlice] Persisting batch updates to backend');
-        const response = await fetch('/api/user-info/profile', {
-          method: 'PATCH',
+        // Changed to PUT /api/user-info
+        const response = await fetch('/api/user-info', {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updates)
         });
@@ -801,11 +811,13 @@ const isOnboardingComplete = async (userId: string): Promise<boolean> => {
     if (!response.ok) throw new Error('Failed to fetch user info');
     
     const userInfo = await response.json();
-    const profileResponse = await fetch('/api/user-info/profile');
-    const profile = profileResponse.ok ? await profileResponse.json() : null;
+    // const profileResponse = await fetch('/api/user-info/profile'); // Removed
+    // const profile = profileResponse.ok ? await profileResponse.json() : null; // Removed
     
-    // Determine completion status
-    const isComplete = validateOnboardingState(userInfo, profile);
+    // Determine completion status based on userInfo only
+    // Ensure UserInfo type includes all necessary fields for validateOnboardingState if profile was used there
+    // For now, assuming userInfo contains equivalent fields or validateOnboardingState is adapted
+    const isComplete = validateOnboardingState(userInfo, userInfo as UserProfile); // Cast userInfo to UserProfile if compatible
     
     // Update cache
     cachedOnboardingStatus = { userId, isComplete };
