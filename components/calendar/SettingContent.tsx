@@ -18,7 +18,7 @@ interface StudyPlan {
 interface SettingContentProps {
   onComplete?: (result: {
     success: boolean;
-    action: "generate" | "save";
+    action: "generate" | "save" | "skip";
     data?: {
       examDate: Date;
       hoursPerDay: Record<string, string>;
@@ -419,7 +419,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
 
   const handleSkipCalendar = () => {
     if (onComplete) {
-      onComplete({ success: true, action: "save" });
+      onComplete({ success: true, action: "skip" });
     }
   };
 
