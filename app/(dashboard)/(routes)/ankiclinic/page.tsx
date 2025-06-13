@@ -24,10 +24,6 @@ import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
-// Add import for KalypsoOnboarding
-const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding'), {
-  ssr: false
-});
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -137,7 +133,6 @@ const DoctorsOfficePage = () => {
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
-  const [showKalypsoOnboarding, setShowKalypsoOnboarding] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -245,14 +240,6 @@ const DoctorsOfficePage = () => {
     }
   }, [userInfo, isClinicUnlocked]);
 
-  // Add effect to show KalypsoOnboarding every time the page loads
-  useEffect(() => {
-    // Show KalypsoOnboarding every time the page is accessed
-    // Only show after the component has mounted and onboarding is complete
-    if (onboardingComplete && !mcqState.isLoading) {
-      setShowKalypsoOnboarding(true);
-    }
-  }, [onboardingComplete, mcqState.isLoading]);
 
   // Improved audio management effect - using audio store state to prevent duplicate loops
   useEffect(() => {
@@ -803,14 +790,6 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
-  const handleKalypsoOnboardingComplete = useCallback((showCoinReward?: boolean) => {
-    setShowKalypsoOnboarding(false);
-    
-    if (showCoinReward) {
-      // Optional: show some coin reward or success message
-      toast.success("Welcome to AnkiClinic! Ready to start studying? 🎉");
-    }
-  }, []);
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
@@ -821,14 +800,6 @@ const DoctorsOfficePage = () => {
       {/* Conditionally render the OnboardingModal if onboarding is not complete */}
       { !onboardingComplete && <OnboardingModal /> }
       
-      {/* Conditionally render KalypsoOnboarding every time the page loads */}
-      {showKalypsoOnboarding && onboardingComplete && (
-        <KalypsoOnboarding
-          isOpen={showKalypsoOnboarding}
-          onClose={() => setShowKalypsoOnboarding(false)}
-          onComplete={handleKalypsoOnboardingComplete}
-        />
-      )}
       
       {showWelcomeDialogue && onboardingComplete &&
         <WelcomeDialog 
