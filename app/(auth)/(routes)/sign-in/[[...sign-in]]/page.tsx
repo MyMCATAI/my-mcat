@@ -11,16 +11,20 @@ export default function Page() {
           colorBackground: '#001226',
           colorText: 'white',
           fontSize: '1rem',
-          borderRadius: '0.5rem',
+          borderRadius: '1rem',
           colorNeutral: 'white',
           spacingUnit: '1.2rem',
         },
         elements: {
           cardBox: {
-            border: '2px solid #5F7E92',
+            border: '1px solid rgb(66, 150, 205)',
             width: '28rem',
             maxWidth: '100%'
           },
+          card: {
+            border: 'none',
+            boxShadow: 'none'
+          }
         }
       }}
     />

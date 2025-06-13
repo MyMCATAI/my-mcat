@@ -24,6 +24,7 @@ import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
+
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
   ssr: false,
@@ -238,6 +239,7 @@ const DoctorsOfficePage = () => {
       setShowWelcomeDialogue(true);
     }
   }, [userInfo, isClinicUnlocked]);
+
 
   // Improved audio management effect - using audio store state to prevent duplicate loops
   useEffect(() => {
@@ -788,6 +790,7 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
+
   /* ----------------------------------------- Render  ---------------------------------------- */
 
   return (
@@ -796,6 +799,7 @@ const DoctorsOfficePage = () => {
       
       {/* Conditionally render the OnboardingModal if onboarding is not complete */}
       { !onboardingComplete && <OnboardingModal /> }
+      
       
       {showWelcomeDialogue && onboardingComplete &&
         <WelcomeDialog 
