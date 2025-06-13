@@ -216,7 +216,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
           >
             Watch Demo
           </motion.button>
-          <Link href="/hiatus">
+          <Link href="/sign-up">
             <motion.button
               className="bg-black text-white py-4 text-xl border-white border md:text-2xl px-10 rounded-[20px]"
               whileHover={{ scale: 1.05 }}
