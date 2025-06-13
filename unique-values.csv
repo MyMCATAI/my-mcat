@@ -1,0 +1,96 @@
+Model,Column,Unique Values
+KnowledgeProfile,userId,"user_2jCgBjhLB1r8t8LMNUTTDsUe1v5, user_2jDyTOgTqrpgR5SdDfQt39zOsgj, user_2jXWix0sZNe2S7nsp7BQsfXXlDq, user_2krsGoh0Le5bc7yQQ11JTszUUo7, user_2krsn2kgiY3BgNg3EAgAclaGqWK, user_2kru15eRC7Q6VW3aHq4zohAn22U, user_2krvngqCBc1MinfCjUU3wmGzynz, user_2krwdlkAI2v2dS0lDcgMQhrLiYp, user_2ll8ajd3Vhg587oTfM3jqDtRTWA, user_2luyOzBYLZqQO2urZXhO10g7zsT, user_2n814yOsF54lio3NOYbc1hrVWs6, user_2nnWcFVgWcReqBz3qCgQAQ8IP3T, user_2oP8s9hEHWwMHU7LnlksFAxAT6z, user_2piNzZXCmZCmK885rRqr06vTwjk, user_2qGwn9teBBhcPSGfQysp9eRZxM5, user_2qGwxY5TvAle79KRzpXjfk5KPIS, user_2qGxJB8O2fquy1TlF8AaHX9Dlpe, user_2qJMpFo3D2nwpChxt2HPzRYxete, user_2qmf2rNj3trkZG0SEMiPHz619sU, user_2qmnN8oFTgNQCg415OgwP7BEsSg, user_2qmPzxELkesCJIzSD7dpK3bKi6V, user_2qmQDRLBIKLN61XltEt9GnkSqHo, user_2qmqQ4sFlhQI2ZBnQg1nT1WJTM0, user_2qmVgeEkGStB3RcXgKZjrFdYbaC, user_2qMVMiRPfmIMPFqMShR9JSN4pSM, user_2qmvz8QcSvjS6x0bbxdCmvH4atA, user_2qmXdfy009CIPMEPYZAq3qixAwG, user_2qnmLiJ9S4LDxhUMja7YkovEaJM, user_2qoS1t9VYjZwNp7fEYfFUiSuGSc, user_2qxc5wg2kDhsqyiEP7F96seYjmW, user_2r2F5VhMLTbhMqyk71j92nnyipy, user_2r2hgfHswh5H9zoGx5XuY22LsRW, user_2rBnEVyeutvgd6At8KiTEueXUZ4, user_2re4rVxULWK9255wt6B3M2JqHTK, user_2rFXhmeHNzY3irm9HShrGMGMY3M, user_2roxe0DTLvu0qolbL8VO82CStSK, user_2rp8lL97rulYEsU5lhXNf5ygOOK, user_2rshPERuVqG8yeFpDa5AaAWu26j, user_2rssjc7Y3dTdPMph4BZdMk9z6Yx, user_2rsVfa7qQ3p78Fefu0tDKxxqR4M, user_2rsW1FyLCvIE1xuFzKUjPTdhTaC, user_2rsXdJmVSgNW3MJLJRxrlAIY8Vq, user_2rtGn694f1oBNc5NnirKI7yMeYM, user_2rtnwwtYqGEyIMa2TCZukQvC5ZC, user_2ru4PXtY6zrS42VreGoiCCIVnpr, user_2ru8xjrQ0UdSaKmLCxNVyE7VXLg, user_2ruiZ9poMGOv95CF3Z51asOacOI, user_2rummmvldr4DzJMJJRak80KoO7T, user_2ruo4X6DbMJEbS4Xhmg6WMNfZFe, user_2rushgAjWPUgludQ6Z6uzmwurnL, user_2rutYaChbqSIOsJsQlN62maMgqO, user_2ruXOqM5cYtpRULLd2XFni5fi8J, user_2ruzZ3vRoygByZP3wRszDtrSNmB, user_2rv0qzKlFxBZaTyzGvfhukdCuOR, user_2rv12x9ZrRvvAVslvYeaSG9GGfd, user_2rv2AKOH44QCVVvWMDaHViDB5V5, user_2rv5SHAORqIZx4ybzA5SAtZ6fIf, user_2rv5vHwahTvYO5Yw7pFQqCns5rC, user_2rv7DbK4Gj3HrAJ2riHBw9ZD6h3, user_2rvaAuJDoS43VSeXM6MrJGiID44, user_2rvHCC5DjBZL6csvsItHoNHzvHG, user_2rvUtpLKF77Bss9QsiCHDaIjBYl, user_2rwbqYVlVGdzYB6VZVxWcCLm0Go, user_2rweN56aa0LJGVHa5oTv5uTfPAR, user_2rwgcxfW43kOHoIZyLrWj3Fc2aw, user_2rwkXrWfYyBDYZfywbcL0FYWQ8e, user_2rwm3n8kNFzuDFSINiY4rlF9NJ4, user_2rwoDvBzRmRGcRFsyECS2qsi7ai, user_2rx1EGL6NAcxxJmzqyzFRV9J57A, user_2rx3WSRsecmOwgapU9ecHJDDBTc, user_2rxfPFhXupNEHLRVmgkltzMoe4S, user_2rxttTffVIEfrqsU7IAyXh5uwAC, user_2rzsRk2QwV7Fj41QCsYrrHi0YDE, user_2s0jdZRmrpF5vBUo9lDUyWLj2b2, user_2s0oOxMSCPkyefCbFnhNRwugFIx, user_2s0ycCQunqF1cDcLuCq7lqw1PT3, user_2s37HiamFmw2zwPkbHyRkIdXAKM, user_2s3MucMYGOAanbZOnPvlPSjuwLL, user_2s67A4BwYtEeKiAYRRUveN0U8qT, user_2s6cqbrw3rvpSR42t78MgTuZtjs, user_2s9FyhLpe7HetlyuLu7OEMnWBh5, user_2sa1IehNpKO7EOQwPufDawNKmfz, user_2sB9aaEkylC9Q13S3DDSdDkr47e, user_2sBmCEFNWGGLEBSqsLWvXM8AbE3, user_2sCYvemY5IsnvuWgQN5PO6RNUaa, user_2sEYWOGeWx95JjMRLOzHfvkkvmN, user_2sGacvwruAyf5ecmyXBirRJZ8CN, user_2sH73d6IvyH1kO7DeeDb0GPjaS4, user_2sJdAajgt3sQYqc5Ulcow2cAwVD, user_2sK9q0HPIOb53FURgKMpbt3L1fc, user_2sKOQSE5P4GeGLAMPApCNyEcaag, user_2sMJVFsCKw3tgMqG4uYOP2B5HDo, user_2sOlHrBc7t2VqVniOULLeQ9WliS, user_2sT2cEqApXT5TW4sjcdaY4fkBbU, user_2sXayZ1EyxrR6cVzgsHBJX7MNvq, user_2t3Pg0NW1XLceReqczeDx97S5Ul, user_2tn5xgOuDs0oQPd0aYx4kFInVHx, user_2tN8knNvWAYBTbtl3HSRz0waSoq, user_2tQOmx3c7X1t1XPUQFoAwwCdTd0, user_2trJHtV3msVjJ868QvszVOgwA8H, user_2trr0ltcY5jX2KJjoeMfKGUQ50J, user_2tVHVhlmyIxvr5k9YuLRH2OZc5f"
+KnowledgeProfile,categoryId,"clywfuyme000011jwnyhonmor, clywfuyrn000111jwz2sk4hy0, clywfuyuz000211jwvy9i4ku5, clywfuyyc000311jwqeq7xh1u, clywfuzww000d11jw2766n6k5, clywfv2je001411jwa5g5iar7, clywfv2tp001711jwuy0rpxln, clywfv2xg001811jwnwo43p4u, cm0r162240000r0s66glounez, cm0r1b92p0001r0s6pytjzsn2, cm0r1b92r0002r0s6rielolcn, clywfuz1t000411jwb5vusbo2, clywfuz54000511jwejp1ujnh, clywfuz8l000611jwaqaamrql, clywfuzfk000811jwj3hxpv69, clywfuzix000911jwqqmfgfsu, clywfuzmb000a11jwrid2mdjh, clywfuzpo000b11jwr3r9czwn, clywfuzt2000c11jw94kgwxcs, clywfv04g000f11jwaiud3znf, clywfv0m6000k11jw59ud7b95, clywfv0pi000l11jw44oibp6l, clywfv0su000m11jww7xfo1gc, clywfv1h1000t11jw50696ey2, clywfv1ke000u11jwnhsme8m7, clywfv1nt000v11jw5wgfn0x7, clywfv1rc000w11jwcd84ksbl, clywfv1y3000y11jwqnc3mtzs, clywfv21f000z11jwc3vohy5n, clywfv24v001011jw8y1dwiiq, clywfv2cd001211jwv9uiaxli, clywfv2n0001511jw0co4xiwj, clywfv2qc001611jwdgk4hgh8, clywfv384001b11jwtu58guzv, clywfv3bm001c11jwd976qygm, clywfv3wr001i11jwlip24o96, clywfv404001j11jwuzaw9yr5, clywfv43j001k11jwln45ln77, clywfv4l8001p11jwaebue372, clywfv4om001q11jw36a3vgk2, clywfv4sc001r11jwfzebqhps, clywfv52j001u11jwv1cj8l83, clywfv5u8002211jwm28ymn7b, clywfv5xk002311jwmim7wmwu, clywfv64e002511jwa641sk5l, clywfv59n001w11jwwh5xlypj, clywfv0wb000n11jw63tza0ga, clywfv34s001a11jw87kso6xf, clywfuzc3000711jw5umaqo25, clywfv5na002011jw67w395y5, clywfv5qt002111jwyvwc0j4a, clywfv46w001l11jwcw3dcbe3, clywfv4a6001m11jwacyln6t0, clywfv4vo001s11jwvt36szzg, clywfv3p5001g11jwz2v6ghzx, clywfv5gf001y11jwdx1r6uwg, clywfv08b000g11jwk1jf5yrv, clywfv0bn000h11jwzc8ykfcw, clywfv0ez000i11jwqv1jzqvk, clywfv0ib000j11jwzb9mjl3v, clywfv0zn000o11jw0xdrpxev, clywfv131000p11jw39y272u6, clywfv16g000q11jwsbez8vdb, clywfv1aa000r11jwp8zhl5hl, clywfv1dq000s11jwjikyu4nl, clywfv1uo000x11jw6bpfin3e, clywfv287001111jwrdmfeqep, clywfv313001911jwl48fe5bv, clywfv3ii001e11jw6hz0uojg, clywfv3lt001f11jw1mpiutfv, clywfv3sw001h11jwmg4wyt7a, clywfv5jx001z11jw5hun48nr, clywfv613002411jwcj96lwzb, clywfv67p002611jw53fo9deu, clywfv3f4001d11jwcwe33bqo"
+Category,subjectCategory,"Biochemistry, Biology, Physics, Chemistry, Psychology, Sociology, CARs"
+Category,contentCategory,"1A, 1B, 1C, 1D, 2A, 2B, 2C, 3A, 3B, 4A, 4B, 4C, 4D, 4E, 5A, 5B, 5C, 5D, 5E, 6A, 6B, 6C, 7A, 7B, 7C, 8A, 8B, 8C, 9A, 9B, 10A, CARs"
+Category,conceptCategory,"Amino Acids, Enzymes, Proteins, DNA and Biotechnology, RNA and The Central Dogma, Eukaryotic Gene Expression, Genetics, Evolution, Meiosis and Genetic Diversity, Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway, Aerobic Respiration, Lipid and Amino Acid Metabolism, Bioenergetics and Regulation of Metabolism, The Cell, Plasma Membrane, Prokaryotes, Viruses, Mitosis, Embryogenesis, Nervous System, Endocrine System, Respiration and Circulation, Immune System, Digestion System, Excretion System, Reproductive System, Muscular System, Skin and Bones, Kinematics, Force, Energy, Fluids, Gases, Electrostatics and Magnetism, Circuits, Electrochemistry, Sound and Waves, Light and Optics, Atoms, Periodic Trends, Stoichiometry, Acid-Base, Solutions, Covalent Bonds, Intermolecular Forces, Seperations and Purifications, Spectroscopy, Organic Compounds, Carbohydrate Structure and Function, Lipid Structure and Function, Enzyme Kinetics, Equilibrium, Thermodynamics and Thermochemistry, Sensation, Perception, Cognition, Memory and Language, Emotions and Stress, Biology and Behavior, Personality, Motivation and Attitudes, Social Processes on Individuals, Social Processes on Communities, Learning, Attitude and Behavior Change, Self-Identity, Attribution, Stereotypes and Bias, Social Interaction, Self Presentation, Social Institutions, Culture, Demographic Structure, Demographic Shift, Social Stratification, Reasoning Beyond the Text, Reasoning Within the Text, Foundations of Comprehension"
+Category,generalWeight,"1.5, 1.2, 1.4, 0.8, 0.7, 1.1, 1, 1.3, 0.9"
+Category,section,"B/B, C/P, P/S, CARs"
+
+DataPulse,name,"B/B, Musculoskeletal, Endocrine, Nervous, Metabolism, Amino Acids, Solutions and Electrochemistry, Dem. and Social Structure, Organic Chemistry, Molecular Biology, Cell Biology, Sensation, Perception, Consciousness, Genetics, Mechanics and Energy, Identity and Social Interactions, Chemical and Physical Foundations, Critical Analysis and Reasoning, Biological and Biochemical Foundations, Psychological, Social, and Biological Foundations, Bioenergetics and Regulation of Metabolism, Carbohydrate Structure and Function, Aerobic Respiration, 1D, Circuits, 4E, 5A, Foundations of Comprehension, 6C, 4A, 4B, 4D, 4C, 1C, 2A, 6A, 5D, Evolution, 1B, 1A, 3A, 6B, 8A, 7A, 5B, 5C, Atomic Theory, Light and Optics, Fluids, Cognition, Perception, Attitude and Behavior Change, Atoms, CARs, Social Stratification, Self Presentation, Biology and Behavior, 8C, 7C, 8B, Fluids & Gases, 9B, 3B, Lab Techniques, 5E, 9A, Self-Identity, 7B, 10A, 2C, Motivations, Attitude, Personality, Endocrine System, Plasma Membrane, Digestion System, Embryogenesis, DNA and Biotechnology, Prokaryotes, Reproduction, Interactions of Chem Substances, 2B, Acid-Base, Light and Sound, Emotions and Stress, Circulation + Respiration, Enzyme Kinetics, Seperations and Purifications, Covalent Bonds"
+DataPulse,level,"conceptCategory, contentCategory, section"
+DataPulse,weight,"1"
+DataPulse,source,"UWorld, full_length_exam, exam_question, Jack Westin, Blueprint, AAMC, , Altius, Kaplan, Work on Full Length Exam(FL1), Work on Unscored sample full Length Exam"
+DataPulse,errorType,""
+DataPulse,section,"C/P, CARs, P/S, B/B"
+DataPulse,reviewed,"false, true"
+
+Subject Category,Content Category,Concept Category
+Biochemistry,1A,Amino Acids
+Biochemistry,1A,Enzymes
+Biochemistry,1A,Proteins
+Biochemistry,1B,DNA and Biotechnology
+Biochemistry,1B,Eukaryotic Gene Expression
+Biochemistry,1B,RNA and The Central Dogma
+Biochemistry,1C,Evolution
+Biochemistry,1C,Genetics
+Biochemistry,1C,Meiosis and Genetic Diversity
+Biochemistry,1D,Aerobic Respiration
+Biochemistry,1D,Bioenergetics and Regulation of Metabolism
+Biochemistry,1D,Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway
+Biochemistry,1D,Lipid and Amino Acid Metabolism
+Biology,2A,Plasma Membrane
+Biology,2A,The Cell
+Biology,2B,Prokaryotes
+Biology,2B,Viruses
+Biology,2C,Embryogenesis
+Biology,2C,Mitosis
+Biology,3A,Endocrine System
+Biology,3A,Nervous System
+Biology,3B,Digestion System
+Biology,3B,Excretion System
+Biology,3B,Immune System
+Biology,3B,Muscular System
+Biology,3B,Reproductive System
+Biology,3B,Respiration and Circulation
+Biology,3B,Skin and Bones
+CARs,CARs,Foundations of Comprehension
+CARs,CARs,Reasoning Beyond the Text
+CARs,CARs,Reasoning Within the Text
+Chemistry,4E,Atoms
+Chemistry,4E,Periodic Trends
+Chemistry,4E,Stoichiometry
+Chemistry,5A,Acid-Base
+Chemistry,5A,Solutions
+Chemistry,5B,Covalent Bonds
+Chemistry,5B,Intermolecular Forces
+Chemistry,5C,Seperations and Purifications
+Chemistry,5C,Spectroscopy
+Chemistry,5D,Carbohydrate Structure and Function
+Chemistry,5D,Lipid Structure and Function
+Chemistry,5D,Organic Compounds
+Chemistry,5E,Enzyme Kinetics
+Chemistry,5E,Equilibrium
+Chemistry,5E,Thermodynamics and Thermochemistry
+Physics,4A,Energy
+Physics,4A,Force
+Physics,4A,Kinematics
+Physics,4B,Fluids
+Physics,4B,Gases
+Physics,4C,Circuits
+Physics,4C,Electrochemistry
+Physics,4C,Electrostatics and Magnetism
+Physics,4D,Light and Optics
+Physics,4D,Sound and Waves
+Psychology,6A,Perception
+Psychology,6A,Sensation
+Psychology,6B,Cognition
+Psychology,6B,Memory and Language
+Psychology,6C,Emotions and Stress
+Psychology,7A,Biology and Behavior
+Psychology,7A,Motivation and Attitudes
+Psychology,7A,Personality
+Psychology,7B,Social Processes on Communities
+Psychology,7B,Social Processes on Individuals
+Psychology,7C,Attitude and Behavior Change
+Psychology,7C,Learning
+Sociology,10A,Social Stratification
+Sociology,8A,Self-Identity
+Sociology,8B,Attribution
+Sociology,8B,Stereotypes and Bias
+Sociology,8C,Self Presentation
+Sociology,8C,Social Interaction
+Sociology,9A,Culture
+Sociology,9A,Social Institutions
+Sociology,9B,Demographic Shift
+Sociology,9B,Demographic Structure

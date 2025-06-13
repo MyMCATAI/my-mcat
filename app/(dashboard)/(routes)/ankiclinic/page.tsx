@@ -22,20 +22,15 @@ import OfficeContainer from './OfficeContainer';
 import SideBar from '../home/SideBar';
 import { useUser } from "@/store/selectors";
 import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
+import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
-// Add import for KalypsoOnboarding
-const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding'), {
-  ssr: false
-});
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
   ssr: false,
   loading: () => (
-    <button className="p-3 bg-[--theme-leaguecard-color] rounded-full shadow-lg flex items-center justify-center opacity-70">
-      <span className="animate-pulse text-white">Loading...</span>
+    <button className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center opacity-70">
+      <span className="animate-pulse">Loading...</span>
     </button>
   )
 });
@@ -63,55 +58,9 @@ const RedeemReferralModal = dynamic(() => import('@/components/social/friend-req
 
 // Loading component for better UX during initial load
 const LoadingClinic = () => (
-  <div className={`flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${typeof window !== 'undefined' && window.innerWidth <= 768 ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
-    {/* Main office area - left side (3/4 width) */}
-    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-l-lg relative">
-      {/* Simulated isometric grid pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="grid grid-cols-8 grid-rows-6 h-full w-full gap-1 p-4">
-          {Array.from({ length: 48 }).map((_, i) => (
-            <div key={i} className="bg-gray-700/40 rounded-sm animate-pulse" style={{ animationDelay: `${i * 50}ms` }} />
-          ))}
-        </div>
-      </div>
-      {/* Loading text */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <div className="text-white/70 text-lg font-medium animate-pulse">Setting up your clinic...</div>
-          <div className="flex space-x-1 justify-center">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="w-2 h-2 bg-[--theme-leaguecard-color] rounded-full animate-bounce" style={{ animationDelay: `${i * 200}ms` }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    {/* Sidebar area - right side (1/4 width) */}
-    <div className="w-1/4 p-4 gradientbg animate-pulse relative">
-      {/* Simulated sidebar content */}
-      <div className="space-y-4">
-        {/* Header area */}
-        <div className="h-8 bg-white/20 rounded animate-pulse" />
-        
-        {/* Stats area */}
-        <div className="space-y-2">
-          <div className="h-4 bg-white/15 rounded animate-pulse" />
-          <div className="h-4 bg-white/15 rounded animate-pulse w-3/4" />
-          <div className="h-4 bg-white/15 rounded animate-pulse w-1/2" />
-        </div>
-        
-        {/* Activity area */}
-        <div className="space-y-3 mt-6">
-          <div className="h-6 bg-white/20 rounded animate-pulse" />
-          <div className="space-y-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-12 bg-white/10 rounded animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+  <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+    <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse"></div>
+    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg"></div>
   </div>
 );
 
@@ -184,11 +133,6 @@ const DoctorsOfficePage = () => {
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
-  const [showKalypsoOnboarding, setShowKalypsoOnboarding] = useState(false);
-  const [showCoinReward, setShowCoinReward] = useState(false);
-  const [showCoin, setShowCoin] = useState(false);
-  const [showDescription, setShowDescription] = useState(false);
-  const [isOfficeContainerReady, setIsOfficeContainerReady] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -296,14 +240,6 @@ const DoctorsOfficePage = () => {
     }
   }, [userInfo, isClinicUnlocked]);
 
-  // Add effect to show KalypsoOnboarding every time the page loads
-  useEffect(() => {
-    // Show KalypsoOnboarding every time the page is accessed
-    // Only show after the component has mounted and onboarding is complete
-    if (onboardingComplete && !mcqState.isLoading) {
-      setShowKalypsoOnboarding(true);
-    }
-  }, [onboardingComplete, mcqState.isLoading]);
 
   // Improved audio management effect - using audio store state to prevent duplicate loops
   useEffect(() => {
@@ -566,18 +502,6 @@ const DoctorsOfficePage = () => {
       hasCalculatedRef.current = true;
     }
   }, [mcqState.isLoading, userInfo]);
-
-  // Effect to set OfficeContainer as ready after data loading is complete
-  useEffect(() => {
-    if (!mcqState.isLoading && reportData && userRooms.length > 0) {
-      // Add a small delay to ensure OfficeContainer has time to initialize
-      const timer = setTimeout(() => {
-        setIsOfficeContainerReady(true);
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [mcqState.isLoading, reportData, userRooms.length]);
 
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
@@ -846,6 +770,11 @@ const DoctorsOfficePage = () => {
     }
   }, [currentUserTestId, completeAllRoom, mcqState.isLoading, isFlashcardsOpen, largeDialogQuit, 
       fetchUserResponses, correctCount, wrongCount, setTestScore]);
+  
+  // Show loading state during initial load
+  if (mcqState.isLoading && !isClinicUnlocked) {
+    return <LoadingClinic />;
+  }
 
   const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
     <button 
@@ -861,65 +790,16 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
-  const handleKalypsoOnboardingComplete = useCallback(async (shouldShowCoinReward?: boolean) => {
-    setShowKalypsoOnboarding(false);
-    
-    if (shouldShowCoinReward) {
-      try {
-        // Actually increment the user's coin count
-        const response = await fetch("/api/user-info", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: 1 }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to award coin");
-        }
-
-        // Play fanfare sound
-        audio.playSound('fanfare');
-        
-        // Show coin reward animation
-        setShowCoinReward(true);
-        
-        // Animate the coin and description with delays
-        setTimeout(() => setShowCoin(true), 500);
-        setTimeout(() => setShowDescription(true), 1500);
-        
-        // Auto-close the coin reward after 5 seconds
-        setTimeout(() => {
-          setShowCoinReward(false);
-          setShowCoin(false);
-          setShowDescription(false);
-          toast.success("Welcome to AnkiClinic! You earned 1 coin! 🎉");
-        }, 5000);
-      } catch (error) {
-        console.error("Error awarding onboarding coin:", error);
-        toast.error("Failed to award coin, but welcome to AnkiClinic!");
-      }
-    }
-  }, [audio]);
 
   /* ----------------------------------------- Render  ---------------------------------------- */
-
-  // Show loading state during initial load
-  if (mcqState.isLoading && !isClinicUnlocked) {
-    return <LoadingClinic />;
-  }
 
   return (
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
       
-      {/* Conditionally render KalypsoOnboarding every time the page loads */}
-      {showKalypsoOnboarding && onboardingComplete && (
-        <KalypsoOnboarding
-          isOpen={showKalypsoOnboarding}
-          onClose={() => setShowKalypsoOnboarding(false)}
-          onComplete={handleKalypsoOnboardingComplete}
-        />
-      )}
+      {/* Conditionally render the OnboardingModal if onboarding is not complete */}
+      { !onboardingComplete && <OnboardingModal /> }
+      
       
       {showWelcomeDialogue && onboardingComplete &&
         <WelcomeDialog 
@@ -927,13 +807,9 @@ const DoctorsOfficePage = () => {
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
     <Suspense fallback={
-        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
-          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-l-lg relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white/70 text-lg font-medium animate-pulse">Loading clinic components...</div>
-            </div>
-          </div>
-          <div className="w-1/4 p-4 gradientbg animate-pulse" />
+        <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] rounded-lg overflow-hidden">
+          <div className="w-1/4 p-4 bg-[--theme-leaguecard-color] animate-pulse" />
+          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
         <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-leaguecard-color] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
@@ -950,29 +826,6 @@ const DoctorsOfficePage = () => {
                   updateVisibleImages={updateVisibleImages}
                   onKalypsoClick={handleActivateChatbot}
                 />
-                
-                {/* Mobile OfficeContainer Loading Overlay */}
-                {!isOfficeContainerReady && (
-                  <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30">
-                    <div className="text-center space-y-4 px-6">
-                      <div className="text-white/90 text-lg font-medium animate-pulse">
-                        Preparing your clinic...
-                      </div>
-                      <div className="flex space-x-2 justify-center">
-                        {[...Array(4)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="w-2 h-2 bg-[--theme-leaguecard-color] rounded-full animate-bounce" 
-                            style={{ animationDelay: `${i * 150}ms` }} 
-                          />
-                        ))}
-                      </div>
-                      <div className="text-white/60 text-sm">
-                        Loading rooms and sprites...
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               
               {/* Mobile sidebar - completely separate from main content flow */}
@@ -1037,29 +890,6 @@ const DoctorsOfficePage = () => {
                   updateVisibleImages={updateVisibleImages}
                   onKalypsoClick={handleActivateChatbot}
                 />
-                
-                {/* OfficeContainer Loading Overlay */}
-                {!isOfficeContainerReady && (
-                  <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-l-lg">
-                    <div className="text-center space-y-4">
-                      <div className="text-white/90 text-xl font-medium animate-pulse">
-                        Preparing your clinic rooms...
-                      </div>
-                      <div className="flex space-x-2 justify-center">
-                        {[...Array(5)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="w-3 h-3 bg-[--theme-leaguecard-color] rounded-full animate-bounce" 
-                            style={{ animationDelay: `${i * 150}ms` }} 
-                          />
-                        ))}
-                      </div>
-                      <div className="text-white/60 text-sm">
-                        Setting up textures and positioning...
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               
               <div className="w-1/4 p-4 gradientbg relative z-50">
@@ -1174,110 +1004,6 @@ const DoctorsOfficePage = () => {
         isOpen={showReferralModal}
         onClose={() => setShowReferralModal(false)}
       />
-
-      {/* Coin Reward Popup */}
-      {showCoinReward && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/70 z-[10002] flex items-center justify-center"
-          onClick={() => {
-            setShowCoinReward(false);
-            setShowCoin(false);
-            setShowDescription(false);
-          }}
-        >
-          <div className="flex flex-col items-center space-y-8 max-w-4xl mx-auto px-4">
-            {/* "You've won a coin!" text */}
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={showCoin ? { opacity: 1, y: 0 } : {}}
-              transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.2 }}
-              className="text-4xl md:text-5xl text-yellow-400 font-bold text-center"
-              style={{
-                textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(255, 215, 0, 0.5)'
-              }}
-            >
-              You've won a coin! 🎉
-            </motion.div>
-            
-            {/* Coin Animation */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0, y: 100 }}
-              animate={showCoin ? { 
-                opacity: 1, 
-                scale: 1, 
-                y: 0,
-                rotate: [0, 360]
-              } : {}}
-              transition={{ 
-                type: "spring", 
-                damping: 15, 
-                stiffness: 200,
-                rotate: { duration: 2, ease: "easeOut" }
-              }}
-              className="flex items-center justify-center"
-            >
-              <div className="relative">
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-xl scale-150 animate-pulse"></div>
-                
-                {/* Coin image - Made much bigger */}
-                <Image
-                  src="/game-components/CupcakeCoin.gif"
-                  alt="Cupcake Coin"
-                  width={400}
-                  height={400}
-                  className="relative z-10 drop-shadow-2xl"
-                  style={{
-                    filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))'
-                  }}
-                />
-                
-                {/* Sparkle effects - Adjusted for bigger coin */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {[...Array(8)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={showCoin ? {
-                        opacity: [0, 1, 0],
-                        scale: [0, 1, 0],
-                        x: [0, Math.cos(i * 45 * Math.PI / 180) * 150],
-                        y: [0, Math.sin(i * 45 * Math.PI / 180) * 150]
-                      } : {}}
-                      transition={{
-                        duration: 2,
-                        delay: 0.5 + i * 0.1,
-                        repeat: Infinity,
-                        repeatDelay: 1
-                      }}
-                      className="absolute top-1/2 left-1/2 w-4 h-4 bg-yellow-400 rounded-full"
-                      style={{
-                        boxShadow: '0 0 10px rgba(255, 215, 0, 0.8)'
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Description Animation */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={showDescription ? { opacity: 1, y: 0 } : {}}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="text-2xl md:text-3xl text-white font-semibold max-w-2xl mx-auto px-4 text-center"
-              style={{
-                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
-              }}
-            >
-              You win coins for getting questions right and consistency, and lose them for inconsistency!
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
 
       {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}

@@ -1,0 +1,428 @@
+PLAN
+
+1st step:
+calculate content and concept mastery scores properly
+
+2nd step:
+new column for score in DataPulse
+deciding whether between scores of sections or content/concept mastery
+
+KnowledgeProfiles created on userresponses
+
+Final content mastery = 0.2 MCAT + 0.5 aamc + 0.3 uworld
+
+group pulses by: source ["uworld, aamc"]
+group pulses by: level ["conceptCategory, contentCategory, section"]
+
+Case 1:
+contentcategory in level
+For each content category found in DataPulses:
+Creates entry if not already present from internal data
+Processes each source (aamc, uworld, other) separately
+Calculates mastery score using positive and negative counts
+Calculates final mastery score for each content category
+
+Ex:
+[
+  { 
+    level: "contentCategory", 
+    name: "1A", 
+    source: "AAMC", 
+    positive: 18, 
+    negative: 7, 
+    weight: "1" 
+  },
+  { 
+    level: "contentCategory", 
+    name: "1A", 
+    source: "UWorld", 
+    positive: 12, 
+    negative: 3, 
+    weight: "1" 
+  }
+]
+
+1A has 3 concept categories
+so,
+
+const aamcMastery = 18 / (18 + 7) = 18 / 25 = 0.72;
+const uworldMastery = 12 / (12 + 3) = 12 / 15 = 0.80; 
+
+totalmastery of 1A = mcatmastery x 0.2 + aamcmastery x 0.5 + uworldMastery x 0.3
+
+Case 2:
+conceptcategory in level
+For each concept category found in DataPulses:
+Creates entry if not already present from internal data
+Processes each source (aamc, uworld, other) separately
+Calculates mastery score using positive and negative counts for each source
+Calculates final mastery score for each concept category
+    Within this, need to recalculate mastery score of the content category this concept category belongs to
+
+total concept mastery 
+
+New Logic and Changes:
+Content Category Masteries:
+
+Initialization: Initializes a structure to hold mastery data for content categories.
+Processing Data Pulses: Adds logic to process DataPulses with level="contentCategory".
+Calculating Masteries: Calculates mastery for each source (AAMC, UWorld, MyMCAT) and updates the content category masteries.
+Final Mastery Calculation: Calculates final mastery for each content category by combining weighted masteries from different sources.
+Concept Category Masteries:
+
+Initialization: Initializes a structure to hold mastery data for concept categories.
+Concept-to-Content Mapping: Builds a mapping from concept categories to content categories using both user responses and subject/content/concept mappings.
+Processing Data Pulses: Adds logic to process DataPulses with level="conceptCategory".
+Calculating Masteries: Calculates mastery for each source (AAMC, UWorld, MyMCAT) and updates the concept category masteries.
+Final Mastery Calculation: Calculates final mastery for each concept category by combining weighted masteries from different sources.
+Blending Masteries:
+
+Content Category Updates: Updates content category masteries based on concept category masteries, blending direct content mastery with concept-derived mastery.
+Knowledge Profile Updates:
+
+New Fields: Adds lastUpdatedAt field to track the last update time for knowledge profiles.
+Database Schema and Columns:
+
+knowledgeProfile: The schema is updated to include lastUpdatedAt. The existing fields such as correctAnswers, totalAttempts, lastAttemptAt, conceptMastery, and contentMastery are retained and updated with the new calculations.
+Impact of Changes:
+Enhanced Mastery Calculation: The new logic provides a more detailed and granular calculation of mastery by separately handling content and concept categories.
+Data Pulse Integration: The integration of DataPulses allows for better utilization of external data sources, improving the accuracy of mastery calculations.
+Blended Mastery Scores: Blending direct content mastery with concept-derived mastery provides a more holistic view of a user's knowledge.
+Track Last Update: Adding the lastUpdatedAt field helps in tracking when the knowledge profiles were last updated, aiding in data consistency and auditing.
+Overall, these changes enhance the robustness of the mastery calculation, make better use of available data, and improve the maintainability and traceability of the knowledge profiles.
+
+
+
+
+Case 3:
+section in level
+
+59 questions each section
+130 = 52/59
+
+
+
+Ex:
+510 = score
+4 sections = 510 /4 = 130
+
+Assume all sections reviewed thoroughly
+
+Input correct and incorrect questions for each section
+
+Before sorting - Categories and their concept mastery:
+Amino Acids: concept mastery = 0.9983391611618612, has profile = true
+Enzymes: concept mastery = 0.7963509054698769, has profile = true
+Proteins: concept mastery = 0.4472036314855911, has profile = true
+DNA and Biotechnology: concept mastery = 0, has profile = true
+RNA and The Central Dogma: concept mastery = 0.5, has profile = true
+Eukaryotic Gene Expression: concept mastery = 0.9000027682403015, has profile = true
+Genetics: concept mastery = 0, has profile = true
+Evolution: concept mastery = 0, has profile = false
+Meiosis and Genetic Diversity: concept mastery = 0, has profile = true
+Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway: concept mastery = 0.9568746885664436, has profile = true
+Aerobic Respiration: concept mastery = 0.2456131308464815, has profile = true
+Lipid and Amino Acid Metabolism: concept mastery = 0.8193289868737876, has profile = true     
+Bioenergetics and Regulation of Metabolism: concept mastery = 0.8642439759059354, has profile = true
+The Cell: concept mastery = 0.8516187315186551, has profile = true
+Plasma Membrane: concept mastery = 0.6070957362862006, has profile = true
+Prokaryotes: concept mastery = 0, has profile = false
+Viruses: concept mastery = 0, has profile = false
+Mitosis: concept mastery = 0, has profile = false
+Embryogenesis: concept mastery = 0, has profile = false
+Nervous System: concept mastery = 0.5, has profile = true
+Endocrine System: concept mastery = 0.3999990703672248, has profile = true
+Respiration and Circulation: concept mastery = 0, has profile = true
+Immune System: concept mastery = 0, has profile = false
+Digestion System: concept mastery = 0, has profile = false
+Excretion System: concept mastery = 0, has profile = false
+Reproductive System: concept mastery = 0, has profile = false
+Muscular System: concept mastery = 0, has profile = false
+Skin and Bones: concept mastery = 0, has profile = false
+Kinematics: concept mastery = 0.8395086015677348, has profile = true
+Force: concept mastery = 0.60945469056136, has profile = true
+Energy: concept mastery = 0.9818277429161761, has profile = true
+Fluids: concept mastery = 0.9170989023965974, has profile = true
+Gases: concept mastery = 0, has profile = false
+Electrostatics and Magnetism: concept mastery = 0.7119193456759716, has profile = true        
+Circuits: concept mastery = 0.1496139514282137, has profile = true
+Electrochemistry: concept mastery = 0.276822627153118, has profile = true
+Sound and Waves: concept mastery = 0, has profile = false
+Light and Optics: concept mastery = 0, has profile = true
+Atoms: concept mastery = 0.3238863360741637, has profile = true
+Periodic Trends: concept mastery = 0.4337941973084659, has profile = true
+Stoichiometry: concept mastery = 1, has profile = true
+Acid-Base: concept mastery = 0, has profile = false
+Solutions: concept mastery = 0, has profile = false
+Covalent Bonds: concept mastery = 0, has profile = false
+Intermolecular Forces: concept mastery = 0, has profile = false
+Seperations and Purifications: concept mastery = 0.7917389925928919, has profile = true       
+Spectroscopy: concept mastery = 0.9301624115871966, has profile = true
+Organic Compounds: concept mastery = 0, has profile = false
+Carbohydrate Structure and Function: concept mastery = 0, has profile = false
+Lipid Structure and Function: concept mastery = 0, has profile = false
+Enzyme Kinetics: concept mastery = 0, has profile = false
+Equilibrium: concept mastery = 0, has profile = false
+Thermodynamics and Thermochemistry: concept mastery = 1, has profile = true
+Sensation: concept mastery = 0.8238998340221628, has profile = true
+Perception: concept mastery = 0.3378787365326664, has profile = true
+Cognition: concept mastery = 0, has profile = false
+Memory and Language: concept mastery = 0, has profile = false
+Emotions and Stress: concept mastery = 0, has profile = false
+Biology and Behavior: concept mastery = 0.7673289229015966, has profile = true
+Personality: concept mastery = 0.6809079380109039, has profile = true
+Motivation and Attitudes: concept mastery = 0.6218443588492064, has profile = true
+Social Processes on Individuals: concept mastery = 0, has profile = false
+Social Processes on Communities: concept mastery = 0, has profile = false
+Learning: concept mastery = 0, has profile = true
+Attitude and Behavior Change: concept mastery = 0, has profile = false
+Self-Identity: concept mastery = 0, has profile = false
+Attribution: concept mastery = 0, has profile = false
+Stereotypes and Bias: concept mastery = 0, has profile = false
+Social Interaction: concept mastery = 0, has profile = false
+Self Presentation: concept mastery = 0, has profile = false
+Social Institutions: concept mastery = 0.5056467839218888, has profile = true
+Culture: concept mastery = 0.6325532830568882, has profile = true
+Demographic Structure: concept mastery = 0, has profile = false
+Demographic Shift: concept mastery = 0, has profile = true
+Social Stratification: concept mastery = 0, has profile = false
+Reasoning Beyond the Text: concept mastery = 0.001789223446605568, has profile = true
+Reasoning Within the Text: concept mastery = 0.003612647438706013, has profile = true
+Foundations of Comprehension: concept mastery = 0.001742471806993991, has profile = true      
+
+After sorting - Categories ordered by weakness:
+DNA and Biotechnology: concept mastery = 0, has profile = true
+Genetics: concept mastery = 0, has profile = true
+Meiosis and Genetic Diversity: concept mastery = 0, has profile = true
+Respiration and Circulation: concept mastery = 0, has profile = true
+Light and Optics: concept mastery = 0, has profile = true
+Learning: concept mastery = 0, has profile = true
+Demographic Shift: concept mastery = 0, has profile = true
+Circuits: concept mastery = 0.1496139514282137, has profile = true
+Aerobic Respiration: concept mastery = 0.2456131308464815, has profile = true
+Electrochemistry: concept mastery = 0.276822627153118, has profile = true
+Atoms: concept mastery = 0.3238863360741637, has profile = true
+Perception: concept mastery = 0.3378787365326664, has profile = true
+Endocrine System: concept mastery = 0.3999990703672248, has profile = true
+Periodic Trends: concept mastery = 0.4337941973084659, has profile = true
+Proteins: concept mastery = 0.4472036314855911, has profile = true
+RNA and The Central Dogma: concept mastery = 0.5, has profile = true
+Nervous System: concept mastery = 0.5, has profile = true
+Social Institutions: concept mastery = 0.5056467839218888, has profile = true
+Plasma Membrane: concept mastery = 0.6070957362862006, has profile = true
+Force: concept mastery = 0.60945469056136, has profile = true
+Motivation and Attitudes: concept mastery = 0.6218443588492064, has profile = true
+Culture: concept mastery = 0.6325532830568882, has profile = true
+Personality: concept mastery = 0.6809079380109039, has profile = true
+Electrostatics and Magnetism: concept mastery = 0.7119193456759716, has profile = true        
+Biology and Behavior: concept mastery = 0.7673289229015966, has profile = true
+Seperations and Purifications: concept mastery = 0.7917389925928919, has profile = true       
+Enzymes: concept mastery = 0.7963509054698769, has profile = true
+Lipid and Amino Acid Metabolism: concept mastery = 0.8193289868737876, has profile = true     
+Sensation: concept mastery = 0.8238998340221628, has profile = true
+Kinematics: concept mastery = 0.8395086015677348, has profile = true
+The Cell: concept mastery = 0.8516187315186551, has profile = true
+Bioenergetics and Regulation of Metabolism: concept mastery = 0.8642439759059354, has profile = true
+Eukaryotic Gene Expression: concept mastery = 0.9000027682403015, has profile = true
+Fluids: concept mastery = 0.9170989023965974, has profile = true
+Spectroscopy: concept mastery = 0.9301624115871966, has profile = true
+Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway: concept mastery = 0.9568746885664436, has profile = true
+Energy: concept mastery = 0.9818277429161761, has profile = true
+Amino Acids: concept mastery = 0.9983391611618612, has profile = true
+Stoichiometry: concept mastery = 1, has profile = true
+Thermodynamics and Thermochemistry: concept mastery = 1, has profile = true
+Evolution: concept mastery = 0, has profile = false
+Prokaryotes: concept mastery = 0, has profile = false
+Viruses: concept mastery = 0, has profile = false
+Mitosis: concept mastery = 0, has profile = false
+Embryogenesis: concept mastery = 0, has profile = false
+Immune System: concept mastery = 0, has profile = false
+Digestion System: concept mastery = 0, has profile = false
+Excretion System: concept mastery = 0, has profile = false
+Reproductive System: concept mastery = 0, has profile = false
+Muscular System: concept mastery = 0, has profile = false
+Skin and Bones: concept mastery = 0, has profile = false
+Gases: concept mastery = 0, has profile = false
+Sound and Waves: concept mastery = 0, has profile = false
+Acid-Base: concept mastery = 0, has profile = false
+Solutions: concept mastery = 0, has profile = false
+Covalent Bonds: concept mastery = 0, has profile = false
+Intermolecular Forces: concept mastery = 0, has profile = false
+Organic Compounds: concept mastery = 0, has profile = false
+Carbohydrate Structure and Function: concept mastery = 0, has profile = false
+Lipid Structure and Function: concept mastery = 0, has profile = false
+Enzyme Kinetics: concept mastery = 0, has profile = false
+Equilibrium: concept mastery = 0, has profile = false
+Cognition: concept mastery = 0, has profile = false
+Memory and Language: concept mastery = 0, has profile = false
+Emotions and Stress: concept mastery = 0, has profile = false
+Social Processes on Individuals: concept mastery = 0, has profile = false
+Social Processes on Communities: concept mastery = 0, has profile = false
+Attitude and Behavior Change: concept mastery = 0, has profile = false
+Self-Identity: concept mastery = 0, has profile = false
+Attribution: concept mastery = 0, has profile = false
+Stereotypes and Bias: concept mastery = 0, has profile = false
+Social Interaction: concept mastery = 0, has profile = false
+Self Presentation: concept mastery = 0, has profile = false
+Demographic Structure: concept mastery = 0, has profile = false
+Social Stratification: concept mastery = 0, has profile = false
+GET /api/category?useKnowledgeProfiles=true&page=1&pageSize=6&excludeCompleted=true 200 in 216ms
+
+
+
+Before sorting - Categories and their concept mastery:
+Amino Acids: concept mastery = 0, has profile = false
+Enzymes: concept mastery = 0, has profile = false
+Proteins: concept mastery = 0, has profile = false
+DNA and Biotechnology: concept mastery = 0, has profile = false
+RNA and The Central Dogma: concept mastery = 0, has profile = false
+Eukaryotic Gene Expression: concept mastery = 0, has profile = false        
+Genetics: concept mastery = 0, has profile = false
+Evolution: concept mastery = 0, has profile = false
+Meiosis and Genetic Diversity: concept mastery = 0, has profile = false     
+Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway: concept mastery = 0, has profile = false
+Aerobic Respiration: concept mastery = 0, has profile = false
+Lipid and Amino Acid Metabolism: concept mastery = 0, has profile = false   
+Bioenergetics and Regulation of Metabolism: concept mastery = 0, has profile = false
+The Cell: concept mastery = 0, has profile = false
+Plasma Membrane: concept mastery = 0, has profile = false
+Prokaryotes: concept mastery = 0, has profile = false
+Viruses: concept mastery = 0, has profile = false
+Mitosis: concept mastery = 0, has profile = false
+Embryogenesis: concept mastery = 0, has profile = false
+Nervous System: concept mastery = 0, has profile = false
+Endocrine System: concept mastery = 0, has profile = false
+Respiration and Circulation: concept mastery = 0, has profile = false       
+Immune System: concept mastery = 0, has profile = false
+Digestion System: concept mastery = 0, has profile = false
+Excretion System: concept mastery = 0, has profile = false
+Reproductive System: concept mastery = 0, has profile = false
+Muscular System: concept mastery = 0, has profile = false
+Skin and Bones: concept mastery = 0, has profile = false
+Kinematics: concept mastery = 0, has profile = false
+Force: concept mastery = 0, has profile = false
+Energy: concept mastery = 0, has profile = false
+Fluids: concept mastery = 0, has profile = false
+Gases: concept mastery = 0, has profile = false
+Electrostatics and Magnetism: concept mastery = 0, has profile = false      
+Circuits: concept mastery = 0, has profile = false
+Electrochemistry: concept mastery = 0, has profile = false
+Sound and Waves: concept mastery = 0, has profile = false
+Light and Optics: concept mastery = 0, has profile = false
+Atoms: concept mastery = 0, has profile = false
+Periodic Trends: concept mastery = 0, has profile = false
+Stoichiometry: concept mastery = 0, has profile = false
+Acid-Base: concept mastery = 0, has profile = false
+Solutions: concept mastery = 0, has profile = false
+Covalent Bonds: concept mastery = 0, has profile = false
+Intermolecular Forces: concept mastery = 0, has profile = false
+Seperations and Purifications: concept mastery = 0, has profile = false     
+Spectroscopy: concept mastery = 0, has profile = false
+Organic Compounds: concept mastery = 0, has profile = false
+Carbohydrate Structure and Function: concept mastery = 0, has profile = false
+Lipid Structure and Function: concept mastery = 0, has profile = false      
+Enzyme Kinetics: concept mastery = 0, has profile = false
+Equilibrium: concept mastery = 0, has profile = false
+Thermodynamics and Thermochemistry: concept mastery = 0, has profile = false
+Sensation: concept mastery = 0, has profile = false
+Perception: concept mastery = 0, has profile = false
+Cognition: concept mastery = 0, has profile = false
+Memory and Language: concept mastery = 0, has profile = false
+Emotions and Stress: concept mastery = 0, has profile = false
+Biology and Behavior: concept mastery = 0, has profile = false
+Personality: concept mastery = 0, has profile = false
+Motivation and Attitudes: concept mastery = 0, has profile = false
+Social Processes on Individuals: concept mastery = 0, has profile = false   
+Social Processes on Communities: concept mastery = 0, has profile = false   
+Learning: concept mastery = 0, has profile = false
+Attitude and Behavior Change: concept mastery = 0, has profile = false      
+Self-Identity: concept mastery = 0, has profile = false
+Attribution: concept mastery = 0, has profile = false
+Stereotypes and Bias: concept mastery = 0, has profile = false
+Social Interaction: concept mastery = 0, has profile = false
+Self Presentation: concept mastery = 0, has profile = false
+Social Institutions: concept mastery = 0, has profile = false
+Culture: concept mastery = 0, has profile = false
+Demographic Structure: concept mastery = 0, has profile = false
+Demographic Shift: concept mastery = 0, has profile = false
+Social Stratification: concept mastery = 0, has profile = false
+Reasoning Beyond the Text: concept mastery = 0, has profile = false
+Reasoning Within the Text: concept mastery = 0, has profile = false
+Foundations of Comprehension: concept mastery = 0, has profile = false      
+
+After sorting - Categories ordered by weakness:
+Amino Acids: concept mastery = 0, has profile = false
+Enzymes: concept mastery = 0, has profile = false
+Proteins: concept mastery = 0, has profile = false
+DNA and Biotechnology: concept mastery = 0, has profile = false
+RNA and The Central Dogma: concept mastery = 0, has profile = false
+Eukaryotic Gene Expression: concept mastery = 0, has profile = false        
+Genetics: concept mastery = 0, has profile = false
+Evolution: concept mastery = 0, has profile = false
+Meiosis and Genetic Diversity: concept mastery = 0, has profile = false     
+Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway: concept mastery = 0, has profile = false
+Aerobic Respiration: concept mastery = 0, has profile = false
+Lipid and Amino Acid Metabolism: concept mastery = 0, has profile = false   
+Bioenergetics and Regulation of Metabolism: concept mastery = 0, has profile = false
+The Cell: concept mastery = 0, has profile = false
+Plasma Membrane: concept mastery = 0, has profile = false
+Prokaryotes: concept mastery = 0, has profile = false
+Viruses: concept mastery = 0, has profile = false
+Mitosis: concept mastery = 0, has profile = false
+Embryogenesis: concept mastery = 0, has profile = false
+Nervous System: concept mastery = 0, has profile = false
+Endocrine System: concept mastery = 0, has profile = false
+Respiration and Circulation: concept mastery = 0, has profile = false       
+Immune System: concept mastery = 0, has profile = false
+Digestion System: concept mastery = 0, has profile = false
+Excretion System: concept mastery = 0, has profile = false
+Reproductive System: concept mastery = 0, has profile = false
+Muscular System: concept mastery = 0, has profile = false
+Skin and Bones: concept mastery = 0, has profile = false
+Kinematics: concept mastery = 0, has profile = false
+Force: concept mastery = 0, has profile = false
+Energy: concept mastery = 0, has profile = false
+Fluids: concept mastery = 0, has profile = false
+Gases: concept mastery = 0, has profile = false
+Electrostatics and Magnetism: concept mastery = 0, has profile = false      
+Circuits: concept mastery = 0, has profile = false
+Electrochemistry: concept mastery = 0, has profile = false
+Sound and Waves: concept mastery = 0, has profile = false
+Light and Optics: concept mastery = 0, has profile = false
+Atoms: concept mastery = 0, has profile = false
+Periodic Trends: concept mastery = 0, has profile = false
+Stoichiometry: concept mastery = 0, has profile = false
+Acid-Base: concept mastery = 0, has profile = false
+Solutions: concept mastery = 0, has profile = false
+Covalent Bonds: concept mastery = 0, has profile = false
+Intermolecular Forces: concept mastery = 0, has profile = false
+Seperations and Purifications: concept mastery = 0, has profile = false
+Spectroscopy: concept mastery = 0, has profile = false
+Organic Compounds: concept mastery = 0, has profile = false
+Carbohydrate Structure and Function: concept mastery = 0, has profile = false
+Lipid Structure and Function: concept mastery = 0, has profile = false      
+Enzyme Kinetics: concept mastery = 0, has profile = false
+Equilibrium: concept mastery = 0, has profile = false
+Thermodynamics and Thermochemistry: concept mastery = 0, has profile = false
+Sensation: concept mastery = 0, has profile = false
+Perception: concept mastery = 0, has profile = false
+Cognition: concept mastery = 0, has profile = false
+Memory and Language: concept mastery = 0, has profile = false
+Emotions and Stress: concept mastery = 0, has profile = false
+Biology and Behavior: concept mastery = 0, has profile = false
+Personality: concept mastery = 0, has profile = false
+Motivation and Attitudes: concept mastery = 0, has profile = false
+Social Processes on Individuals: concept mastery = 0, has profile = false   
+Social Processes on Communities: concept mastery = 0, has profile = false   
+Learning: concept mastery = 0, has profile = false
+Attitude and Behavior Change: concept mastery = 0, has profile = false      
+Self-Identity: concept mastery = 0, has profile = false
+Attribution: concept mastery = 0, has profile = false
+Stereotypes and Bias: concept mastery = 0, has profile = false
+Social Interaction: concept mastery = 0, has profile = false
+Self Presentation: concept mastery = 0, has profile = false 
+Social Institutions: concept mastery = 0, has profile = false
+Culture: concept mastery = 0, has profile = false
+Demographic Structure: concept mastery = 0, has profile = false
+Demographic Shift: concept mastery = 0, has profile = false
+Social Stratification: concept mastery = 0, has profile = false

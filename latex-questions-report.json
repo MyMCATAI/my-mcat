@@ -1,0 +1,159 @@
+[
+  {
+    "id": "cm2h1mmsm01n1imoliehc5xx1",
+    "questionID": "B1DB-011-flashcard",
+    "contentLatex": [
+      "\\frac{kJ}{mol}"
+    ]
+  },
+  {
+    "id": "cm2h1mr0901ojimol5qv76fw0",
+    "questionID": "B1DB-018-flashcard",
+    "contentLatex": [
+      "\\frac{weight~in~kg}{(height~in~meters)^2}"
+    ]
+  },
+  {
+    "id": "cm2h1ns6e0227imoln3m7hy6r",
+    "questionID": "P4BF-003-flashcard",
+    "optionsLatex": [
+      "\\frac{m}{V}",
+      "\\frac{V}{m}",
+      "\\frac{m+V}{2}"
+    ]
+  },
+  {
+    "id": "cm2h1o7lx0281imolqyojjvo7",
+    "questionID": "G4CE-012-flashcard",
+    "optionsLatex": [
+      "\\frac{C}{mol}"
+    ],
+    "notesLatex": [
+      "\\frac{C}{mol}"
+    ]
+  },
+  {
+    "id": "cm2h1o81t0287imol3zm3iipp",
+    "questionID": "G4CE-013-flashcard",
+    "optionsLatex": [
+      "\\frac{J}{K•mol}"
+    ],
+    "notesLatex": [
+      "\\frac{J}{K•mol}"
+    ]
+  },
+  {
+    "id": "cm2h1tvwv04cdimolihby0wka",
+    "questionID": "-flashcard",
+    "optionsLatex": [
+      "\\frac{1}{λ}"
+    ],
+    "notesLatex": [
+      "\\frac{1}{λ}"
+    ]
+  },
+  {
+    "id": "cm2h1u5fc04fvimolucjb0u2l",
+    "questionID": "-flashcard",
+    "contentLatex": [
+      "\\frac{m}{z}"
+    ],
+    "optionsLatex": [
+      "\\frac{m}{z}"
+    ],
+    "notesLatex": [
+      "\\frac{m}{z}"
+    ]
+  },
+  {
+    "id": "cm2h1u6ti04gdimolim9ab0go",
+    "questionID": "-flashcard",
+    "contentLatex": [
+      "\\frac{m}{z}"
+    ],
+    "optionsLatex": [
+      "\\frac{m}{z}",
+      "\\frac{4.4}{1.1}"
+    ],
+    "notesLatex": [
+      "\\frac{m}{z}",
+      "\\frac{4.4}{1.1}"
+    ]
+  },
+  {
+    "id": "cm44uu28700bxjyx388bm5r86",
+    "questionID": "P4DS-007-normal",
+    "notesLatex": [
+      "\\lambda",
+      "\\frac{v}{f}"
+    ]
+  },
+  {
+    "id": "cm481jutn004xgx0kx9jfc5ff",
+    "questionID": "B1AA-030-normal",
+    "optionsLatex": [
+      "\\frac{pK1 + pK2}{2}",
+      "\\frac{pK1 + pK3}{2}",
+      "\\frac{pK2 + pK3}{2}",
+      "\\frac{pK1 - pK2}{2}"
+    ],
+    "notesLatex": [
+      "\\frac{pK1 + pK2}{2}",
+      "\\frac{pK1 + pK2}{2}",
+      "\\frac{pK1 + pK2}{2}",
+      "\\frac{pK_a1 + pK_a2}{2}"
+    ]
+  },
+  {
+    "id": "cm481jv7m0053gx0k6xhkfjfw",
+    "questionID": "B1AA-031-normal",
+    "optionsLatex": [
+      "\\frac{pK_1 + pK_2}{2}",
+      "\\frac{pK_1 - pK_2}{2}",
+      "\\frac{pK_1 \\\\cdot pK_2}{2}"
+    ],
+    "notesLatex": [
+      "\\frac{pK_1 + pK_2}{2}",
+      "\\frac{pK_1 - pK_2}{2}",
+      "\\frac{pK_a(\\\\text{NH}",
+      "\\frac{pK_1 \\\\cdot pK_2}{2}",
+      "\\frac{pK_a1 + pK_a2}{2}"
+    ]
+  },
+  {
+    "id": "cm481jvlt0059gx0k4k3vq1k8",
+    "questionID": "B1AA-032-normal",
+    "optionsLatex": [
+      "\\frac{pK_a2 + pK_R}{2}",
+      "\\frac{pK_2 + pK_3}{2}",
+      "\\frac{pK_a1 + pK_R}{2}",
+      "\\frac{pK_3 + pK_a}{2}"
+    ],
+    "notesLatex": [
+      "\\frac{pK_a2 + pK_R}{2}",
+      "\\frac{{pK_a(\\\\text{COOH}",
+      "\\frac{pK_a1 + pK_R}{2}",
+      "\\frac{pK_a1 + pK_a2}{2}",
+      "\\frac{{pK_3 + pK_a}",
+      "\\frac{{pK_a1 + pK_a2}"
+    ]
+  },
+  {
+    "id": "cm481jvzq005fgx0k03w8y70k",
+    "questionID": "B1AA-033-normal",
+    "optionsLatex": [
+      "\\frac{pK_a1 + pK_a2}{2}",
+      "\\frac{pK_a2 + pK_R}{2}",
+      "\\frac{pK_a1 + pK_b}{2}"
+    ],
+    "notesLatex": [
+      "\\frac{pK_a1 + pK_R}{2}",
+      "\\frac{pK_a1 + pK_a2}{2}",
+      "\\frac{pK_a1 + pK_R}{2}",
+      "\\frac{pK_a2 + pK_R}{2}",
+      "\\frac{pK_a1 + pK_R}{2}",
+      "\\frac{pK_a1 + pK_b}{2}",
+      "\\frac{pK_a1 + pK_R}{2}"
+    ]
+  }
+]
