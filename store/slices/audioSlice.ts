@@ -15,9 +15,9 @@ interface VolumeCoefficients {
 // Default volume settings
 const DEFAULT_VOLUMES: VolumeCoefficients = {
   master: 0.7,
-  music: 0.7,
-  sfx: 0.8,  // Increased from 0.5 to 0.8 for better audibility
-  loop: 0.5,
+  music: 0.4,
+  sfx: 0.5,  // REALLY low - barely detectable
+  loop: 0.1,  // REALLY low - barely detectable
   voice: 0.9  // Voice should be loud and clear
 };
 
