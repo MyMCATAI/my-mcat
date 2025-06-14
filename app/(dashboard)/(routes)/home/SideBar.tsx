@@ -20,7 +20,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
-import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";  
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
@@ -61,7 +60,6 @@ interface SideBarProps {
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
   | { type: 'tutors'; schools: Tutor[] }
-  | { type: 'tutorial' }
   | { type: 'tasks' }
   | { type: 'leaderboard' };
 
@@ -540,8 +538,6 @@ const SideBar: React.FC<SideBarProps> = ({
         return renderInsights();
     } else if (content.type === 'tutors') {
         return renderTutors(content.schools);
-    } else if (content.type === 'tutorial') {
-        return <HelpContentTestingSuite />;
     } else if (content.type === 'tasks') {
         return renderTasks();
     } else if (content.type === 'leaderboard') {

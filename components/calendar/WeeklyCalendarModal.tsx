@@ -379,9 +379,8 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         const uniqueWeekdays = Array.from(new Set(availableDays.map(day => day.dayName)));
         
         return (
-          <div className="space-y-6 p-6">
+          <div className="space-y-4 p-4">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Schedule</h3>
               {getNextExam() ? (
                 <p className="text-[--theme-emphasis-color] text-sm">
                   {format(new Date(), 'MMMM do')} → {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} ({getNextExam()!.activityTitle})
@@ -499,8 +498,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         return (
           <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Resources</h3>
-              <p className="text-[--theme-emphasis-color] text-sm">
+              <p className="text-[--theme-emphasis-color] text-base">
                 Select the resources you&apos;ll use to prepare for your {getNextExam()?.activityTitle}
               </p>
             </div>
@@ -557,8 +555,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         return (
           <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Balance</h3>
-              <p className="text-[--theme-emphasis-color] text-sm">
+              <p className="text-[--theme-emphasis-color] text-base">
                 Choose how to balance content review and practice
               </p>
             </div>
@@ -721,7 +718,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
               onClick={() => setIsResetConfirmOpen(true)}
               variant="secondary"
               size="sm"
-              className="opacity-70 hover:opacity-100"
+              className="opacity-70 hover:opacity-100 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"
             >
               Reset Schedule
             </Button>

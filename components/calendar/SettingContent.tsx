@@ -18,7 +18,7 @@ interface StudyPlan {
 interface SettingContentProps {
   onComplete?: (result: {
     success: boolean;
-    action: "generate" | "save";
+    action: "generate" | "save" | "skip";
     data?: {
       examDate: Date;
       hoursPerDay: Record<string, string>;
@@ -417,19 +417,25 @@ const SettingContent: React.FC<SettingContentProps> = ({
     return hoursPerDay;
   };
 
+  const handleSkipCalendar = () => {
+    if (onComplete) {
+      onComplete({ success: true, action: "skip" });
+    }
+  };
+
   const renderStep = (step: number) => {
     switch (step) {
       case 0:
         return (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="text-center space-y-2 mb-8">
-              <h3 className="text-2xl text-white opacity-70 ml-4">
+              <h3 className="text-2xl text-white opacity-70">
                 How many hours a week can you study?
               </h3>
             </div>
-            <div className="w-full max-w-md bg-transparent p-8 rounded-2xl flex flex-col items-center">
+            <div className="w-full max-w-md bg-transparent p-4 rounded-2xl flex flex-col items-center">
               <div className="flex flex-col items-center space-y-4">
-                <div className="relative w-48">
+                <div className="relative w-36">
                   <input
                     type="text"
                     inputMode="numeric"
@@ -447,22 +453,22 @@ const SettingContent: React.FC<SettingContentProps> = ({
                 </span>
               </div>
               {weeklyHours < 12 && (
-                <p className="text-sm text-white opacity-70 mt-4 text-center">
+                <p className="text-sm text-white opacity-70 mt-2 text-center">
                   Your test better be in a few months.
                 </p>
               )}
               {weeklyHours >= 12 && weeklyHours <= 21 && (
-                <p className="text-sm text-white opacity-70 mt-4 text-center">
+                <p className="text-sm text-white opacity-70 mt-2 text-center">
                   This is the optimal study time.
                 </p>
               )}
               {weeklyHours >= 22 && weeklyHours <= 29 && (
-                <p className="text-sm text-white opacity-70 mt-4 text-center">
+                <p className="text-sm text-white opacity-70 mt-2 text-center">
                   {"Don't lie to yourself."}
                 </p>
               )}
               {weeklyHours >= 30 && (
-                <p className="text-sm text-white opacity-70 mt-4 text-center">
+                <p className="text-sm text-white opacity-70 mt-2 text-center">
                   {"Please be realistic."}
                 </p>
               )}
@@ -472,15 +478,13 @@ const SettingContent: React.FC<SettingContentProps> = ({
       case 1:
         return (
           <div className="flex flex-col items-center space-y-4">
-            <div className="text-center space-y-2"></div>
+            <div className="text-center space-y-2 mb-4">
+              <h4 className="text-2xl text-white">
+                What days can you take practice exams?
+              </h4>
+            </div>
             <div className="w-full max-w-5xl p-3 rounded-2xl">
-              <div className="flex items-start justify-end gap-8">
-                <div className="flex flex-col justify-center w-3/5 text-center">
-                  <h4 className="text-2xl text-white translate-y-[8.5rem]">
-                    What days can you take practice exams?
-                  </h4>
-                </div>
-
+              <div className="flex items-center justify-center">
                 <div className="w-1/2 gap-3 min-w-[20rem]">
                   {days.map((day) => (
                     <div
@@ -580,7 +584,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
               <div className="flex gap-4">
                 <button
                   onClick={handleRecommendTestDate}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-400/30 hover:text-white"
+                  className="flex-1 bg-white/10 text-white py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-400/30 hover:bg-gray-300/20 hover:text-white hover:scale-105 hover:border-white/50"
                 >
                   <svg
                     className="w-4 h-4 opacity-70"
@@ -592,7 +596,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                     />
                   </svg>
                   Recommend
@@ -602,7 +606,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
                   href="https://students-residents.aamc.org/register-mcat-exam/register-mcat-exam"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-400/30 hover:text-white"
+                  className="flex-1 bg-white/10 text-white py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-400/30 hover:bg-gray-300/20 hover:text-white hover:scale-105 hover:border-white/50"
                 >
                   Register
                 </a>
@@ -633,7 +637,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
             ? "w-full bg-transparent"
             : "bg-white/10 rounded-2xl shadow-xl absolute right-[2rem] w-[40rem]"
         }
-        h-[45rem]
+        h-[42rem]
         flex flex-col
       `}
     >
@@ -647,70 +651,78 @@ const SettingContent: React.FC<SettingContentProps> = ({
           ${isInitialSetup ? "bg-transparent" : "bg-[#001226]"}
         `}
       >
-        {existingStudyPlan && (
-          <div className="bg-white/20 text-white px-4 py-2 text-center text-sm">
-            {"You're updating your existing study plan"}
-          </div>
-        )}
-
-        <div className="flex items-center justify-center mb-8 mt-4 flex-shrink-0">
+        <div className="flex items-center justify-center mb-4 mt-2 flex-shrink-0">
           <div className="flex items-center space-x-4">
             {steps.map((step, index) => (
               <React.Fragment key={index}>
                 <div
-                  className={`flex flex-col items-center cursor-pointer ${
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 ${
                     index === currentStep ? "opacity-100" : "opacity-50"
                   }`}
                   onClick={() => setCurrentStep(index)}
                 >
                   <div
                     className={`
-                    w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
+                    w-8 h-8 rounded-full flex items-center justify-center text-base font-bold
+                    transition-all duration-200
                     ${
                       index === currentStep
                         ? "bg-white/20 text-white"
-                        : "bg-[#001226] text-white"
+                        : "bg-[#001226] text-white hover:bg-gray-400/20 hover:scale-105 hover:border hover:border-white/30"
                     }
+                    hover:bg-gray-400/20 hover:scale-105 hover:border hover:border-white/30
                   `}
                   >
                     {index + 1}
                   </div>
-                  <div className="text-center mt-2">
+                  <div className="text-center mt-1">
                     <div className="text-sm font-medium text-white">
                       {step.title}
-                    </div>
-                    <div className="text-xs text-white opacity-70">
-                      {step.subtitle}
                     </div>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="w-16 h-[2px] bg-gray-400/30" />
+                  <div className="w-16 h-[0.125rem] bg-gray-400/30" />
                 )}
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <div className="flex-1 px-6 py-4 flex items-center justify-center overflow-y-auto">
+        <div className="flex-1 px-4 py-2 flex items-center justify-center overflow-y-auto">
           {renderStep(currentStep)}
         </div>
 
-        <div className="p-6 mt-auto flex justify-between flex-shrink-0">
+        <div className="p-4 mt-auto flex justify-between flex-shrink-0">
           <Button
-            className="px-6 py-3 rounded-xl text-white bg-white/10 backdrop-blur-md 
-                      hover:bg-white/20 transition-all duration-300
+            className="px-4 py-2 rounded-xl text-white bg-white/10 backdrop-blur-md 
+                      hover:bg-gray-400/20 hover:scale-105 transition-all duration-200
                       focus:outline-none focus:ring-2 focus:ring-blue-500/50
-                      border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed
+                      disabled:hover:scale-100 disabled:hover:bg-white/10"
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             disabled={currentStep === 0}
           >
             Previous
           </Button>
 
+          <Button
+            className="px-4 py-2 rounded-xl text-white bg-red-500/20 backdrop-blur-md
+                      hover:bg-gray-400/20 hover:scale-105 transition-all duration-200
+                      focus:outline-none focus:ring-2 focus:ring-red-500/50
+                      border border-red-400/30 hover:border-red-400/50"
+            onClick={handleSkipCalendar}
+          >
+            Skip Calendar
+          </Button>
+
           {currentStep === steps.length - 1 ? (
             <Button
-              className="px-8 py-3 rounded-xl text-white bg-white/20 hover:opacity-90"
+              className="px-6 py-2 rounded-xl text-white bg-white/20 
+                        hover:bg-gray-400/20 hover:scale-105 transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                        border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed
+                        disabled:hover:scale-100 disabled:hover:bg-white/20"
               onClick={handleGenerateStudyPlan}
               disabled={isGenerating}
             >
@@ -727,7 +739,11 @@ const SettingContent: React.FC<SettingContentProps> = ({
             </Button>
           ) : (
             <Button
-              className="px-6 py-3 rounded-xl text-white bg-white/20 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-xl text-white bg-white/20 
+                        hover:bg-gray-400/20 hover:scale-105 transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                        border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed
+                        disabled:hover:scale-100 disabled:hover:bg-white/20"
               onClick={handleNextStep}
               disabled={currentStep === 1 && !hasSelectedFullLengthDay}
             >
