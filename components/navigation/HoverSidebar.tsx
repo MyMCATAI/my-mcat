@@ -11,6 +11,7 @@ import { UnlockDialog } from "@/components/unlock-dialog";
 /* ----- Types ---- */
 // Feature unlock enum for type safety
 export enum FEATURE_UNLOCK {
+  KALYPSO_AI = "kalypso_ai",
   CARS = "cars",
   TUTORING = "tutoring",
   TESTS = "tests",
