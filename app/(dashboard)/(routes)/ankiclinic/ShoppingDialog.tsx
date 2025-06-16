@@ -70,7 +70,7 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   }, [clinicRooms]);
 
   const levelInfo = [
-    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 4 },
+    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 1 },
     { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 8 },
     { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 12 },
     { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 16 },

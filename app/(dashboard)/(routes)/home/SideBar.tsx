@@ -3,7 +3,7 @@ import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle, Cat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle, Cat, Calendar as CalendarIcon } from 'lucide-react';
 import { FaCheckCircle, FaYoutube } from 'react-icons/fa';
 import { toast } from "react-hot-toast";
 import { isToday, isSameDay, isTomorrow, format } from "date-fns";
@@ -26,6 +26,16 @@ import Leaderboard from "@/components/leaderboard/Leaderboard";
 import { useAudio } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
 import { cn } from "@/lib/utils";
+import { useAllCalendarActivities, useExamActivities } from "@/hooks/useCalendarActivities";
+import TestCalendar from '@/components/calendar/TestCalendar';
+import type { CalendarEvent } from "@/types/calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "@/components/styles/CustomCalendar.css";
+import {
+  processExamActivities,
+  processStudyActivities,
+  combineCalendarEvents,
+} from "@/components/chatgpt/CalendarUtils";
 
 interface Task {
   text: string;
@@ -288,18 +298,6 @@ const SideBar: React.FC<SideBarProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-semibold text-[--theme-text-color]">{tutor.name}</h3>
-                        {tutorExpertise[tutor.name] && (
-                          <div className="flex items-center gap-1">
-                            {tutorExpertise[tutor.name].map((expertise, i) => (
-                              <span
-                                key={i}
-                                className="px-2 py-0.5 text-xs rounded-full bg-[--theme-hover-color] text-[--theme-hover-text]"
-                              >
-                                {expertise}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
                     <p className="text-sm text-[--theme-text-color] opacity-80">{tutor.university}</p>
@@ -346,6 +344,32 @@ const SideBar: React.FC<SideBarProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const [loadingTasks, setLoadingTasks] = useState<Record<string, boolean>>({});
+  
+  // Calendar modal state
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  
+  // Get calendar activities
+  const { activities: examActivities, loading: examLoading, fetchExamActivities } = useExamActivities();
+  const { activities: studyActivities, loading: studyLoading, refetch: refetchStudyActivities } = useAllCalendarActivities();
+
+  // Process calendar events
+  useEffect(() => {
+    if (examActivities && studyActivities) {
+      const examEvents = processExamActivities(examActivities);
+      const studyEvents = processStudyActivities(studyActivities);
+      const combined = combineCalendarEvents(examEvents, studyEvents);
+      setCalendarEvents(combined);
+    }
+  }, [examActivities, studyActivities]);
+
+  useEffect(() => {
+    if (isCalendarModalOpen) {
+      fetchExamActivities();
+      refetchStudyActivities();
+    }
+  }, [isCalendarModalOpen, fetchExamActivities, refetchStudyActivities]);
 
   const renderTasks = () => {
     if (!isSubscribed) {
@@ -506,12 +530,20 @@ const SideBar: React.FC<SideBarProps> = ({
           </div>
         </ScrollArea>
 
-        <div className="mt-4 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
-          <span className="text-sm opacity-75 ml-6">Wallet</span>
+        <div className="mt-4 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between p-4">
+          <Button
+            onClick={() => setIsCalendarModalOpen(true)}
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            OPEN CALENDAR
+          </Button>
           <PurchaseButton 
             userCoinCount={userInfo?.score || 0}
             tooltipText="Click to purchase more coins"
-            className="bg-[--theme-leaguecard-color] text-[--theme-hover-text]"
+            className="bg-transparent"
           >
             <div className="cursor-pointer hover:opacity-80 transition-opacity text-sm">
               <ScoreDisplay score={userInfo?.score || 0} textClassName="text-xl font-bold" />
@@ -529,6 +561,7 @@ const SideBar: React.FC<SideBarProps> = ({
         showAddFriend={true}
         className="p-4"
         compact={true}
+        defaultTab="friends"
       />
     </div>
   );
@@ -845,6 +878,21 @@ const SideBar: React.FC<SideBarProps> = ({
     }
   };
 
+  // Calendar modal handlers
+  const handleCalendarNavigate = (date: Date) => {
+    setCalendarDate(date);
+  };
+
+  const handleSelectEvent = (event: CalendarEvent) => {
+    // Optionally handle event selection
+  };
+
+  const handleEventUpdate = async () => {
+    await fetchExamActivities();
+    await refetchStudyActivities();
+    onActivitiesUpdate(); // Also refresh the sidebar activities
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
@@ -909,6 +957,43 @@ const SideBar: React.FC<SideBarProps> = ({
         tasks={uWorldTasks}
         hours={todayActivities.find(activity => activity.activityTitle === "UWorld")?.hours || 1}
       />
+
+      {/* Calendar Modal */}
+      {isCalendarModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsCalendarModalOpen(false);
+            }
+          }}
+        >
+          <div className="w-[90vw] max-w-6xl h-[calc(100%-2rem)] bg-transparent rounded-xl overflow-hidden">
+            <div className="p-4 h-full overflow-auto">
+              {(examLoading || studyLoading) ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
+                </div>
+              ) : (
+                <div className="h-full flex flex-col min-h-[500px]">
+                  <TestCalendar
+                    events={calendarEvents}
+                    date={calendarDate}
+                    onNavigate={handleCalendarNavigate}
+                    onSelectEvent={handleSelectEvent}
+                    chatbotRef={chatbotRef}
+                    onEventUpdate={handleEventUpdate}
+                    buttonLabels={{
+                      generate: "Generate Tasks",
+                      hideSummarize: true
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

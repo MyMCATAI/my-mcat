@@ -11,7 +11,6 @@ import { UnlockDialog } from "@/components/unlock-dialog";
 /* ----- Types ---- */
 // Feature unlock enum for type safety
 export enum FEATURE_UNLOCK {
-  KALYPSO_AI = "kalypso-ai",
   CARS = "cars",
   TUTORING = "tutoring",
   TESTS = "tests",
@@ -55,16 +54,6 @@ interface HoverSidebarProps {
 }
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-  {
-    id: FEATURE_UNLOCK.KALYPSO_AI,
-    name: "Kalypso AI",
-    tab: "KalypsoAI",
-    icon: <Brain className="w-5 h-5" />,
-    requiresUnlock: true,
-    unlockCost: 5,
-    description: "Your personal AI assistant for MCAT preparation. Get personalized study guidance, a custom study plan generator, and answers to your questions.",
-    photo: "/kalypso/kalypsocalendar.png"
-  },
   {
     id: FEATURE_UNLOCK.CARS,
     name: "CARS Suite",
@@ -151,7 +140,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     }
     // Otherwise use the global navigation state
     const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === activePage);
-    return matchingItem ? matchingItem.id : "kalypso-ai";
+    return matchingItem ? matchingItem.id : FEATURE_UNLOCK.CARS;
   })();
   
   /* ---- Refs --- */
@@ -317,8 +306,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
           <div className="p-4 space-y-2">
             {NAVIGATION_ITEMS.map(item => {
               const isUnlocked = isFeatureUnlocked(item.id);
-              // Special highlight for Kalypso AI when not unlocked
-              const isKalypsoHighlighted = item.id === "kalypso-ai" && !isUnlocked;
               
               return (
               <button
@@ -327,9 +314,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
                   "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-300 relative",
                   activeTab === item.id
                     ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                    : isKalypsoHighlighted 
-                        ? "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-emerald-400/50 shadow-md" 
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                    : "bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                 )}
                 onClick={() => {
                   handleNavigationClick(item);
@@ -339,39 +324,17 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
                   }
                 }}
               >
-                {/* Subtle border animation for Kalypso */}
-                {isKalypsoHighlighted && (
-                  <div className="absolute inset-0 rounded-lg border-2 border-emerald-400/0 animate-[pulse_3s_ease-in-out_infinite] pointer-events-none"></div>
-                )}
-                
-                <div className={cn(
-                  "flex-shrink-0",
-                  isKalypsoHighlighted && "text-emerald-500"
-                )}>
+                <div className="flex-shrink-0">
                   {item.icon}
                 </div>
-                <span className={cn(
-                  "font-medium",
-                  isKalypsoHighlighted && "text-emerald-700 dark:text-emerald-400"
-                )}>
+                <span className="font-medium">
                   {item.name}
-                  {isKalypsoHighlighted && (
-                    <span className="ml-1 text-[9.8px] font-bold text-emerald-600 dark:text-emerald-300">
-                      (Recommended)
-                    </span>
-                  )}
                 </span>
                 {item.requiresUnlock && !isFeatureUnlocked(item.id) && (
-                  <div className={cn(
-                    "ml-auto flex items-center gap-1",
-                    isKalypsoHighlighted ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"
-                  )}>
+                  <div className="ml-auto flex items-center gap-1 text-gray-400">
                     <Lock className="w-4 h-4" />
                     {item.unlockCost && (
-                      <div className={cn(
-                        "flex items-center text-xs",
-                        isKalypsoHighlighted && "font-bold"
-                      )}>
+                      <div className="flex items-center text-xs">
                         <span>{item.unlockCost}</span>
                         <Image 
                           src="/coin.png" 

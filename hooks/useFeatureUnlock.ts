@@ -7,9 +7,16 @@ import { FEATURE_UNLOCK } from "@/components/navigation/HoverSidebar";
 // Union type to support both string and enum values for backward compatibility
 type FeatureId = FEATURE_UNLOCK | string;
 
+interface UnlockResult {
+  success: boolean;
+  error?: string;
+  required?: number;
+  type?: 'insufficient_coins' | 'server_error' | 'unknown';
+}
+
 interface UseFeatureUnlockResult {
   isUnlocking: boolean;
-  unlockFeature: (featureId: FeatureId, cost: number, name: string, navigateTo?: string) => Promise<boolean>;
+  unlockFeature: (featureId: FeatureId, cost: number, name: string, navigateTo?: string, showPurchaseDialog?: boolean) => Promise<UnlockResult>;
   isFeatureUnlocked: (featureId: FeatureId) => boolean;
 }
 
@@ -34,11 +41,12 @@ export const useFeatureUnlock = (): UseFeatureUnlockResult => {
     featureId: FeatureId, 
     cost: number, 
     name: string,
-    navigateTo?: string
-  ): Promise<boolean> => {
+    navigateTo?: string,
+    showPurchaseDialog: boolean = true
+  ): Promise<UnlockResult> => {
     if (isFeatureUnlocked(featureId)) {
       toast.success(`${name} is already unlocked!`);
-      return true;
+      return { success: true };
     }
     
     try {
@@ -58,11 +66,24 @@ export const useFeatureUnlock = (): UseFeatureUnlockResult => {
       if (!response.ok) {
         const errorData = await response.json();
         if (errorData.error === "Insufficient coins") {
-          toast.error(`You need ${errorData.required} coins to unlock this feature.`);
+          if (!showPurchaseDialog) {
+            toast.error(`You need ${errorData.required} coins to unlock this feature.`);
+          }
+          return { 
+            success: false, 
+            error: errorData.error,
+            required: errorData.required,
+            type: 'insufficient_coins'
+          };
         } else {
-          toast.error(`Failed to unlock: ${errorData.error || 'Unknown error'}`);
+          const errorMessage = `Failed to unlock: ${errorData.error || 'Unknown error'}`;
+          toast.error(errorMessage);
+          return { 
+            success: false, 
+            error: errorMessage,
+            type: 'server_error'
+          };
         }
-        return false;
       }
       
       const data = await response.json();
@@ -78,11 +99,16 @@ export const useFeatureUnlock = (): UseFeatureUnlockResult => {
         router.push(navigateTo);
       }
       
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('Error unlocking feature:', error);
-      toast.error('Failed to unlock feature. Please try again.');
-      return false;
+      const errorMessage = 'Failed to unlock feature. Please try again.';
+      toast.error(errorMessage);
+      return { 
+        success: false, 
+        error: errorMessage,
+        type: 'unknown'
+      };
     } finally {
       setIsUnlocking(false);
     }

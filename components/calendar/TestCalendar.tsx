@@ -384,14 +384,14 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
       />
       {isWeeklyModalOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsWeeklyModalOpen(false);
             }
           }}
         >
-          <div className="w-[90vw] max-w-6xl h-full bg-[--theme-mainbox-color] rounded-xl overflow-hidden">
+          <div className="w-[90vw] max-w-6xl h-[calc(100%-2rem)] bg-[--theme-mainbox-color] rounded-xl overflow-hidden">
             <WeeklyCalendarModal
               onComplete={async (result: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => {
                 if (result.success) {

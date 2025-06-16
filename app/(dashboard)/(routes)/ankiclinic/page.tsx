@@ -9,6 +9,7 @@ import { imageGroups } from "./constants/imageGroups";
 import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { useOnboardingInfo } from '@/hooks/useOnboardingInfo';
 import { useAudio } from "@/store/selectors";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
@@ -21,9 +22,9 @@ import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
 import SideBar from '../home/SideBar';
 import { useUser } from "@/store/selectors";
-import { FeatureUnlockBanner } from '@/components/ankiclinic/FeatureUnlockBanner';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+
 
 // Add import for KalypsoOnboarding
 const KalypsoOnboarding = dynamic(() => import('./onboarding/KalypsoOnboarding'), {
@@ -148,6 +149,7 @@ const DoctorsOfficePage = () => {
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const { isSubscribed, userInfo, incrementScore, decrementScore, refetch, updateScore } = useUserInfo();
   const { refreshUserInfo, onboardingComplete } = useUser();
+  const { finalizeOnboarding } = useOnboardingInfo();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -189,6 +191,7 @@ const DoctorsOfficePage = () => {
   const [showCoin, setShowCoin] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [isOfficeContainerReady, setIsOfficeContainerReady] = useState(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   } | null>(null);
@@ -481,6 +484,7 @@ const DoctorsOfficePage = () => {
     // Fetch data only once on mount
     const timer = setTimeout(() => {
       fetchData();
+      fetchActivities(); // Also fetch activities for sidebar tasks
     }, 10);
     
     return () => {
@@ -602,7 +606,7 @@ const DoctorsOfficePage = () => {
 
     // Buying logic
     if (userInfo?.score && userInfo.score < group.cost) {
-      toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
+      setShowPurchaseDialog(true);
       return;
     }
 
@@ -804,6 +808,16 @@ const DoctorsOfficePage = () => {
   }, [completeAllRoom, setCompleteAllRoom]);
 
   // Simplified effect for test completion
+  // Effect to close purchase dialog when user gains coins
+  useEffect(() => {
+    if (showPurchaseDialog && userInfo?.score && userInfo.score > 0) {
+      const timer = setTimeout(() => {
+        setShowPurchaseDialog(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [userInfo?.score, showPurchaseDialog]);
+
   useEffect(() => {
     if (!mcqState.isLoading && completeAllRoom && currentUserTestId) {
       const finishTest = async () => {
@@ -861,6 +875,15 @@ const DoctorsOfficePage = () => {
   const handleKalypsoOnboardingComplete = useCallback(async (shouldShowCoinReward?: boolean) => {
     setShowKalypsoOnboarding(false);
     
+    // Actually finalize the onboarding to mark it as complete
+    try {
+      await finalizeOnboarding();
+      console.log("Onboarding finalized successfully");
+    } catch (error) {
+      console.error("Error finalizing onboarding:", error);
+      toast.error("Failed to complete onboarding setup");
+    }
+    
     if (shouldShowCoinReward) {
       try {
         // Actually increment the user's coin count
@@ -896,7 +919,7 @@ const DoctorsOfficePage = () => {
         toast.error("Failed to award coin, but welcome to AnkiClinic!");
       }
     }
-  }, [audio]);
+  }, [audio, finalizeOnboarding]);
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
@@ -953,7 +976,7 @@ const DoctorsOfficePage = () => {
                   <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30">
                     <div className="text-center space-y-4 px-6">
                       <div className="text-white/90 text-lg font-medium animate-pulse">
-                        Preparing your clinic...
+                        {userLevel === "PATIENT LEVEL" ? "Welcome to AnkiClinic!" : "Preparing your clinic..."}
                       </div>
                       <div className="flex space-x-2 justify-center">
                         {[...Array(4)].map((_, i) => (
@@ -965,7 +988,9 @@ const DoctorsOfficePage = () => {
                         ))}
                       </div>
                       <div className="text-white/60 text-sm">
-                        Loading rooms and sprites...
+                        {userLevel === "PATIENT LEVEL" 
+                          ? "Click the marketplace in the bottom left and purchase the first level (intern!)"
+                          : "Loading rooms and sprites..."}
                       </div>
                     </div>
                   </div>
@@ -1040,7 +1065,7 @@ const DoctorsOfficePage = () => {
                   <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-l-lg">
                     <div className="text-center space-y-4">
                       <div className="text-white/90 text-xl font-medium animate-pulse">
-                        Preparing your clinic rooms...
+                        {userLevel === "PATIENT LEVEL" ? "Welcome to AnkiClinic!" : "Preparing your clinic rooms..."}
                       </div>
                       <div className="flex space-x-2 justify-center">
                         {[...Array(5)].map((_, i) => (
@@ -1052,7 +1077,9 @@ const DoctorsOfficePage = () => {
                         ))}
                       </div>
                       <div className="text-white/60 text-sm">
-                        Setting up textures and positioning...
+                        {userLevel === "PATIENT LEVEL" 
+                          ? "Click the marketplace in the bottom left and purchase the first level (intern!)"
+                          : "Setting up textures and positioning..."}
                       </div>
                     </div>
                   </div>
@@ -1136,13 +1163,7 @@ const DoctorsOfficePage = () => {
             toggleGroup={toggleGroup}
           />
           
-          {/* Feature unlock banner */}
-
-          {userLevel !== "PATIENT LEVEL" && totalPatients > 0 && (
-            <div className="absolute top-20 right-4 left-4 z-40 md:left-1/4 md:right-4">
-              <FeatureUnlockBanner />
-            </div>
-          )}
+          {/* Feature unlock banner removed */}
         </div>
       </Suspense>
 
@@ -1310,6 +1331,8 @@ const DoctorsOfficePage = () => {
         onOpenChange={setIsMarketplaceOpen}
         clinicRooms={userInfo?.clinicRooms || "[]"}
       />
+
+
     </div>
   );
 };
