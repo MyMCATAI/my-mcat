@@ -251,36 +251,6 @@ export function PurchaseButton({
               </button>
             ))}
           </div>
-
-          <div className="flex justify-center p-4 mt-4">
-            <button 
-              onClick={() => handlePurchase("anki_game")}
-              disabled={loadingStates["anki_game"] || isLoading}
-              className={`relative flex flex-col items-center space-y-3 p-4 rounded-lg transition-all duration-200 w-full max-w-sm 
-                        bg-[--theme-leaguecard-color] border-2 border-green-300/50 hover:border-green-300 hover:scale-[1.02]
-                        ${loadingStates["anki_game"] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              style={{ 
-                boxShadow: '0 0 15px rgba(134, 239, 172, 0.25)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 20px rgba(134, 239, 172, 0.35)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 15px rgba(134, 239, 172, 0.25)'; }}
-            >
-              <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md transform rotate-6 z-[103]">
-                Free
-              </div>
-              <Image
-                src="/kalypso/kalypotesting.png"
-                alt="Earn Coins Anki Game"
-                width={80}
-                height={80}
-                className="rounded-full object-cover pointer-events-none"
-              />
-              <p className="text-sm text-[--theme-text-color] text-center font-medium">
-                Want to earn coins for free? Play the anki game!
-              </p>
-            </button>
-          </div>
         </DialogContent>
       </Dialog>
     </>

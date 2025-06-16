@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUser, useGame } from "@/store/selectors";
 
+
 interface NewGameButtonProps {
   onGameStart: (userTestId: string) => void;
 }
@@ -13,6 +14,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
   onGameStart
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const { decrementScore } = useUserInfo();
   // Get user state from Zustand store
   const { coins: userScore } = useUser();
@@ -43,7 +45,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
 
   const handleNewGame = async () => {
     if (userScore < 1) {
-      toast.error("You need 1 coin to start a new game!");
+      setShowPurchaseDialog(true);
       return;
     }
 
@@ -74,6 +76,17 @@ const NewGameButton: FC<NewGameButtonProps> = ({
       setIsLoading(false);
     }
   }, [isGameInProgress]);
+
+  // Effect to close purchase dialog when user gains coins
+  useEffect(() => {
+    if (showPurchaseDialog && userScore >= 1) {
+      const timer = setTimeout(() => {
+        setShowPurchaseDialog(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [userScore, showPurchaseDialog]);
+
   return (
     <div className="hover:-translate-y-0.5">
       <button
@@ -103,6 +116,8 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           className="inline-block"
         />
       </button>
+
+
     </div>
   );
 };

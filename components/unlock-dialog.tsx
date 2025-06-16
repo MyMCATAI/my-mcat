@@ -56,9 +56,9 @@ export const UnlockDialog = ({
     // Delay to show animation
     setTimeout(async () => {
       // Use the hook to handle unlocking
-      const success = await unlockFeature(item.id, item.unlockCost!, item.name);
+      const result = await unlockFeature(item.id, item.unlockCost!, item.name);
       
-      if (success) {
+      if (result.success) {
         // Show an exciting toast message
         toast.custom((t) => (
           <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} 

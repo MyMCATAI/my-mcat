@@ -789,14 +789,14 @@ const ChatContainer = ({ className, chatbotRef, activities, containerProps }: Ch
       {/* Calendar Modal */}
       {isCalendarModalOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsCalendarModalOpen(false);
             }
           }}
         >
-          <div className="w-[90vw] max-w-6xl h-full bg-transparent rounded-xl overflow-hidden">
+          <div className="w-[90vw] max-w-6xl h-[calc(100%-2rem)] bg-transparent rounded-xl overflow-hidden">
             <div className="p-4 h-full overflow-auto">
               {(examLoading || studyLoading) ? (
                 <div className="flex items-center justify-center h-64">

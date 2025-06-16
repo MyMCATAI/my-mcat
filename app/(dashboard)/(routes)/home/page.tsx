@@ -24,7 +24,7 @@ import { useUIStore } from "@/store/slices/uiSlice";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
-import IntroVideoPlayer from "@/components/home/IntroVideoPlayer";
+
 // Import the extracted components from their new location
 import { LoadingSpinner } from "@/components/home/LoadingSpinner";
 import { ContentWrapper } from "@/components/home/ContentWrapper";
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { userInfo, refreshUserInfo, isSubscribed, setHasSeenIntroVideo } = useUser();
+  const { userInfo, refreshUserInfo, isSubscribed } = useUser();
   const [isLoadingUserInfo, setIsLoadingUserInfo] = useState(false);
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
@@ -183,13 +183,6 @@ const HomePage: React.FC = () => {
     }
   }, [isLoadingUserInfo, loadingState.isLoading]);
   
-  // Check if intro video has been seen from userInfo.onboardingInfo
-  const hasSeenIntroVideo = useMemo(() => {
-    const seen = userInfo?.onboardingInfo?.hasSeenIntroVideo || false;
-    console.log('[HomePage] hasSeenIntroVideo calculated:', seen);
-    return seen;
-  }, [userInfo]);
-
   // Debug mode check
   const isDebugMode = searchParams?.get('debug') === 'true';
 
@@ -622,17 +615,7 @@ const HomePage: React.FC = () => {
     };
   }, [endActivity, currentStudyActivityId]);
 
-  // Handle when the intro video is completed
-  const handleIntroVideoComplete = useCallback(async () => {
-    try {
-      // Update the user's hasSeenIntroVideo status in global state and database
-      await setHasSeenIntroVideo(true);
-      toast.success("Introduction video completed!");
-    } catch (error) {
-      console.error("[HomePage] Failed to update intro video status:", error);
-      toast.error("Failed to update your profile. Please try again.");
-    }
-  }, [setHasSeenIntroVideo]);
+
 
   // Add the missing navigation effect back without the console.log
   // Update URL parameter effect to respect user navigation 
@@ -696,17 +679,9 @@ const HomePage: React.FC = () => {
                 {/* Main content area - conditional rendering based on active page */}
                 {(activePage === 'KalypsoAI' || !activePage) && (
                   <div className="h-full overflow-hidden relative">
-                    {!hasSeenIntroVideo ? (
-                      <IntroVideoPlayer 
-                        onComplete={handleIntroVideoComplete}
-                      />
-                    ) : (
-                      <>
-                        <ChatContainer chatbotRef={chatbotRef} activities={activities} />
-                        {!isFeatureUnlocked(FEATURE_UNLOCK.KALYPSO_AI) && (
-                          <LockedFeatureOverlay featureId={FEATURE_UNLOCK.KALYPSO_AI} />
-                        )}
-                      </>
+                    <ChatContainer chatbotRef={chatbotRef} activities={activities} />
+                    {!isFeatureUnlocked(FEATURE_UNLOCK.KALYPSO_AI) && (
+                      <LockedFeatureOverlay featureId={FEATURE_UNLOCK.KALYPSO_AI} />
                     )}
                   </div>
                 )}
@@ -809,8 +784,6 @@ const HomePage: React.FC = () => {
     isSubscribed,
     userInfo,
     router,
-    handleIntroVideoComplete,
-    hasSeenIntroVideo,
     // Add dependencies for new state structure
     uiState.showReferralModal,
     uiState.showStreakPopup,

@@ -47,6 +47,36 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const cmdPressedTime = useRef<number | null>(null);
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Shortcut button actions
+  const shortcuts = [
+    { emoji: "📅", prompt: "What's on my schedule today?", tooltip: "Schedule" },
+    { emoji: "📊", prompt: "Show me my tutor's last report", tooltip: "Report" },
+    { emoji: "❓", prompt: "Give me a practice question", tooltip: "Question" },
+    { emoji: "💪", prompt: "Help me stay motivated with my MCAT prep", tooltip: "Motivation" }
+  ];
+
+  const handleShortcutClick = (prompt: string) => {
+    const textarea = document.querySelector('.rcb-chat-input-textarea');
+    if (textarea instanceof HTMLTextAreaElement) {
+      textarea.value = prompt;
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+      });
+      
+      textarea.focus();
+      setTimeout(() => {
+        textarea.dispatchEvent(enterEvent);
+      }, 100);
+    }
+  };
 
   useEffect(() => {
     if (chatbotRef) {
@@ -111,9 +141,15 @@ const ChatBot: React.FC<ChatBotProps> = ({
         }
       } else if (cmdPressedRef.current) {
         // If any other key is pressed while Command is down, mark it as a combo
-        // This prevents toggling audio when Command is used for shortcuts
+        // This prevents toggling audio when Command is used for shortcuts like Cmd+Tab
         console.log('[ChatBot] Combo detected, clearing cmdPressedTime');
         cmdPressedTime.current = null;
+        
+        // Also clear the cmd pressed state immediately for common system shortcuts
+        if (event.key === 'Tab' || event.key === 'c' || event.key === 'v' || event.key === 'x' || event.key === 'z') {
+          cmdPressedRef.current = false;
+          setCmdPressed(false);
+        }
       }
     };
 
@@ -155,6 +191,17 @@ const ChatBot: React.FC<ChatBotProps> = ({
       }
     };
   }, []);
+
+  // Show shortcuts after initial mount and first message
+  useEffect(() => {
+    if (isMounted) {
+      // Show shortcuts after a short delay to ensure chat is ready
+      const timer = setTimeout(() => {
+        setShowShortcuts(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMounted]);
 
   const sendMessage = async (message: string, messageContext?: string) => {
     setIsLoading(true);
@@ -463,6 +510,34 @@ const ChatBot: React.FC<ChatBotProps> = ({
           themes={themes}
           flow={flow}
         />
+        {/* Shortcut buttons positioned below last bot message */}
+        {showShortcuts && (
+          <div 
+            className="absolute z-10 pointer-events-none"
+            style={{
+              bottom: '120px', // Position above input area
+              left: '20px',
+              right: '20px',
+            }}
+          >
+            <div className="flex gap-2 justify-start pointer-events-auto">
+              {shortcuts.map((shortcut, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleShortcutClick(shortcut.prompt)}
+                  className="w-8 h-8 rounded-full bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] border border-[--theme-border-color] flex items-center justify-center text-sm transition-all duration-200 hover:scale-110 shadow-md"
+                  title={shortcut.tooltip}
+                  style={{ 
+                    backdropFilter: 'blur(10px)',
+                    backgroundColor: 'rgba(var(--theme-leaguecard-color-rgb, 255, 255, 255), 0.9)'
+                  }}
+                >
+                  {shortcut.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {isPlaying && audioEnabled && (
