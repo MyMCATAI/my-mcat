@@ -347,7 +347,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
     createReferral,
     checkHasReferrals,
     createNewUser,
-    isSubscribed: true,
+    isSubscribed: isSubscribed,
     hasSeenIntroVideo,
     setHasSeenIntroVideo
   };

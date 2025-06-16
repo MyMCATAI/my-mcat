@@ -21,7 +21,7 @@ export const imageGroups: ImageGroup[] = [
       { id: "WaitingRoom1", src: "/game-components/WaitingRoom1.png" },
       { id: "DoctorsOffice1", src: "/game-components/DoctorsOffice1.png" },
     ],
-    cost: 4,
+    cost: 1,
     benefits: [
       "You are an intern learning the ropes.",
       "Psychology",
@@ -38,7 +38,7 @@ export const imageGroups: ImageGroup[] = [
       { id: "Bathroom1", src: "/game-components/Bathroom1.png" },
       { id: "Bathroom2", src: "/game-components/Bathroom1.png" },
     ],
-    cost: 8,
+    cost: 2,
     benefits: [
       "You are a doctor in training with Kalypso.",
       "Biology"
@@ -50,7 +50,7 @@ export const imageGroups: ImageGroup[] = [
       { id: "HighCare1", src: "/game-components/HighCare1.png" },
       { id: "HighCare2", src: "/game-components/HighCare1.png" },
     ],
-    cost: 12,
+    cost: 3,
     benefits: [
       "You are a physician.",
       "Advanced Biology"
@@ -63,7 +63,7 @@ export const imageGroups: ImageGroup[] = [
       { id: "MedicalCloset1", src: "/game-components/MedicalCloset1.png" },
       { id: "MRIMachine2", src: "/game-components/MRIMachine.png" },
     ],
-    cost: 16,
+    cost: 4,
     benefits: [
       "You can do surgeries.",
       "Biochemistry"
@@ -72,7 +72,7 @@ export const imageGroups: ImageGroup[] = [
   {
     name: "PHYSICIAN LEVEL",
     items: [{ id: "MRIMachine1", src: "/game-components/MRIMachine.png" }],
-    cost: 20,
+    cost: 5,
     benefits: [
       "You can lead teams.",
       "Physics",
@@ -85,7 +85,7 @@ export const imageGroups: ImageGroup[] = [
       { id: "CATScan1", src: "/game-components/CATScan1.png" },
       { id: "CATScan2", src: "/game-components/CATScan1.png" },
     ],
-    cost: 24,
+    cost: 6,
     benefits: [
       "You are now renowned.",
       "Advanced Chemistry",

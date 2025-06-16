@@ -17,12 +17,48 @@ export async function PUT(req: Request) {
     const onboardingData: Partial<OnboardingInfo> = body;
 
     // Get current onboarding info
-    const currentUserInfo = await prismadb.userInfo.findUnique({
+    let currentUserInfo = await prismadb.userInfo.findUnique({
       where: { userId }
     });
 
+    // If user doesn't exist, create a new record
     if (!currentUserInfo) {
-      return new NextResponse("User not found", { status: 404 });
+      console.log('[ONBOARDING_INFO_UPDATE] Creating new user record for:', userId);
+      currentUserInfo = await prismadb.userInfo.create({
+        data: {
+          userId,
+          bio: "Hello! I'm studying for the MCAT and using MyMCAT.ai to achieve my goals!",
+          firstName: onboardingData.firstName || "",
+          apiCount: 0,
+          score: 30,
+          clinicRooms: JSON.stringify([]),
+          hasPaid: false,
+          subscriptionType: "",
+          diagnosticScores: {
+            total: "",
+            cp: "",
+            cars: "",
+            bb: "",
+            ps: ""
+          },
+          onboardingInfo: {
+            currentStep: 1,
+            onboardingComplete: false,
+            firstName: onboardingData.firstName || null,
+            college: null,
+            isNonTraditional: null,
+            isCanadian: null,
+            gpa: null,
+            currentMcatScore: null,
+            hasNotTakenMCAT: null,
+            mcatAttemptNumber: null,
+            targetMedSchool: null,
+            targetScore: null,
+            referralEmail: null,
+            hasSeenIntroVideo: false
+          }
+        }
+      });
     }
 
     // Parse existing onboarding info
