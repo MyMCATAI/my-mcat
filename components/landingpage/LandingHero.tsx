@@ -15,7 +15,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /* ----------------------------------------- Constants ------------------------------------------ */
 const VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4";
-const DEMO_VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCAT+Software+and+Mission-VEED.mp4";
+const DEMO_VIDEO_URL = "https://youtu.be/2ltRTaTkAc4";
 const BROWSER_REGEX = {
   safari: /^((?!chrome|android).)*safari/i,
   firefox: /firefox/i
@@ -148,43 +148,67 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
   };
 
   /* --------------------------------------- Render Methods ------------------------------------ */
-  const renderVideoModal = () => (
-    <AnimatePresence>
-      {isVideoModalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={handleCloseModal}
-        >
+  const renderVideoModal = () => {
+    // Convert YouTube URL to embed format
+    const getYouTubeEmbedUrl = (url: string) => {
+      const videoId = url.includes('youtu.be/') 
+        ? url.split('youtu.be/')[1].split('?')[0]
+        : url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    };
+
+    const isYouTubeUrl = DEMO_VIDEO_URL.includes('youtube.com') || DEMO_VIDEO_URL.includes('youtu.be');
+    const embedUrl = isYouTubeUrl ? getYouTubeEmbedUrl(DEMO_VIDEO_URL) : DEMO_VIDEO_URL;
+
+    return (
+      <AnimatePresence>
+        {isVideoModalOpen && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4"
+            onClick={handleCloseModal}
           >
-            <video
-              className="w-full h-full"
-              controls
-              autoPlay
-              src={DEMO_VIDEO_URL}
-            />
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 p-2"
-              aria-label="Close modal"
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-sm sm:max-w-2xl lg:max-w-4xl aspect-video bg-black rounded-lg overflow-hidden"
+              onClick={e => e.stopPropagation()}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
+              {isYouTubeUrl ? (
+                <iframe
+                  className="w-full h-full"
+                  src={embedUrl}
+                  title="Demo Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  className="w-full h-full"
+                  controls
+                  autoPlay
+                  src={DEMO_VIDEO_URL}
+                />
+              )}
+              <button
+                onClick={handleCloseModal}
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 p-1 sm:p-2 bg-black/50 rounded-full"
+                aria-label="Close modal"
+              >
+                <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+        )}
+      </AnimatePresence>
+    );
+  };
 
   const renderHeroContent = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
