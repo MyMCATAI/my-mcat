@@ -225,7 +225,7 @@ export async function POST(request: Request) {
           priceId = process.env.STRIPE_PRICE_100_ID!;
           break;
         case ProductType.MD_PREMIUM:
-          priceId = process.env.STRIPE_PRICE_PREMIUM_ID!;
+          priceId = "price_1RaVzBAtAHX4wxMZJPyg9hud"; // MD Premium $50/month
           mode = 'subscription';
           break;
         case ProductType.MD_GOLD:
