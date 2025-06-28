@@ -9,6 +9,7 @@ import DatePickerDialog from "@/components/DatePickerDialog";
 import { useStudyPlan } from '@/hooks/useStudyPlan';
 import { toast } from "react-hot-toast";
 import ResetConfirmDialog from "@/components/calendar/ResetConfirmDialog";
+import SettingContent from "@/components/calendar/SettingContent";
 
 interface WeeklyCalendarModalProps {
   onComplete?: (result: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => Promise<boolean>;
@@ -107,6 +108,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
   const [examSchedule, setExamSchedule] = useState<ExamSchedule[]>([]);
+  const [showExamSetup, setShowExamSetup] = useState(false);
 
   const messages = [
     "Purr-using your past exams...",
@@ -324,6 +326,29 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const renderStep = () => {
     switch (currentStep) {
       case 0:
+        // If showing exam setup, render SettingContent instead of normal step 0 content
+        if (showExamSetup) {
+          return (
+            <div className="h-full">
+              <SettingContent
+                onComplete={(result) => {
+                  if (result.success) {
+                    setShowExamSetup(false);
+                    // Advance to step 1 (Weekly Schedule) after completing exam setup
+                    setCurrentStep(1);
+                    // Refresh exam activities to show the new schedule
+                    if (onComplete) {
+                      onComplete({ success: true, action: 'generate' });
+                    }
+                    toast.success('Exam schedule updated successfully!');
+                  }
+                }}
+                isInitialSetup={true}
+              />
+            </div>
+          );
+        }
+
         const nextExam = getNextExam();
         return (
           <motion.div
@@ -359,7 +384,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                       No upcoming exams scheduled.
                     </p>
                     <Button
-                      onClick={() => window.location.href = '/examcalendar'}
+                      onClick={() => setShowExamSetup(true)}
                       variant="default"
                       size="lg"
                       className="flex items-center gap-2"
