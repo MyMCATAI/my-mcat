@@ -101,7 +101,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
   // Different navbar styles based on route
   const isHomePage = pathname?.includes('/home');
   
-  return (
+    return (
     <nav 
       className={`
         flex items-center justify-between h-16 z-10
@@ -128,7 +128,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
           {/* Right section with buttons and baller text - aligned with the section below */}
           <div className="flex items-center">
             <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-6 mr-2 sm:mr-4 md:mr-6">
-              {/* <MailButton /> */}
+              <MailButton />
               <div className="flex items-center relative z-[10] pr-4">
                 <ProfileButton />
               </div> 
@@ -180,7 +180,7 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
           </div>
           <div className="flex items-center">
             <div className="flex flex-row w-full items-center gap-1 sm:gap-2 md:gap-4">
-              {/* <MailButton /> */}
+              <MailButton />
               <div className="flex items-center relative z-[10] pr-2 sm:pr-4">
                 <ProfileButton />
               </div> 
@@ -207,13 +207,13 @@ const Navbar = ({ subscription = "free", onVisibilityChange }: NavbarProps) => {
                     }}
                   />
                 </Link>
-              </div>
-            </span>
-          </div>
-        </>
-      )}
-    </nav>
-  );
+                </div>
+              </span>
+            </div>
+          </>
+        )}
+      </nav>
+    );
 };
 
 export default Navbar;
