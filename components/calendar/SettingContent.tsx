@@ -360,7 +360,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
 
       if (data.success) {
         toast.success("Study plan generated successfully!");
-        // if (onComplete) onComplete({ success: true, action: "generate" });
+        if (onComplete) onComplete({ success: true, action: "generate" });
       } else {
         throw new Error("Failed to generate study plan");
       }
