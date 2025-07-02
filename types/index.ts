@@ -231,7 +231,7 @@ export interface OnboardingInfo {
   targetMedSchool: string | null;
   targetScore: number | null;
   referralEmail: string | null;
-  hasSeenIntroVideo: boolean;
+  hasSeenIntroVideo?: boolean | null;
 }
 
 export enum ProductType {

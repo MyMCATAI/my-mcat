@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useUserInfo } from '@/hooks/useUserInfo';
-import { useAudio, useUser } from '@/store/selectors';
+import { useAudio } from '@/store/selectors';
 import { toast } from 'react-hot-toast';
 import KalypsoAvatar from './KalypsoAvatar';
 import TestCalendar from '@/components/calendar/TestCalendar';
@@ -16,7 +16,6 @@ import { CalendarEvent } from '@/types/calendar';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { CalendarIcon } from 'lucide-react';
 import { formatDisplayDate, toUTCDate } from "@/lib/utils";
-import { useOnboardingInfo } from "@/hooks/useOnboardingInfo";
 
 /* --- Constants ----- */
 const DIAGNOSTIC_TEST_ID = 'cm65mma4j00b1uqgeyoiozs01';
@@ -57,10 +56,8 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
   const router = useRouter();
   const { userInfo } = useUserInfo();
   const audio = useAudio();
-  const { refreshUserInfo } = useUser();
   const { activities: examActivities, updateExamDate, fetchExamActivities } = useExamActivities();
   const { activities: allActivities, refetch: refetchAllActivities } = useAllCalendarActivities();
-  const { finalizeOnboarding } = useOnboardingInfo();
 
   // Function to stop any currently playing audio
   const stopKalypsoVoice = useCallback(() => {
@@ -311,16 +308,13 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
         // Complete setup
         setIsCompleting(true);
         
-        // Finalize onboarding in the database
-        await finalizeOnboarding();
-
         setTimeout(() => {
           onComplete(true);
           setIsCompleting(false);
         }, 2000);
         break;
     }
-  }, [currentStep, onComplete, playKalypsoVoice, stepMessages, finalizeOnboarding]);
+  }, [currentStep, onComplete, playKalypsoVoice, stepMessages]);
 
   const handleDemographicsComplete = useCallback(async (data: {
     firstName: string;
@@ -351,9 +345,6 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
 
       if (!response.ok) throw new Error('Failed to save demographic information');
 
-      // Refresh user info after successful save to ensure UI reflects changes
-      await refreshUserInfo();
-
       // Hide demographics form and go to exam calendar setup
       console.log('📅 Moving to Exam Calendar Setup step');
       setShowDemographics(false);
@@ -365,7 +356,7 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
       console.error('Error saving demographics:', error);
       toast.error('Failed to save your information. Please try again.');
     }
-  }, [stepMessages, playKalypsoVoice, refreshUserInfo]);
+  }, [stepMessages, playKalypsoVoice]);
 
   const handleExamCalendarComplete = useCallback(async (result: {
     success: boolean;
@@ -649,9 +640,8 @@ const KalypsoOnboarding: React.FC<KalypsoOnboardingProps> = ({
               ) : (
                 /* Step 4: Show Complete Setup button */
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     setIsCompleting(true);
-                    await finalizeOnboarding();
                     setTimeout(() => {
                       onComplete(true);
                       setIsCompleting(false);

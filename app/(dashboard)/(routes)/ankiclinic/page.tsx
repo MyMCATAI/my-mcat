@@ -560,78 +560,10 @@ const DoctorsOfficePage = () => {
     }
   };
 
-  // Daily reward logic
-  const checkAndRewardDailyCoins = async () => {
-    try {
-      // Check if user is eligible for daily reward
-      const checkResponse = await fetch("/api/daily-reward", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!checkResponse.ok) {
-        console.log("Daily reward check failed or user not eligible");
-        return;
-      }
-
-      const checkData = await checkResponse.json();
-      
-      if (!checkData.eligible || checkData.alreadyClaimed) {
-        console.log("User not eligible or already claimed daily reward");
-        return;
-      }
-
-      // User is eligible and hasn't claimed today - claim the reward
-      const claimResponse = await fetch("/api/daily-reward", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!claimResponse.ok) {
-        console.log("Failed to claim daily reward");
-        return;
-      }
-
-      const claimData = await claimResponse.json();
-      
-      if (claimData.success) {
-        // Show success notification
-        toast.custom(
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px] text-white">
-            <div className="text-2xl">🎁</div>
-            <div className="flex flex-col">
-              <div className="font-bold text-lg">Daily MD Premium Reward!</div>
-              <div className="text-sm opacity-90">You've received 100 coins for being a premium subscriber!</div>
-              <div className="text-xs opacity-75 mt-1">New Balance: {claimData.newBalance} coins</div>
-            </div>
-          </div>,
-          {
-            duration: 6000,
-            position: 'top-center',
-          }
-        );
-
-        // Play reward sound
-        audio.playSound('fanfare');
-
-        // Refresh user info to update coin display
-        await refetch();
-      }
-    } catch (error) {
-      console.error("Error checking/claiming daily reward:", error);
-      // Don't show error toast to user as this is automatic
-    }
-  };
-
-  // Effect to run daily calculations and check daily rewards after data is loaded
+  // Effect to run daily calculations after data is loaded
   useEffect(() => {
     if (!mcqState.isLoading && userInfo && !hasCalculatedRef.current) {
       performDailyCalculations();
-      checkAndRewardDailyCoins(); // Check and claim daily reward
       hasCalculatedRef.current = true;
     }
   }, [mcqState.isLoading, userInfo]);
