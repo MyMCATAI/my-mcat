@@ -872,6 +872,10 @@ const DoctorsOfficePage = () => {
     </button>
   );
 
+  const handleRestartOnboarding = useCallback(() => {
+    setShowKalypsoOnboarding(true);
+  }, []);
+
   const handleKalypsoOnboardingComplete = useCallback(async (shouldShowCoinReward?: boolean) => {
     setShowKalypsoOnboarding(false);
     
@@ -932,8 +936,8 @@ const DoctorsOfficePage = () => {
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
       
-      {/* Conditionally render KalypsoOnboarding every time the page loads */}
-      {showKalypsoOnboarding && !onboardingComplete && (
+      {/* Conditionally render KalypsoOnboarding - allow restart regardless of completion status */}
+      {showKalypsoOnboarding && (
         <KalypsoOnboarding
           isOpen={showKalypsoOnboarding}
           onClose={() => setShowKalypsoOnboarding(false)}
@@ -1108,22 +1112,20 @@ const DoctorsOfficePage = () => {
               <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
                 {/* Left side - Tutorial button */}
                 <div>
-                  <a 
-                    href="/ankiclinic-tutorial" 
+                  <button 
                     className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // This functionality is now handled in the ClinicHeader component
-                      const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
+                    onClick={() => {
+                      // Open onboarding dialog
+                      const headerButton = document.querySelector('.clinic-header-onboarding-trigger');
                       if (headerButton) {
                         (headerButton as HTMLElement).click();
                       }
                     }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                     </svg>
-                  </a>
+                  </button>
                 </div>
                 
                 {/* Center - New Game button */}
@@ -1161,6 +1163,7 @@ const DoctorsOfficePage = () => {
             imageGroups={imageGroups}
             visibleImages={visibleImages}
             toggleGroup={toggleGroup}
+            onStartOnboarding={handleRestartOnboarding}
           />
           
           {/* Feature unlock banner removed */}
