@@ -2,13 +2,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { PurchaseButton } from "@/components/purchase-button";
 import ShoppingDialog, { ImageGroup } from "../ShoppingDialog";
-import dynamic from 'next/dynamic';
 import { FaArrowUp } from 'react-icons/fa';
-
-// Dynamically import TutorialVidDialog
-const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialog'), {
-  ssr: false
-});
 
 /* --- Constants ----- */
 /* ----- Types ---- */
@@ -20,6 +14,7 @@ interface ClinicHeaderProps {
   imageGroups: ImageGroup[];
   visibleImages: Set<string>;
   toggleGroup: (groupName: string) => Promise<void>;
+  onStartOnboarding: () => void;
 }
 
 const ClinicHeader = ({
@@ -29,12 +24,12 @@ const ClinicHeader = ({
   userLevel,
   imageGroups,
   visibleImages,
-  toggleGroup
+  toggleGroup,
+  onStartOnboarding
 }: ClinicHeaderProps) => {
 /* ---- State ----- */
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
 /* ---- Refs --- */
   const marketplaceDialogRef = useRef<HTMLDialogElement>(null);
@@ -150,9 +145,9 @@ const ClinicHeader = ({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                setIsTutorialOpen(true);
+                onStartOnboarding();
               }}
-              className="clinic-header-tutorial-trigger w-full px-3 py-2 sm:px-4 md:px-6 sm:py-2 md:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+              className="clinic-header-onboarding-trigger w-full px-3 py-2 sm:px-4 md:px-6 sm:py-2 md:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -165,23 +160,16 @@ const ClinicHeader = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Tutorial
+              Onboarding
             </a>
           </div>
         </div>
       </div>
 
-      {/* Tutorial Dialog */}
-      {isTutorialOpen && (
-        <TutorialVidDialog
-          isOpen={isTutorialOpen}
-          onClose={() => setIsTutorialOpen(false)}
-          videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiClinicVideo(1).mp4"
-        />
-      )}
+
     </>
   );
 };
