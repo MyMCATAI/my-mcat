@@ -309,6 +309,8 @@ const TestComponent: React.FC<TestComponentProps> = ({
     userAnswer: string,
     isCorrect: boolean
   ) => {
+    const currentQuestion = getCurrentQuestion();
+    console.log("User response:", { questionId, userAnswer, isCorrect, currentQuestion });
     updateActivityEndTime ? updateActivityEndTime() : null;
     if (!hasAnsweredFirstQuestion) {
       setHasAnsweredFirstQuestion(true);
@@ -320,7 +322,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
 
     const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
-    const currentQuestion = getCurrentQuestion();
     if (!currentQuestion) {
       console.error("No current question found");
       return;
@@ -585,6 +586,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
       return;
     }
 
+    console.log("User highlight action:", { activeEditor, currentQuestion });
     setFlashHighlight(true);
     setCanApplyStyle(false);
 
@@ -605,6 +607,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
       return;
     }
 
+    console.log("User strikethrough action:", { activeEditor, currentQuestion });
     setFlashStrikethrough(true);
     setCanApplyStyle(false);
 

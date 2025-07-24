@@ -167,7 +167,13 @@ const QuestionComponent = forwardRef<QuestionRef, QuestionProps>(
     }, [question.id, options]);
 
   const handleAnswerChange = (value: string) => {
-    console.log(correctAnswer)
+    console.log("Question answer change:", { 
+      questionId: question.id, 
+      selectedAnswer: value, 
+      correctAnswer, 
+      isCorrect: value === correctAnswer,
+      question: question.questionContent 
+    });
     onAnswer(question.id, value, value === correctAnswer);
   };
 
