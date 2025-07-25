@@ -1,7 +1,3 @@
-# MYMCAT MVP
-Created by Joshua Karki and Prynce Wade
-
----
 
 ## Documentation Directory
 - 📘 [README.md](./README.md) - Project overview & quickstart guide
@@ -100,7 +96,6 @@ Follow these steps to set up the project locally:
    ```
 
 - #### Making Database Changes:
-   ⚠️ Always contact Josh before making schema changes.
    ```bash
    npx prisma db push       # Apply schema changes to the database
    npx prisma generate      # Update Prisma client after schema changes
